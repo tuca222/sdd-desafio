@@ -1,10 +1,5 @@
 # CLAUDE.md
 
-> Este arquivo é lido pelo Claude Code no início de toda sessão. É onde moram as
-> convenções que você não quer repetir em todo prompt.
-> Substitua os `<...>` e apague o que não usar. Mantenha curto — CLAUDE.md longo
-> é CLAUDE.md ignorado.
-
 ## O projeto
 
 Motor de cálculo de reembolso de despesas corporativas. CLI que lê um JSON de
@@ -34,16 +29,20 @@ Se o que eu pedi não está coberto por nenhuma task, me avise em vez de impleme
 
 ## Stack e comandos
 
-- Linguagem: `<...>`
-- Rodar: `<comando>`
-- Testes: `<comando>`
-- Lint/format: `<comando>`
+- Linguagem: Python 3.11+
+- Rodar: `python -m src.cli calcular --input despesas.json --output resultado.json`
+- Testes: `pytest -v`
+- Lint/format: `ruff check . && ruff format .`
 
 ## Convenções de código
 
-- `<nomenclatura, estrutura de pastas, tratamento de erro, o que for relevante>`
-- Valores monetários: `<como são representados — decimal, centavos em inteiro, etc.>`
+- snake_case para funções e variáveis; type hints obrigatórios em funções públicas.
+- Estrutura: `src/` com módulos separados por responsabilidade; `tests/` espelhando `src/`.
+- Valores monetários: `decimal.Decimal`, nunca `float`. Cálculo financeiro com
+  float acumula erro de arredondamento — decisão não negociável.
 
 ## Fora de escopo
 
-- `<o que este projeto explicitamente não faz — evita que o agente invente feature>`
+- Sem persistência em banco de dados (entrada e saída são arquivos JSON).
+- Sem API HTTP/autenticação.
+- Sem interface gráfica.

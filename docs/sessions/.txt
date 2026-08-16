@@ -1,0 +1,11 @@
+ ▐▛███▜▌   Claude Code v2.1.233
+▝▜█████▛▘  Sonnet 5 · Claude Pro
+  ▘▘ ▝▝    /mnt/c/Projetos/NTT/SDD - Desafio prático/sdd-desafio
+
+   Tackle your toughest work with Opus 5. Switch anytime with /model.
+
+❯ mensagem de teste usada para testar o comando '/export' na sequencia.         
+
+● Recebido — mensagem de teste registrada. Pode mandar o /export na sequência.
+
+✻ Brewed for 2s
