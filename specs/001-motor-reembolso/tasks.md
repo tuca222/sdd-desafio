@@ -35,7 +35,7 @@
 - [x] **T-005** — Truncamento RN-010 na borda do parser (aplicado no momento em que `Despesa` é construída)
   - **Atende:** RN-010
   - **Aceite:** `tests/test_parser.py::test_rn010_trunca_casas_decimais_excedentes` (`d-011`: `33.333` → `33.33`)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `97e4d09`
 
 ## Fase 2 — Regras de negócio
 
