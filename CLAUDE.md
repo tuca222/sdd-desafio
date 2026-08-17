@@ -43,6 +43,18 @@ Se o que eu pedi não está coberto por nenhuma task, me avise em vez de impleme
   ponteiro nunca deve ficar referenciando uma versão de spec mais antiga que
   a atual — se o `plan.md` ainda não foi revisado contra o que mudou, isso
   também precisa ficar registrado (não apenas o número da versão).
+- **Disciplina de `tasks.md`:**
+  - Marque `[x]` em cada task conforme ela é concluída — ao longo do caminho,
+    nunca todas de uma vez no final. A correção lê o histórico de quando cada
+    task foi marcada, não só o estado final do arquivo.
+  - Toda task precisa ser pequena o bastante para virar **um commit**. Se o
+    critério de aceite não dá pra descrever como "o teste X passa", a task
+    está grande demais e precisa ser quebrada antes de ser implementada.
+  - Qualquer agente que perceber uma task não marcada apesar de já concluída,
+    ou uma task grande demais para um commit (critério de aceite vago, cobre
+    mais de um teste/regra sem necessidade), **deve sinalizar isso
+    imediatamente ao usuário e propor a correção** (marcar `[x]`, ou quebrar a
+    task em tasks menores) antes de continuar o trabalho.
 
 ## Stack e comandos
 
