@@ -52,7 +52,7 @@
 - [x] **T-008** — Filtro: categoria fora da política (usa a normalização de T-006)
   - **Atende:** RN-008, RN-011
   - **Aceite:** `tests/test_regras.py::test_rn008_categoria_fora_da_politica` (`d-005`, categoria `coworking`)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `af28133`
 
 - [ ] **T-009** — Filtro: fora do período de competência (limites inclusivos nos dois extremos)
   - **Atende:** RN-006
