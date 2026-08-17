@@ -69,10 +69,10 @@
   - **Aceite:** `tests/test_regras.py::test_rn005_nota_fiscal_obrigatoria_acima_de_100` + `test_rn005_valor_exatamente_100_nao_exige` (`d-003`)
   - **Commit:** `3c15471`
 
-- [ ] **T-012** — Pipeline de filtros em `motor.py`, aplicados na ordem da spec.md §8 ("Ordem de aplicação das regras"), uma única justificativa por despesa
+- [x] **T-012** — Pipeline de filtros em `motor.py`, aplicados na ordem da spec.md §8 ("Ordem de aplicação das regras"), uma única justificativa por despesa
   - **Atende:** RN-005, RN-006, RN-007, RN-008, RN-009, RN-013
   - **Aceite:** `tests/test_motor.py::test_pipeline_aplica_filtros_na_ordem_definida` (`d-004`: negado por nota fiscal ausente, não por limite diário já esgotado — AMB-004)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-013** — Agregação de limite diário: categorias `alimentacao` e `transporte_urbano` (soma por categoria+dia, ordem de entrada, corta excedente)
   - **Atende:** RN-001, RN-002, RN-004
