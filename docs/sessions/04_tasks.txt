@@ -523,7 +523,7 @@
   v1.2/plan v1.0, commitado e pushado no branch
   worktree-leia-a-spec-md-e-spicy-seal — pronto para merge em main.
 
-✻ Baked for 4m 25s
+✻ Churned for 4m 25s
 
 ※ recap: Preenchi tasks.md com 23 tasks rastreáveis da spec/plan e pushei no branch worktree-leia-a-spec-md-e-spicy-seal. Próximo passo: você revisar e dar merge em main (comando ou link do PR já enviados). (disable recaps in /config)
 
@@ -593,7 +593,7 @@
   granularidade de task = 1 commit, commitado (00ca134) e pushado no branch
   worktree-leia-a-spec-md-e-spicy-seal, pronto para merge em main.
 
-✻ Cogitated for 35s
+✻ Brewed for 35s
 
 ❯ Atualize a main com as alterações realizadas até agora                        
 
@@ -627,7 +627,7 @@
   CLAUDE.md (commits 951464d e 00ca134); rode git pull origin main no checkout
   principal para sincronizar localmente.
 
-✻ Cooked for 1m 5s
+✻ Brewed for 1m 5s
 
 ❯ git pull origin main                                                          
 
@@ -656,7 +656,7 @@
   (era a origem do fast-forward). Para sincronizar o checkout principal fora do
   worktree, rode !git pull origin main.
 
-✻ Cooked for 20s
+✻ Worked for 20s
 
 ! git pull origin main                                                          
   ⎿  From https://github.com/tuca222/sdd-desafio
@@ -679,7 +679,7 @@
   os dois commits (951464d e 00ca134). Qualquer clone/checkout que puxar de
   origin/main vai pegar as mudanças.
 
-✻ Cooked for 25s
+✻ Churned for 25s
 
 ❯ fiz o git pull pelo terminal e deu certo. Me ajude a ajustar isso no          
   CLAUDE.md para que isso não aconteça mais. Como este é um projeto "desafio"   
@@ -755,7 +755,7 @@
   result: CLAUDE.md atualizado com a seção "Fluxo de git" (commit direto em
   main, sem branch/PR) e já pushado como 234921d direto em origin/main — rode
   git pull origin main no seu checkout local para sincronizar.
-✻ Cogitated for 1m 21s
+✻ Worked for 1m 21s
 
 ❯ não consigo dar permissão para que o agente execute o pull também ao final?   
 
@@ -786,7 +786,7 @@
   interativa direta neste projeto, evite background job") pra deixar claro pra
   qualquer agente futuro?
 
-✻ Churned for 28s
+✻ Sautéed for 28s
 
 ❯ Entendi. Não precisa realizar essa distinção no momento, era só uma dúvida    
   minha mesmo.                                                                  
@@ -794,7 +794,7 @@
 ● Combinado, deixo como está — sem mudanças no CLAUDE.md por enquanto. Qualquer
   coisa é só chamar.
 
-✻ Sautéed for 3s
+✻ Cooked for 3s
 
 ❯ Agora com base nessa sessão revise se tem algo que faz sentido incluir ou     
   editar no @docs/RELATORIO.md                                                  
@@ -976,4 +976,135 @@
   linhas novas em Delegação e um Caso 3 de Discernimento baseados nesta sessão;
   falta exportar a sessão (/export) para a evidência citada existir de fato.
 
-✻ Crunched for 2m 25s
+✻ Baked for 2m 25s
+
+❯ /export docs/sessions/04_tasks.txt                                            
+  ⎿  Conversation exported to: /mnt/c/Projetos/NTT/SDD - Desafio
+     prático/sdd-desafio/.claude/worktrees/leia-a-spec-md-e-spicy-seal/docs/sess
+     ions/04_tasks.txt
+
+❯ realizei o export, pode ajustar a referencia                                  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Vou ajustar a referência da evidência no Caso 3 para o arquivo real
+  (docs/sessions/04_tasks.txt, linha ~651-666, onde está a sequência do !git 
+  pull).
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(docs/RELATORIO.md)
+  ⎿  Added 6 lines, removed 5 lines
+      230  recusa a operação — não há como o agente alcançar aquele diret
+           ório de dentro
+      231  do worktree.
+      232  
+      233 -**Onde está a evidência:** esta sessão (a exportar em `docs/se
+          -ssions/04_...`)                                               
+      234 -— sequência "Se quiser, digite `!git pull origin main`..." → r
+          -esultado                                                      
+      235 -"Already up to date" → correção do Claude ("Esse `!git pull or
+          -igin main`                                                    
+      236 -também rodou dentro deste worktree... Não sincronizou o checko
+          -ut externo...")                                               
+      237 -→ minha confirmação ("fiz o git pull pelo terminal e deu certo
+          -").                                                           
+      233 +**Onde está a evidência:** `docs/sessions/04_tasks.txt`, linha
+          +s 651–674 —                                                   
+      234 +sequência "Se quiser, digite `!git pull origin main`..." → res
+          +ultado                                                        
+      235 +"Already up to date" (linha 632) → correção do Claude ("Esse `
+          +!git pull origin                                              
+      236 +main` também rodou dentro deste worktree... Não sincronizou o 
+          +checkout                                                      
+      237 +externo...", linha 666) → minha confirmação ("fiz o git pull p
+          +elo terminal e                                                
+      238 +deu certo").                                                  
+      239  
+      240  ---
+      241  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Só essa referência mesmo. Agora commito o ajuste, junto com o próprio arquivo
+  de sessão exportado (docs/sessions/04_tasks.txt, que ainda não estava
+  versionado), e faço push direto na main.
+
+  Committed e6d2493, pushed to main, ran 1 shell command (ctrl+o to expand)
+
+● Feito — origin/main está em e6d2493.
+
+  - Referência no Caso 3 do RELATORIO.md atualizada de docs/sessions/04_...
+  (placeholder) para docs/sessions/04_tasks.txt, com linhas exatas (651–674)
+  apontando pra sequência do erro do !git pull.
+  - O arquivo exportado ainda não estava versionado — commitei junto
+  (docs/sessions/04_tasks.txt, 978 linhas).
+
+  result: docs/RELATORIO.md com a referência de evidência corrigida para o
+  arquivo real, e docs/sessions/04_tasks.txt commitado — ambos em origin/main
+  (e6d2493).
+
+✻ Cogitated for 36s
+
+❯ Uma coisa para você ajustar também. Todo commit que você fizer, deve ser      
+  assinado por você. Os ultimos realizados não vieram com assinatura. Adicione  
+  isso no claude code para não passar batido.                                   
+  Ran 1 shell command (ctrl+o to expand)
+
+● Confirmado — os últimos 5 commits (951464d até e6d2493) não têm nenhum trailer
+  de assinatura. Vou adicionar a regra no CLAUDE.md, na seção "Fluxo de git".
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(CLAUDE.md)
+  ⎿  Added 8 lines
+      74  - Isso não dispensa nenhuma outra regra deste arquivo (task ref
+          erenciada no
+      75    commit, `spec.md` atômica em três partes, etc.) — só define q
+          ue o destino
+      76    de todo commit é sempre `main`.
+      77 +- **Todo commit feito por um agente leva assinatura no rodapé d
+         +a mensagem:**                                                  
+      78 +  `Co-Authored-By: <nome do modelo> <noreply@anthropic.com>` (e
+         +x.:                                                            
+      79 +  `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`). É
+         + o que                                                         
+      80 +  diferencia, no `git log`, o que foi commitado por mim do que 
+         +foi gerado por                                                 
+      81 +  um agente — sem essa linha, a distinção se perde. Nenhuma exc
+         +eção, nem para                                                 
+      82 +  commit pequeno de doc. Antes de criar qualquer commit, o agen
+         +te confere se                                                  
+      83 +  a mensagem já inclui a assinatura; se não incluir, é bug de p
+         +rocesso, igual                                                 
+      84 +  a esquecer o prefixo `docs(...)`/`feat(T-NNN)`.              
+      85  
+      86  ## Stack e comandos
+      87  
+
+● Agora commito essa mudança já com a assinatura correta, e faço push direto na
+  main.
+
+  Committed 40168f1, pushed to main (ctrl+o to expand)
+
+● origin/main em 40168f1, já com a assinatura no rodapé.
+
+  Adicionei em CLAUDE.md (seção "Fluxo de git") a exigência de Co-Authored-By: 
+  <modelo> <noreply@anthropic.com> em todo commit de agente, sem exceção — e
+  este próprio commit já sai assinado, servindo de exemplo.
+
+  Fica uma pendência que não resolvi sozinho: os 5 commits anteriores desta
+  sessão (951464d, 00ca134, 234921d, c0a09f1, e6d2493) já estão em origin/main
+  sem assinatura. Corrigir isso retroativamente exigiria reescrever o histórico
+  (rebase + force-push em main) — uma operação destrutiva em branch
+  compartilhado que não faço sem sua confirmação explícita.
+
+✻ Sautéed for 54s
+
+❯ não precisa fazer, isso fica como aprendizado.                                
+
+● Combinado — deixo os 5 commits antigos como estão, sem reescrever histórico. A
+  regra em CLAUDE.md já garante que daqui pra frente todo commit de agente sai
+  assinado.
+
+✻ Churned for 4s
