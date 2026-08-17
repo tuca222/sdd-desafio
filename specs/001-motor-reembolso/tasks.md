@@ -49,10 +49,10 @@
   - **Aceite:** `tests/test_regras.py::test_rn009_valor_negativo_ignorado` (`d-009`)
   - **Commit:** `60fbd69`
 
-- [ ] **T-008** — Filtro: categoria fora da política (usa a normalização de T-006)
+- [x] **T-008** — Filtro: categoria fora da política (usa a normalização de T-006)
   - **Atende:** RN-008, RN-011
   - **Aceite:** `tests/test_regras.py::test_rn008_categoria_fora_da_politica` (`d-005`, categoria `coworking`)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-009** — Filtro: fora do período de competência (limites inclusivos nos dois extremos)
   - **Atende:** RN-006
