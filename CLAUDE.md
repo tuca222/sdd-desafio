@@ -56,22 +56,24 @@ Se o que eu pedi não está coberto por nenhuma task, me avise em vez de impleme
     imediatamente ao usuário e propor a correção** (marcar `[x]`, ou quebrar a
     task em tasks menores) antes de continuar o trabalho.
   - O campo **Commit** de cada task nunca fica com o placeholder `<hash
-    preenchido depois>` além do momento em que a task é fechada. O hash só
-    existe depois que o commit é criado — então o preenchimento é
-    necessariamente um passo à parte, não algo que dá pra fazer no mesmo
-    commit que marca `[x]`. Fluxo obrigatório ao fechar uma task:
-    1. Commitar a implementação (`feat(T-NNN):`/`test(T-NNN):`), já com
-       `[x]` marcado em `tasks.md` (o campo **Commit** fica vazio ou com o
-       placeholder nesse commit — é inevitável).
-    2. Rodar `git log -1 --format=%h` (ou equivalente) para pegar o hash
-       real.
-    3. Editar só o campo **Commit** daquela task com o hash e criar um
-       segundo commit pequeno, **antes de seguir para a próxima task**:
-       `docs(tasks): registra hash do commit da T-NNN`.
-    Uma task não está encerrada — nem pronta para relatar ao usuário como
-    concluída — enquanto o campo **Commit** ainda mostrar o placeholder.
-    Nunca usar `git commit --amend` para resolver isso (proibido por regra
-    geral de git deste ambiente); é sempre um commit novo.
+    preenchido depois>` além do momento em que a task é fechada. Como o
+    hash só existe depois que o commit é criado, fechar uma task sempre
+    exige dois commits em sequência — os dois só acontecem depois que eu
+    aprovar a implementação (ver "Fluxo de git" → aprovação antes do
+    commit):
+    1. `feat(T-NNN):`/`test(T-NNN):` — a implementação, já com `[x]`
+       marcado em `tasks.md` (o campo **Commit** ainda mostra o
+       placeholder aqui — é inevitável).
+    2. `docs(tasks): registra hash do commit da T-NNN` — pega o hash do
+       commit anterior (`git log -1 --format=%h`) e troca o placeholder
+       pelo hash real.
+    O segundo commit é fechamento mecânico da mesma task já aprovada, não
+    uma alteração nova — o agente cria os dois em sequência, sem pausar
+    para aprovar de novo entre eles. Uma task não está encerrada — nem
+    pronta para relatar ao usuário como concluída — enquanto o campo
+    **Commit** ainda mostrar o placeholder. Nunca usar `git commit
+    --amend` para resolver isso (proibido por regra geral de git deste
+    ambiente); é sempre um commit novo.
 
 ## Fluxo de git
 
@@ -94,10 +96,21 @@ merge. Todo trabalho, meu ou de um agente, é direto na `main`.
   problemas existe se o agente nunca sai do checkout local.
 - **Todo commit vai direto em `main`.** Nenhuma alteração deve ficar
   pendurada num branch separado esperando merge manual.
-- **Commit não espera aprovação prévia a cada alteração** — eu reviso depois
-  de feito. Se algo precisar de ajuste: ou eu corrijo manualmente e faço o
-  commit, ou peço para o agente corrigir e commitar em seguida — sempre
-  direto em `main`, sem passo intermediário.
+- **Toda alteração espera minha aprovação antes de virar commit.** Fluxo:
+  o agente implementa (código, teste, doc) → eu reviso **sem nenhum commit
+  novo no histórico ainda** → aprovo ou peço ajuste → só depois da minha
+  aprovação o agente commita. Se eu pedir ajuste, o agente corrige e volta
+  a aguardar aprovação antes de commitar — nunca commita "para já deixar
+  registrado" e ajusta depois.
+  **Por quê:** o modelo anterior (commit primeiro, revisão depois) sujava
+  o histórico do `git log` toda vez que algo precisava de ajuste — ficavam
+  commits que já nasciam errados, exigindo mais commits de correção em
+  cima. Aprovar antes do commit mantém o histórico limpo: todo commit que
+  existe já é o resultado final revisado, não um rascunho.
+  **Única exceção:** o commit de registro de hash que fecha uma task
+  (`docs(tasks): registra hash do commit da T-NNN`, mecânica descrita em
+  "Disciplina de `tasks.md`", acima) não espera uma nova rodada de
+  aprovação — é continuação mecânica da mesma task já aprovada.
 - Isso não dispensa nenhuma outra regra deste arquivo (task referenciada no
   commit, `spec.md` atômica em três partes, etc.) — só define que o destino
   de todo commit é sempre `main`.
