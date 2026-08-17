@@ -1,6 +1,6 @@
 # Plano Técnico — Motor de Cálculo de Reembolso
 
-**Versão:** 1.0 · **Baseado na spec:** 1.2
+**Versão:** 1.1 · **Baseado na spec:** 1.2
 
 ---
 
@@ -146,6 +146,26 @@ com `Decimal`.
 - **Nomenclatura:** todo teste que cobre uma `RN-NNN` ou `AMB-NNN` carrega o
   ID no nome da função — é isso que fecha a rastreabilidade spec → teste que
   a `tasks.md` e a correção vão seguir.
+- **Validação de `ResultadoDespesa` em teste de regra/filtro:** aplica-se a
+  todo teste cujo alvo retorna um `ResultadoDespesa` (as funções de
+  `regras.py` que decidem reembolso — `filtro_valor_negativo`,
+  `filtro_categoria_invalida` e as demais que vierem) — **não** se aplica a
+  teste de função auxiliar sem esse retorno, como
+  `test_rn011_normaliza_categoria_case_insensitive` (que testa
+  `normalizar_categoria`, uma `str -> str`). Nesses testes, valida-se o
+  objeto inteiro, campo a campo — `despesa_reembolsavel`,
+  `tipo_reembolso`, `valor_reembolsavel` e `justificativa` — nunca só um
+  subconjunto. Para `justificativa` especificamente, o teste nunca compara
+  a string inteira nem faz busca case-insensitive (`.lower()`) por uma
+  palavra de conteúdo do texto (ex.: `"política"`, `"negativo"`) — frágil,
+  quebra a cada reescrita de frase que não muda a decisão, e não valida o
+  desfecho real. Em vez disso, verifica, com a capitalização exata usada em
+  `regras.py`, a presença da palavra que corresponde ao `tipo_reembolso` já
+  validado no mesmo teste: `"negado" in resultado.justificativa` para
+  `"nenhum"`, `"total" in resultado.justificativa` para `"total"`,
+  `"parcial" in resultado.justificativa` para `"parcial"`. Padrão de
+  referência: `test_rn008_categoria_fora_da_politica` e
+  `test_rn009_valor_negativo_ignorado` em `tests/test_regras.py`.
 
 ## 7. Riscos
 
