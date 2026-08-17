@@ -32,10 +32,10 @@
   - **Aceite:** `tests/test_parser.py::test_parse_carrega_campos_da_entrada` — carrega `despesas-exemplo.json` e confirma tipos/valores
   - **Commit:** `accc227`
 
-- [ ] **T-005** — Truncamento RN-010 na borda do parser (aplicado no momento em que `Despesa` é construída)
+- [x] **T-005** — Truncamento RN-010 na borda do parser (aplicado no momento em que `Despesa` é construída)
   - **Atende:** RN-010
   - **Aceite:** `tests/test_parser.py::test_rn010_trunca_casas_decimais_excedentes` (`d-011`: `33.333` → `33.33`)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 ## Fase 2 — Regras de negócio
 

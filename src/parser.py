@@ -1,8 +1,14 @@
 import json
 from datetime import date
-from decimal import Decimal
+from decimal import ROUND_DOWN, Decimal
 
 from src.modelos import Colaborador, Despesa, Periodo
+
+DUAS_CASAS_DECIMAIS = Decimal("0.01")
+
+
+def _truncar_valor(valor: Decimal) -> Decimal:
+    return valor.quantize(DUAS_CASAS_DECIMAIS, rounding=ROUND_DOWN)
 
 
 def carregar_despesas(caminho: str) -> tuple[Colaborador, Periodo, list[Despesa]]:
@@ -28,7 +34,7 @@ def carregar_despesas(caminho: str) -> tuple[Colaborador, Periodo, list[Despesa]
             categoria=item["categoria"],
             descricao=item["descricao"],
             fornecedor=item["fornecedor"],
-            valor=item["valor"],
+            valor=_truncar_valor(item["valor"]),
             tem_nota_fiscal=item["tem_nota_fiscal"],
         )
         for item in dados["despesas"]

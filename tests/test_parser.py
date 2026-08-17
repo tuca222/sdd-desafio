@@ -37,3 +37,11 @@ def test_parse_carrega_campos_da_entrada():
     assert d009.id == "d-009"
     assert d009.valor == Decimal("-45.00")
     assert d009.tem_nota_fiscal is False
+
+
+def test_rn010_trunca_casas_decimais_excedentes():
+    _, _, despesas = carregar_despesas(CAMINHO_EXEMPLO)
+
+    d011 = next(despesa for despesa in despesas if despesa.id == "d-011")
+
+    assert d011.valor == Decimal("33.33")
