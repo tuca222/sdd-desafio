@@ -56,6 +56,25 @@ Se o que eu pedi não está coberto por nenhuma task, me avise em vez de impleme
     imediatamente ao usuário e propor a correção** (marcar `[x]`, ou quebrar a
     task em tasks menores) antes de continuar o trabalho.
 
+## Fluxo de git
+
+Desafio individual de 2 dias — sem branch de feature, sem PR, sem processo de
+merge. Todo trabalho, meu ou de um agente, é direto na `main`.
+
+- **Todo commit vai direto em `main`.** Nenhuma alteração deve ficar
+  pendurada num branch separado esperando merge manual. Se uma sessão do
+  agente rodar isolada (ex.: worktree de execução em background), ao
+  terminar o trabalho ela deve dar push como fast-forward direto para
+  `origin main` (`git push origin <branch-do-worktree>:main`) — nunca deixar
+  só o branch isolado no remoto à espera de eu mesclar.
+- **Commit não espera aprovação prévia a cada alteração** — eu reviso depois
+  de feito. Se algo precisar de ajuste: ou eu corrijo manualmente e faço o
+  commit, ou peço para o agente corrigir e commitar em seguida — sempre
+  direto em `main`, sem passo intermediário.
+- Isso não dispensa nenhuma outra regra deste arquivo (task referenciada no
+  commit, `spec.md` atômica em três partes, etc.) — só define que o destino
+  de todo commit é sempre `main`.
+
 ## Stack e comandos
 
 - Linguagem: Python 3.12.3
