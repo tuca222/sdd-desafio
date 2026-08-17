@@ -16,6 +16,19 @@ registramos em `DECISIONS.md`.
 **Antes de implementar qualquer coisa, leia a task correspondente em `tasks.md`.**
 Se o que eu pedi não está coberto por nenhuma task, me avise em vez de implementar.
 
+## Modelo do agente
+
+Para desenvolvimento de código — implementar uma task (`src/`, `tests/`), corrigir
+bug, refatorar — usar o modelo **Claude Opus**. Para o resto (conversa, revisão de
+documento, planejamento, ajuste de `CLAUDE.md`/`spec.md`/`plan.md`/`tasks.md`) o
+modelo padrão da sessão serve normalmente.
+
+Isso é uma preferência de sessão, não algo que o próprio agente consegue aplicar
+sozinho a partir deste arquivo — a troca de modelo é uma ação do usuário (ex.:
+`/model opus` no Claude Code). Se uma sessão que não está no Opus for começar a
+implementar uma task, ela deve dizer isso ao usuário antes de escrever código, em
+vez de simplesmente implementar no modelo errado sem avisar.
+
 ## Regras de trabalho
 
 - Toda regra de negócio vive na spec, não no chat e não em comentário de código.
@@ -43,6 +56,20 @@ Se o que eu pedi não está coberto por nenhuma task, me avise em vez de impleme
   ponteiro nunca deve ficar referenciando uma versão de spec mais antiga que
   a atual — se o `plan.md` ainda não foi revisado contra o que mudou, isso
   também precisa ficar registrado (não apenas o número da versão).
+- **Toda citação de seção carrega arquivo + número + título**, em qualquer
+  documento do projeto (`spec.md`, `plan.md`, `tasks.md`, `DECISIONS.md`,
+  `RELATORIO.md`, `CLAUDE.md`): `spec.md §9 ("Critérios de aceite")`, nunca
+  só `§9` e nunca só `spec.md §9`. Vale inclusive quando a seção citada está
+  no mesmo arquivo em que estou escrevendo — o leitor pode estar lendo um
+  trecho isolado, sem saber em qual arquivo ele está.
+  **Por quê:** `§9` sozinho só resolve para quem já tem o documento inteiro
+  na cabeça, e quebra silenciosamente na primeira renumeração. Isso já foi um
+  bug real aqui: a mesma notação `§4` no `plan.md` apontava ora para a
+  `spec.md`, ora para o próprio `plan.md`, sem nada distinguindo os dois
+  casos (ver `DECISIONS.md` D-001). O critério da `RUBRICA.md` para nota
+  máxima em qualidade de spec é "um desenvolvedor que nunca viu o projeto
+  implementaria a mesma coisa" — referência que exige contexto prévio
+  carregado falha esse critério.
 - **Disciplina de `tasks.md`:**
   - Marque `[x]` em cada task conforme ela é concluída — ao longo do caminho,
     nunca todas de uma vez no final. A correção lê o histórico de quando cada
