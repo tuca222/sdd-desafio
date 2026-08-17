@@ -30,7 +30,7 @@
 - [x] **T-004** — Parser: leitura do JSON de entrada com `Decimal` (`parse_float=Decimal`) e construção dos dataclasses
   - **Atende:** spec.md §4
   - **Aceite:** `tests/test_parser.py::test_parse_carrega_campos_da_entrada` — carrega `despesas-exemplo.json` e confirma tipos/valores
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `accc227`
 
 - [ ] **T-005** — Truncamento RN-010 na borda do parser (aplicado no momento em que `Despesa` é construída)
   - **Atende:** RN-010
