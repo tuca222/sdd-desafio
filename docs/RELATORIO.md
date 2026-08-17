@@ -104,7 +104,7 @@ regra estava incompleta.
 de eu mandar comitar, então as duas versões acima não ficaram em commits
 separados — só existe o commit `47f18f9` (`docs(spec): Retirando
 ambiguidades...`), que já sai com a versão final. A versão 1 só existe no
-histórico da conversa, exportado em `docs/sessions/planejamento_spec.txt`.
+histórico da conversa, exportado em `docs/sessions/02_planejamento_spec.txt`.
 
 ---
 
@@ -141,7 +141,7 @@ Ele corrigiu RN-007 e AMB-007 para deixar a regra escrita ("as ocorrências
 duplicadas também não entram em `valor_total_despesas`"), atualizou a
 descrição do campo em spec.md §4 ("Entrada e saída") e os critérios de aceite em spec.md §9 ("Critérios de aceite").
 
-**Onde está a evidência:** `docs/sessions/planejamento_spec.txt`, linha ~1242,
+**Onde está a evidência:** `docs/sessions/02_planejamento_spec.txt`, linha ~1242,
 minha mensagem: "O valor de R$1.861,84 estava incorreto, o certo é R$1.806,94
 pois quando há duplicatas, ela não deve entrar para o calculo do valor total
 de despesas."; correção aplicada no commit `47f18f9`.
@@ -179,10 +179,12 @@ manter `plan.md` sincronizado com a versão de `spec.md` que ele referencia
 ainda apontava para a spec `1.1`, corrigido no mesmo commit seguinte
 (`dd76911`).
 
-**Onde está a evidência:** `docs/sessions/<exportar esta sessão>` — a
-mensagem "Você cometeu dois erros graves..." e a sequência de commits
-`60995ad` (erro), `18442c6` (correção retroativa) e `49601e1` (correção
-sistêmica no `CLAUDE.md`).
+**Onde está a evidência:** `docs/sessions/03_plan.txt`, linha ~1823, minha
+mensagem: "Você cometeu dois erros graves: 1. A spec foi atualizada porém a
+versão não foi incrementada e nem o status foi alterado. 2. Este foi o maior
+erro de todos, a spec foi alterada e NADA foi escrito no DECISIONS.md."; e a
+sequência de commits `60995ad` (erro), `18442c6` (correção retroativa) e
+`49601e1` (correção sistêmica no `CLAUDE.md`).
 
 **Padrão que eu notei:** o Claude segue regras de conteúdo (o que a spec deve
 dizer) com mais disciplina do que regras de processo sobre o próprio ato de
