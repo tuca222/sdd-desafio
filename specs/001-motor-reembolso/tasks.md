@@ -12,7 +12,7 @@
 
 ## Fase 1 — Fundação
 
-- [ ] **T-001** — Scaffolding do projeto (`pyproject.toml`, estrutura `src/` + `tests/`, config `pytest`/`ruff`)
+- [x] **T-001** — Scaffolding do projeto (`pyproject.toml`, estrutura `src/` + `tests/`, config `pytest`/`ruff`)
   - **Atende:** infraestrutura (sem RN — setup de projeto)
   - **Aceite:** `pytest` roda (coleção vazia, sem erro) e `ruff check .` roda sem erro de configuração
   - **Commit:** `<hash preenchido depois>`
