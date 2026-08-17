@@ -47,7 +47,7 @@
 - [x] **T-007** — Filtro: valor negativo / estorno
   - **Atende:** RN-009
   - **Aceite:** `tests/test_regras.py::test_rn009_valor_negativo_ignorado` (`d-009`)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `60fbd69`
 
 - [ ] **T-008** — Filtro: categoria fora da política (usa a normalização de T-006)
   - **Atende:** RN-008, RN-011
