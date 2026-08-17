@@ -4,6 +4,7 @@ from decimal import Decimal
 from src.modelos import Despesa, Periodo
 from src.regras import (
     filtro_categoria_invalida,
+    filtro_duplicata,
     filtro_fora_periodo,
     filtro_valor_negativo,
     normalizar_categoria,
@@ -102,3 +103,35 @@ def test_rn006_data_no_extremo_do_periodo_aceita():
 
     assert filtro_fora_periodo(despesa_no_inicio, PERIODO_JULHO_2026) is None
     assert filtro_fora_periodo(despesa_no_fim, PERIODO_JULHO_2026) is None
+
+
+def test_rn007_duplicata_negada_primeira_mantida():
+    d006 = Despesa(
+        id="d-006",
+        data=date(2026, 7, 9),
+        categoria="alimentacao",
+        descricao="Almoco",
+        fornecedor="Bistro Central",
+        valor=Decimal("54.90"),
+        tem_nota_fiscal=True,
+    )
+    d007 = Despesa(
+        id="d-007",
+        data=date(2026, 7, 9),
+        categoria="alimentacao",
+        descricao="Almoco",
+        fornecedor="Bistro Central",
+        valor=Decimal("54.90"),
+        tem_nota_fiscal=True,
+    )
+
+    assert filtro_duplicata(d006, []) is None
+
+    resultado = filtro_duplicata(d007, [d006])
+
+    assert resultado is not None
+    assert resultado.despesa_reembolsavel is False
+    assert resultado.tipo_reembolso == "nenhum"
+    assert resultado.valor_reembolsavel == Decimal("0.00")
+    assert "negado" in resultado.justificativa
+    assert "Almoco(d-006)" in resultado.justificativa

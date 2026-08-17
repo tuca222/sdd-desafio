@@ -59,10 +59,10 @@
   - **Aceite:** `tests/test_regras.py::test_rn006_fora_do_periodo_negado` (`d-008`) + `test_rn006_data_no_extremo_do_periodo_aceita`
   - **Commit:** `07e0e4f`
 
-- [ ] **T-010** — Filtro: duplicata (todos os campos idênticos exceto `id`)
+- [x] **T-010** — Filtro: duplicata (todos os campos idênticos exceto `id`)
   - **Atende:** RN-007
   - **Aceite:** `tests/test_regras.py::test_rn007_duplicata_negada_primeira_mantida` (`d-006`/`d-007`)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-011** — Filtro: nota fiscal obrigatória (estritamente maior que R$100,00)
   - **Atende:** RN-005
