@@ -22,9 +22,27 @@ Se o que eu pedi não está coberto por nenhuma task, me avise em vez de impleme
 - Se eu te explicar uma regra que não está na spec, **pare e me diga isso** antes
   de escrever código. Isso é um bug de spec.
 - Todo commit referencia uma task: `feat(T-003): <descrição>`.
-  Mudanças de documentação: `docs(spec):`, `docs(plan):`, `docs(tasks):`.
+  Mudanças de documentação: `docs(spec):`, `docs(plan):`, `docs(tasks):`, `docs(claude):`.
 - Nenhuma regra de negócio entra sem teste.
-- Qualquer alteração na spec deve ser apontada em DECISIONS.MD.
+- **Toda alteração em `spec.md` é atômica em três partes, no mesmo commit — nenhuma
+  delas é opcional, nem para mudança pequena de citação/referência que não muda
+  regra de negócio:**
+  1. A mudança em si no conteúdo de `spec.md`.
+  2. Incremento de **Versão** e atualização de **Status** no cabeçalho de
+     `spec.md` (a linha `**Versão:** X.Y · **Status:** ... · **Última
+     alteração:** ...`).
+  3. Uma nova entrada em `specs/001-motor-reembolso/DECISIONS.md` (gatilho, o
+     que mudou, por quê, o que invalidou, tasks afetadas, custo).
+
+  Antes de considerar concluída qualquer edição em `spec.md`, confira os três
+  itens acima explicitamente. "Só mexi numa referência, não numa regra" não
+  dispensa nenhum dos três — commit que toca `spec.md` sem versão/status
+  atualizados e sem entrada em `DECISIONS.md` está incompleto.
+- Toda vez que `spec.md` mudar de versão, checar o campo `**Baseado na
+  spec:**` no cabeçalho de `plan.md` e atualizá-lo para a nova versão. Esse
+  ponteiro nunca deve ficar referenciando uma versão de spec mais antiga que
+  a atual — se o `plan.md` ainda não foi revisado contra o que mudou, isso
+  também precisa ficar registrado (não apenas o número da versão).
 
 ## Stack e comandos
 
