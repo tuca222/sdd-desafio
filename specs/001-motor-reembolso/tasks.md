@@ -39,10 +39,10 @@
 
 ## Fase 2 — Regras de negócio
 
-- [ ] **T-006** — Normalização de categoria (comparação case-insensitive)
+- [x] **T-006** — Normalização de categoria (comparação case-insensitive)
   - **Atende:** RN-011
   - **Aceite:** `tests/test_regras.py::test_rn011_normaliza_categoria_case_insensitive` (`d-014`: `ALIMENTACAO` → `alimentacao`)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-007** — Filtro: valor negativo / estorno
   - **Atende:** RN-009
