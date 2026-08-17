@@ -1,5 +1,3 @@
-# CLAUDE.md
-
 ## O projeto
 
 Motor de cálculo de reembolso de despesas corporativas. CLI que lê um JSON de
@@ -26,10 +24,11 @@ Se o que eu pedi não está coberto por nenhuma task, me avise em vez de impleme
 - Todo commit referencia uma task: `feat(T-003): <descrição>`.
   Mudanças de documentação: `docs(spec):`, `docs(plan):`, `docs(tasks):`.
 - Nenhuma regra de negócio entra sem teste.
+- Qualquer alteração na spec deve ser apontada em DECISIONS.MD.
 
 ## Stack e comandos
 
-- Linguagem: Python 3.11+
+- Linguagem: Python 3.12.3
 - Rodar: `python -m src.cli calcular --input despesas.json --output resultado.json`
 - Testes: `pytest -v`
 - Lint/format: `ruff check . && ruff format .`
