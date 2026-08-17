@@ -62,7 +62,7 @@
 - [x] **T-010** — Filtro: duplicata (todos os campos idênticos exceto `id`)
   - **Atende:** RN-007
   - **Aceite:** `tests/test_regras.py::test_rn007_duplicata_negada_primeira_mantida` (`d-006`/`d-007`)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `5b80d86`
 
 - [ ] **T-011** — Filtro: nota fiscal obrigatória (estritamente maior que R$100,00)
   - **Atende:** RN-005
