@@ -230,11 +230,12 @@ confirmou, ao tentar `git -C <checkout-externo> ...`, que a própria ferramenta
 recusa a operação — não há como o agente alcançar aquele diretório de dentro
 do worktree.
 
-**Onde está a evidência:** esta sessão (a exportar em `docs/sessions/04_...`)
-— sequência "Se quiser, digite `!git pull origin main`..." → resultado
-"Already up to date" → correção do Claude ("Esse `!git pull origin main`
-também rodou dentro deste worktree... Não sincronizou o checkout externo...")
-→ minha confirmação ("fiz o git pull pelo terminal e deu certo").
+**Onde está a evidência:** `docs/sessions/04_tasks.txt`, linhas 651–674 —
+sequência "Se quiser, digite `!git pull origin main`..." → resultado
+"Already up to date" (linha 632) → correção do Claude ("Esse `!git pull origin
+main` também rodou dentro deste worktree... Não sincronizou o checkout
+externo...", linha 666) → minha confirmação ("fiz o git pull pelo terminal e
+deu certo").
 
 ---
 
