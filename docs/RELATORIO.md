@@ -21,15 +21,23 @@
 | Identificar ambiguidades | Claude, com validação do usuário | Claude cruzou os 9 itens da política do RH com os 14 registros de `despesas-exemplo.json` e levantou 11 candidatas a ambiguidade (mais que as 8 mínimas do desafio); o usuário revisou a lista antes de qualquer decisão. |
 | Decidir as ambiguidades | 100% usuário | Cada uma das 11 decisões (agregação diária, reembolso parcial, fronteira de R$100, ordem de regras, viagem, diária de hospedagem, duplicatas, estornos, categoria maiúscula, arredondamento, período de competência) foi escolhida pelo usuário entre opções apresentadas pelo Claude — inclusive uma 12ª decisão (exclusão de duplicatas do `valor_total_despesas`) que o próprio Claude não tinha enxergado como ambiguidade separada até o usuário apontar o número errado. |
 | Escrever a spec | Em conjunto | Claude escreveu a primeira versão completa do `spec.md` (10 seções) a partir das decisões já tomadas; o usuário revisou linha a linha, editou trechos diretamente (cabeçalho, tabela de campos de entrada, exemplo de saída) e pediu ajustes pontuais, que o Claude aplicou. |
-| Desenhar a arquitetura | — | Ainda não realizado — próxima etapa (`plan.md`), fora do escopo desta sessão. |
+| Desenhar a arquitetura | Claude propôs, usuário verificou decisão por decisão | Claude leu a spec fechada e escreveu a primeira versão do `plan.md` em modo de planejamento — mas a primeira tentativa já saiu com 4 decisões técnicas (DT-001 a DT-004: arquitetura do pipeline de regras, onde truncar RN-010, serialização Decimal→float, separação `regras.py`/`motor.py`) decididas e escritas como se já estivessem fechadas, sem perguntar. Rejeitei o pedido de aprovação (`ExitPlanMode`) e exigi que toda decisão técnica ainda não fixada em `CLAUDE.md`/spec fosse verificada comigo antes de entrar no plano. Daí em diante, cada DT (mais CLI, onde a política mora, granularidade dos testes) virou pergunta estruturada com alternativas, não proposta pronta. |
+| Revisar rastreabilidade das citações (`spec.md`/`plan.md`/`RELATORIO.md`) | Usuário identificou o risco, Claude revisou o projeto e aplicou | Perguntei se uma referência como `§8` era resolvível por um agente sem a spec carregada no contexto; a resposta honesta foi "não, só o número não". Pedi revisão do projeto inteiro. Claude achou, além da fragilidade genérica, um bug real: a mesma notação `§4` em `plan.md` apontava ora para `spec.md`, ora para o próprio `plan.md`, sem nada que diferenciasse os dois casos. |
 | Implementar | — | Ainda não realizado. |
 | Escrever testes | — | Ainda não realizado. |
 | Absorver o envelope | — | Ainda não realizado — só ocorre no Dia 2. |
 
-**Onde deleguei e me arrependi:** Até agora, nenhum arrependimento — na fase de
-spec, tudo que delegou (levantamento das ambiguidades, primeira versão do
-`spec.md`) passou por revisão minha antes de virar decisão. Vou reavaliar
-conforme o projeto avançar para implementação e testes.
+**Onde deleguei e me arrependi:** Na fase de spec, nenhum arrependimento — tudo
+que delegou (levantamento das ambiguidades, primeira versão do `spec.md`)
+passou por revisão minha antes de virar decisão. Na fase de `plan.md`, quase
+me arrependi: deixei o Claude escrever a primeira versão completa do plano, e
+ele decidiu sozinho 4 decisões técnicas (DT-001 a DT-004) e já as escreveu
+como fechadas, sem perguntar — só pedi as duas primeiras confirmações (CLI,
+onde a política mora) antes dele escrever. Peguei antes de aprovar, rejeitando
+o `ExitPlanMode` e exigindo verificação de toda decisão técnica ainda não
+fixada. Não custou nada porque peguei a tempo, mas é sinal de que "propor e já
+escrever como decidido" é o modo padrão do Claude — cabe a mim interromper
+antes, não só revisar depois.
 
 **Onde não deleguei e deveria ter delegado:** Preenchi à mão o
 `exemplos/resultado-exemplo.json` completo depois de fechar as
@@ -138,10 +146,52 @@ minha mensagem: "O valor de R$1.861,84 estava incorreto, o certo é R$1.806,94
 pois quando há duplicatas, ela não deve entrar para o calculo do valor total
 de despesas."; correção aplicada no commit `47f18f9`.
 
-### Caso 2 *(opcional)*
+### Caso 2
 
-**Padrão que eu notei:** <em que tipo de tarefa ele erra mais? teve um sinal
-recorrente que passou a te deixar em alerta?>
+**O que ele propôs:** pedi ao Claude para revisar o projeto inteiro e corrigir
+as citações `§N` que dependiam de contexto prévio para serem resolvidas
+(detalhado na tabela de Delegação). Ele revisou `spec.md`, `plan.md` e
+`RELATORIO.md`, aplicou a correção certa, e commitou (`60995ad`) — mas o
+commit alterou o conteúdo de `spec.md` sem incrementar a **Versão**/**Status**
+no cabeçalho e sem nenhuma entrada em `DECISIONS.md`.
+
+**Por que estava errado:** o próprio `CLAUDE.md`, que o Claude tinha lido no
+início da sessão, já dizia explicitamente "Qualquer alteração na spec deve
+ser apontada em DECISIONS.MD." Não foi uma regra nova que ele não conhecia —
+foi uma regra que ele tinha na cabeça e não aplicou no momento de commitar,
+provavelmente porque a mudança "parecia pequena" (só citação, nenhuma regra
+de negócio mudou de sentido). É exatamente o tipo de coisa que a `RUBRICA.md`
+pune diretamente: "`DECISIONS.md` ausente tendo havido mudança de spec: −5".
+
+**Como eu detectei:** reli o diff e o `DECISIONS.md` depois do commit e notei
+os dois problemas ao mesmo tempo: cabeçalho de `spec.md` ainda em `1.1` (igual
+antes da mudança) e nenhuma entrada nova no arquivo de decisões.
+
+**O que eu fiz:** apontei os dois problemas explicitamente ("erros graves").
+Pedi a correção retroativa — o Claude incrementou `spec.md` para `1.2`,
+atualizou o `Status` e escreveu a entrada `D-001` em `DECISIONS.md`
+(commit `18442c6`). Fui além: pedi para ele revisar e corrigir o próprio
+`CLAUDE.md`, para que a regra deixasse de ser uma frase solta e virasse um
+checklist de três partes obrigatórias no mesmo commit (mudança + versão/status
++ `DECISIONS.md`), e que passasse a existir também uma regra explícita de
+manter `plan.md` sincronizado com a versão de `spec.md` que ele referencia
+(commit `49601e1`) — o que revelou, na hora, um segundo drift real: `plan.md`
+ainda apontava para a spec `1.1`, corrigido no mesmo commit seguinte
+(`dd76911`).
+
+**Onde está a evidência:** `docs/sessions/<exportar esta sessão>` — a
+mensagem "Você cometeu dois erros graves..." e a sequência de commits
+`60995ad` (erro), `18442c6` (correção retroativa) e `49601e1` (correção
+sistêmica no `CLAUDE.md`).
+
+**Padrão que eu notei:** o Claude segue regras de conteúdo (o que a spec deve
+dizer) com mais disciplina do que regras de processo sobre o próprio ato de
+commitar (versionar, registrar). Mudanças que "parecem pequenas" no conteúdo
+são exatamente onde ele relaxa a disciplina de processo — o que é o oposto do
+que deveria acontecer, já que é justamente aí que ninguém mais vai notar sem
+uma auditoria explícita do `DECISIONS.md`. Passei a conferir esse arquivo
+sempre que uma sessão mexe em `spec.md`, mesmo quando a mudança parece
+cosmética.
 
 ---
 
@@ -154,15 +204,27 @@ que o Claude entregou a primeira versão — e não só li: fui alterando
 diretamente no arquivo tudo que achei confuso, incompleto ou que dava para
 melhorar (cabeçalho, tabela de campos de entrada, exemplo de saída, e a
 correção do total que virou o Caso 1 de Discernimento), em vez de só listar
-pedidos de ajuste para o Claude aplicar.
+pedidos de ajuste para o Claude aplicar. No `plan.md`, mantive o mesmo hábito:
+editei diretamente duas células da tabela de Stack e o diagrama de arquitetura
+em vez de só pedir ajuste — e isso quase colidiu com uma correção que o Claude
+estava aplicando em paralelo num worktree isolado; a sessão parou, me
+perguntou como reconciliar, e eu disse explicitamente o que manter de cada
+lado em vez de deixar ele decidir sozinho.
 
-**Li o diff inteiro em que porcentagem das entregas?** 100% — até agora só
-existe uma entrega (a spec), e foi lida por completo, linha a linha.
+**Li o diff inteiro em que porcentagem das entregas?** 100% das entregas de
+spec/plan até agora — inclusive achei, no `plan.md`, dois itens da tabela de
+Riscos que não faziam sentido (erro de arredondamento já prevenido por
+arquitetura; ordem de regras já fechada na spec) e pedi para tirar.
 
-**O que aceitei sem verificar direito, e o que me custou:** nada até agora,
-além do que já está registrado no Caso 1 de Discernimento. *(Esta é a primeira
-versão do relatório — vou revisitar esta resposta conforme o projeto avançar
-para implementação e testes.)*
+**O que aceitei sem verificar direito, e o que me custou:** aceitei, sem
+conferir na hora, um commit do Claude que alterava `spec.md` (correção de
+citações `§N`) sem incrementar versão/status e sem entrada em
+`DECISIONS.md` — apesar de essa regra já estar escrita no `CLAUDE.md` desde o
+início do projeto. Só percebi ao reler o `DECISIONS.md` depois, não durante o
+commit em si (ver Caso 2 de Discernimento). O custo foi baixo porque peguei
+antes do fim da sessão, mas é o tipo de lacuna que, numa sessão mais corrida
+ou sem essa releitura específica, ficaria sem registro até a correção do
+projeto notar.
 
 **Testes: quem escreveu, e como você sabe que eles testam a coisa certa?**
 Ainda não se aplica — a fase de implementação e testes ainda não começou.
