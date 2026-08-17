@@ -151,6 +151,4 @@ com `Decimal`.
 
 | Risco | Probabilidade | O que faço se acontecer |
 |---|---|---|
-| Valor monetário passa por `float` em algum ponto do pipeline e acumula erro de arredondamento | Baixa | `Decimal` do parse (DT-002) até a borda de saída (DT-004); o teste de integração compara contra os totais exatos da spec e pega qualquer desvio de centavo. |
 | Mudança de requisito do dia 2 (envelope) exigir novo filtro, reordenar a ordem definida na spec.md §8 ("Ordem de aplicação das regras"), ou mudar um limite | Alta — é o próprio desafio | DT-001 isola a ordem numa lista explícita em `motor.py`; este plan.md §4 ("Como a política é representada") isola os valores em `politica.py`. Ambos são pontos de alteração únicos, sem precisar tocar em `parser.py`, `saida.py` ou `cli.py`. |
-| Ordem entre nota fiscal ausente e limite diário esgotado (AMB-004) implementada errada | Média | Teste de integração usa exatamente `d-003`/`d-004` do exemplo — é o caso de aceite que a própria spec define para essa ordem (RN-013). |
