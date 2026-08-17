@@ -42,7 +42,7 @@
 - [x] **T-006** — Normalização de categoria (comparação case-insensitive)
   - **Atende:** RN-011
   - **Aceite:** `tests/test_regras.py::test_rn011_normaliza_categoria_case_insensitive` (`d-014`: `ALIMENTACAO` → `alimentacao`)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `5defc0f`
 
 - [ ] **T-007** — Filtro: valor negativo / estorno
   - **Atende:** RN-009
