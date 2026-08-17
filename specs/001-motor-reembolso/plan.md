@@ -2,10 +2,6 @@
 
 **Versão:** 1.0 · **Baseado na spec:** 1.1
 
-> Aqui mora o COMO. Este arquivo pode e deve falar de linguagem, biblioteca e
-> arquitetura. O que ele **não** pode é introduzir regra de negócio nova — se
-> apareceu uma, ela pertence à `spec.md`.
-
 ---
 
 ## 1. Stack
@@ -13,9 +9,9 @@
 | Escolha | O quê | Por quê | O que descartei e por quê |
 |---|---|---|---|
 | Linguagem | Python 3.12.3, stdlib apenas (`argparse`, `json`, `decimal`, `dataclasses`) | Fixado em `CLAUDE.md`. Nenhuma dependência externa é necessária para o escopo do desafio (uma CLI de um único subcomando fixo, sem HTTP, sem banco). | Typer/Click para a CLI — dependência externa desnecessária para `calcular --input --output`, que não precisa de mais do que `argparse` oferece. |
-| Testes | pytest | Fixado em `CLAUDE.md`. | — |
+| Testes | pytest | Biblioteca já conhecida pelo desenvolvedor. | Outras bibliotecas de testes, sem necessidade. |
 | Parsing/validação | `json.load(f, parse_float=decimal.Decimal)` | Evita que qualquer valor monetário passe por `float`, mesmo que só na leitura — o valor chega em `Decimal` desde o primeiro instante em que existe no programa. | Pydantic/`jsonschema` para validar o schema de entrada — a spec.md §3 ("Fora de escopo") assume entrada bem formada; dado problemático (valor negativo, casas decimais em excesso) é tratado por regra de negócio, não rejeitado como erro de schema. |
-| Aritmética monetária | `decimal.Decimal` do parse à escrita; truncamento com `Decimal.quantize(Decimal("0.01"), rounding=ROUND_DOWN)` | Fixado em `CLAUDE.md`; reforçado pela RN-010 (truncar, não arredondar). Ponto flutuante em dinheiro acumula erro de arredondamento. | `round()`/`float` em qualquer ponto do pipeline de cálculo — é exatamente o bug que `CLAUDE.md` proíbe. |
+| Aritmética monetária | `decimal.Decimal` do parse à escrita; truncamento com `Decimal.quantize(Decimal("0.01"), rounding=ROUND_DOWN)` | Decisão técnica; reforçado pela RN-010 (truncar, não arredondar). Ponto flutuante em dinheiro acumula erro de arredondamento. | `round()`/`float` em qualquer ponto do pipeline de cálculo. |
 
 ## 2. Arquitetura
 
