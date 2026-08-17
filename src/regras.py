@@ -2,11 +2,15 @@ from datetime import date
 from decimal import Decimal
 
 from src.modelos import Despesa, Periodo, ResultadoDespesa
-from src.politica import CATEGORIAS_VALIDAS
+from src.politica import CATEGORIAS_VALIDAS, LIMITE_NOTA_FISCAL
 
 
 def normalizar_categoria(categoria: str) -> str:
     return categoria.lower()
+
+
+def formatar_reais(valor: Decimal) -> str:
+    return f"R${valor:.2f}".replace(".", ",")
 
 
 def filtro_valor_negativo(despesa: Despesa) -> ResultadoDespesa | None:
@@ -77,4 +81,19 @@ def filtro_duplicata(
                     f"'{anterior.descricao}({anterior.id})'. Reembolso negado."
                 ),
             )
+    return None
+
+
+def filtro_nota_fiscal(despesa: Despesa) -> ResultadoDespesa | None:
+    if despesa.valor > LIMITE_NOTA_FISCAL and not despesa.tem_nota_fiscal:
+        return ResultadoDespesa(
+            despesa_reembolsavel=False,
+            tipo_reembolso="nenhum",
+            valor_reembolsavel=Decimal("0.00"),
+            justificativa=(
+                f"Despesas acima de {formatar_reais(LIMITE_NOTA_FISCAL)} necessitam "
+                "de nota fiscal para reembolso. Esta despesa não possui nota "
+                "fiscal. Reembolso negado."
+            ),
+        )
     return None

@@ -6,6 +6,7 @@ from src.regras import (
     filtro_categoria_invalida,
     filtro_duplicata,
     filtro_fora_periodo,
+    filtro_nota_fiscal,
     filtro_valor_negativo,
     normalizar_categoria,
 )
@@ -135,3 +136,51 @@ def test_rn007_duplicata_negada_primeira_mantida():
     assert resultado.valor_reembolsavel == Decimal("0.00")
     assert "negado" in resultado.justificativa
     assert "Almoco(d-006)" in resultado.justificativa
+
+
+def test_rn005_nota_fiscal_obrigatoria_acima_de_100():
+    d004 = Despesa(
+        id="d-004",
+        data=date(2026, 7, 6),
+        categoria="transporte_urbano",
+        descricao="Corrida hotel",
+        fornecedor="TaxiApp",
+        valor=Decimal("100.01"),
+        tem_nota_fiscal=False,
+    )
+
+    resultado = filtro_nota_fiscal(d004)
+
+    assert resultado is not None
+    assert resultado.despesa_reembolsavel is False
+    assert resultado.tipo_reembolso == "nenhum"
+    assert resultado.valor_reembolsavel == Decimal("0.00")
+    assert "negado" in resultado.justificativa
+
+
+def test_rn005_valor_acima_de_100_com_nota_fiscal_aceito():
+    d010 = Despesa(
+        id="d-010",
+        data=date(2026, 7, 14),
+        categoria="hospedagem",
+        descricao="Hotel Rio - 2 diarias",
+        fornecedor="Hotel Copa Sul",
+        valor=Decimal("480.00"),
+        tem_nota_fiscal=True,
+    )
+
+    assert filtro_nota_fiscal(d010) is None
+
+
+def test_rn005_valor_exatamente_100_nao_exige():
+    d003 = Despesa(
+        id="d-003",
+        data=date(2026, 7, 6),
+        categoria="transporte_urbano",
+        descricao="Corrida aeroporto",
+        fornecedor="TaxiApp",
+        valor=Decimal("100.00"),
+        tem_nota_fiscal=False,
+    )
+
+    assert filtro_nota_fiscal(d003) is None

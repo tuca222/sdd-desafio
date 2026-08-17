@@ -64,10 +64,10 @@
   - **Aceite:** `tests/test_regras.py::test_rn007_duplicata_negada_primeira_mantida` (`d-006`/`d-007`)
   - **Commit:** `5b80d86`
 
-- [ ] **T-011** — Filtro: nota fiscal obrigatória (estritamente maior que R$100,00)
+- [x] **T-011** — Filtro: nota fiscal obrigatória (estritamente maior que R$100,00)
   - **Atende:** RN-005
   - **Aceite:** `tests/test_regras.py::test_rn005_nota_fiscal_obrigatoria_acima_de_100` + `test_rn005_valor_exatamente_100_nao_exige` (`d-003`)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-012** — Pipeline de filtros em `motor.py`, aplicados na ordem da spec.md §8 ("Ordem de aplicação das regras"), uma única justificativa por despesa
   - **Atende:** RN-005, RN-006, RN-007, RN-008, RN-009, RN-013
