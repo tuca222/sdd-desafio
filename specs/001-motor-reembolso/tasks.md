@@ -17,10 +17,10 @@
   - **Aceite:** `pytest` roda (coleção vazia, sem erro) e `ruff check .` roda sem erro de configuração
   - **Commit:** `2312112`
 
-- [ ] **T-002** — Modelos de dados (`dataclasses` frozen: `Colaborador`, `Periodo`, `Despesa`, `ResultadoDespesa`, `ResultadoFinal`)
+- [x] **T-002** — Modelos de dados (`dataclasses` frozen: `Colaborador`, `Periodo`, `Despesa`, `ResultadoDespesa`, `ResultadoFinal`)
   - **Atende:** spec.md §4 ("Entrada e saída")
   - **Aceite:** `tests/test_modelos.py` — instancia cada dataclass e confirma imutabilidade (`frozen=True`)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-003** — Constantes de política (`src/politica.py`: `LIMITE_ALIMENTACAO`, `LIMITE_TRANSPORTE_URBANO`, `LIMITE_HOSPEDAGEM`, `LIMITE_NOTA_FISCAL`, `CATEGORIAS_VALIDAS`)
   - **Atende:** RN-001, RN-002, RN-003, RN-005, RN-008
