@@ -74,6 +74,14 @@ merge. Todo trabalho, meu ou de um agente, é direto na `main`.
 - Isso não dispensa nenhuma outra regra deste arquivo (task referenciada no
   commit, `spec.md` atômica em três partes, etc.) — só define que o destino
   de todo commit é sempre `main`.
+- **Todo commit feito por um agente leva assinatura no rodapé da mensagem:**
+  `Co-Authored-By: <nome do modelo> <noreply@anthropic.com>` (ex.:
+  `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`). É o que
+  diferencia, no `git log`, o que foi commitado por mim do que foi gerado por
+  um agente — sem essa linha, a distinção se perde. Nenhuma exceção, nem para
+  commit pequeno de doc. Antes de criar qualquer commit, o agente confere se
+  a mensagem já inclui a assinatura; se não incluir, é bug de processo, igual
+  a esquecer o prefixo `docs(...)`/`feat(T-NNN)`.
 
 ## Stack e comandos
 
