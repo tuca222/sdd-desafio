@@ -61,12 +61,22 @@ Se o que eu pedi não está coberto por nenhuma task, me avise em vez de impleme
 Desafio individual de 2 dias — sem branch de feature, sem PR, sem processo de
 merge. Todo trabalho, meu ou de um agente, é direto na `main`.
 
+- **Nunca isolar em worktree neste projeto.** `.claude/settings.json` já tem
+  `"worktree": {"bgIsolation": "none"}` — isso desliga, para este repositório,
+  o isolamento automático que o harness aplicaria a sessões de agente em
+  background. Nenhum agente deve chamar `EnterWorktree` aqui por conta
+  própria (nem em sessão interativa, nem em background). Toda ação de agente
+  — commit, edição, exclusão, criação de arquivo, e também `/export` de
+  sessão para `docs/sessions/` — acontece direto no checkout local, na branch
+  `main`, no diretório que eu já estou olhando.
+  **Por quê:** um worktree isolado já causou dois problemas reais aqui — um
+  `/export` de sessão foi gravar dentro do worktree em vez do repositório
+  local (o arquivo não existia onde eu esperava até um push manual), e um
+  commit meu no checkout principal divergiu de um commit do agente feito no
+  worktree, exigindo merge manual pra reconciliar depois. Nenhum dos dois
+  problemas existe se o agente nunca sai do checkout local.
 - **Todo commit vai direto em `main`.** Nenhuma alteração deve ficar
-  pendurada num branch separado esperando merge manual. Se uma sessão do
-  agente rodar isolada (ex.: worktree de execução em background), ao
-  terminar o trabalho ela deve dar push como fast-forward direto para
-  `origin main` (`git push origin <branch-do-worktree>:main`) — nunca deixar
-  só o branch isolado no remoto à espera de eu mesclar.
+  pendurada num branch separado esperando merge manual.
 - **Commit não espera aprovação prévia a cada alteração** — eu reviso depois
   de feito. Se algo precisar de ajuste: ou eu corrijo manualmente e faço o
   commit, ou peço para o agente corrigir e commitar em seguida — sempre
