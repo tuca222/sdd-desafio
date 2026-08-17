@@ -55,6 +55,23 @@ Se o que eu pedi não está coberto por nenhuma task, me avise em vez de impleme
     mais de um teste/regra sem necessidade), **deve sinalizar isso
     imediatamente ao usuário e propor a correção** (marcar `[x]`, ou quebrar a
     task em tasks menores) antes de continuar o trabalho.
+  - O campo **Commit** de cada task nunca fica com o placeholder `<hash
+    preenchido depois>` além do momento em que a task é fechada. O hash só
+    existe depois que o commit é criado — então o preenchimento é
+    necessariamente um passo à parte, não algo que dá pra fazer no mesmo
+    commit que marca `[x]`. Fluxo obrigatório ao fechar uma task:
+    1. Commitar a implementação (`feat(T-NNN):`/`test(T-NNN):`), já com
+       `[x]` marcado em `tasks.md` (o campo **Commit** fica vazio ou com o
+       placeholder nesse commit — é inevitável).
+    2. Rodar `git log -1 --format=%h` (ou equivalente) para pegar o hash
+       real.
+    3. Editar só o campo **Commit** daquela task com o hash e criar um
+       segundo commit pequeno, **antes de seguir para a próxima task**:
+       `docs(tasks): registra hash do commit da T-NNN`.
+    Uma task não está encerrada — nem pronta para relatar ao usuário como
+    concluída — enquanto o campo **Commit** ainda mostrar o placeholder.
+    Nunca usar `git commit --amend` para resolver isso (proibido por regra
+    geral de git deste ambiente); é sempre um commit novo.
 
 ## Fluxo de git
 
