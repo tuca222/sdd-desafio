@@ -114,7 +114,7 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
-                "justificativa": "Despesa identificada como duplicada da despesa 'Almoco' do dia 2026-07-09. Reembolso negado."
+                "justificativa": "Despesa identificada como duplicata da despesa 'Almoco(d-006)'. Reembolso negado."
             }
         },
         {

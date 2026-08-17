@@ -10,6 +10,65 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-002 — Formato da justificativa de duplicata: `descricao(id)` · `17/08/2026`
+
+**Gatilho:** durante a implementação da T-010 (filtro de duplicata), o agente
+detectou que `spec.md` e `exemplos/resultado-exemplo.json` discordavam sobre o
+conteúdo da justificativa de uma despesa negada como duplicata, e parou para
+reportar antes de commitar:
+- RN-007 exigia "justificativa citando o `id` da despesa original" (e
+  `spec.md` §9, "Critérios de aceite": "citando `d-006`").
+- `resultado-exemplo.json` (`d-007`) trazia `"Despesa identificada como
+  duplicada da despesa 'Almoco' do dia 2026-07-09."` — citava `descricao` e
+  data, **sem** citar o `id`.
+
+Um desenvolvedor implementando só a partir da spec produziria uma saída que
+não bate com o arquivo de exemplo do próprio projeto — exatamente a falha de
+rastreabilidade que este repositório existe para evitar.
+
+**O que mudou na spec:** RN-007 passou a definir o formato explicitamente — a
+justificativa cita a `descricao` **e** o `id` da despesa original, no formato
+`descricao(id)`. O critério de aceite de RN-007 passou a citar o valor
+concreto esperado (`Almoco(d-006)`) em vez de só "citando `d-006`".
+
+Na mesma leva, RN-013 teve suas duas citações a `§8` corrigidas para o formato
+completo `spec.md §8 ("Ordem de aplicação das regras")` — a segunda delas não
+tinha nem arquivo nem título. Isso é reincidência do problema que D-001 já
+havia corrigido em outras seções, e a causa raiz foi identificada: a convenção
+existia só como relato histórico **aqui**, no log, e não como regra no
+`CLAUDE.md` — que é o arquivo que todo agente lê no início de cada sessão. A
+regra foi promovida para `CLAUDE.md` (seção "Regras de trabalho") na mesma
+sessão, e as citações incompletas de `tasks.md` (`§4`, `§7`, `§8`, `§9` sem
+título) foram completadas junto.
+
+**Por quê:** a decisão do usuário foi manter os dois dados em vez de escolher
+um lado. A `descricao` é o que um humano do financeiro reconhece ao ler a
+justificativa ("qual almoço?"); o `id` é o que torna a referência não ambígua
+e verificável contra a entrada (duas despesas podem ter a mesma descrição).
+Citar só o `id` é preciso mas ilegível; citar só a `descricao` é legível mas
+ambíguo. `descricao(id)` resolve os dois sem custo.
+
+**O que isso invalidou:** `exemplos/resultado-exemplo.json` foi corrigido na
+mesma mudança (justificativa de `d-007`). Nenhum teste quebrou —
+`test_rn007_duplicata_negada_primeira_mantida` foi escrito na mesma sessão e
+já valida o formato novo (`"Almoco(d-006)" in resultado.justificativa`).
+
+**Tasks afetadas:** T-010 (implementada com o formato final, sem retrabalho).
+T-022 (integração ponta a ponta) passa a ter um alvo consistente entre spec e
+exemplo para este item.
+
+**Custo:** 5 arquivos (`spec.md`, `DECISIONS.md`, `plan.md`,
+`exemplos/resultado-exemplo.json`, `src/regras.py` + teste), resolvido dentro
+da própria T-010, sem reabrir task anterior.
+
+**Fica em aberto:** as demais justificativas de `resultado-exemplo.json`
+(`d-005` categoria, `d-008` período, `d-009` estorno) ainda diferem
+textualmente das produzidas por `regras.py`. Isso **não** foi resolvido nesta
+entrada e precisa de decisão antes da T-022 — ou o teste de integração trata
+`justificativa` de forma flexível, ou os textos são alinhados um a um.
+
+---
+
 ## D-001 — Referências a seções tornadas resolvíveis sem contexto prévio · `17/08/2026`
 
 **Gatilho:** o usuário perguntou se uma referência como `§8` no `plan.md` é

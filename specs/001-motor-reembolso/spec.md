@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 1.2 · **Status:** revisão de referências e rastreabilidade · **Última alteração:** `17/08/2026`
+**Versão:** 1.3 · **Status:** em implementação (Fase 2 — regras de negócio) · **Última alteração:** `17/08/2026`
 
 ---
 
@@ -223,15 +223,17 @@ citando o período de competência.
 `valor` e `tem_nota_fiscal` são todos idênticos (o `id` é o único campo que pode
 diferir) são consideradas o mesmo lançamento repetido. Apenas a primeira ocorrência
 (pela ordem em que aparece na entrada) é avaliada normalmente pelas demais regras; as
-ocorrências seguintes são negadas integralmente, com a justificativa citando o `id` da
-despesa original. As ocorrências negadas como duplicata também **não entram** em
+ocorrências seguintes são negadas integralmente, com a justificativa citando a
+`descricao` e o `id` da despesa original, no formato `descricao(id)`. As
+ocorrências negadas como duplicata também **não entram** em
 `valor_total_despesas` — contá-las infla o total bruto de despesas do período com um
 valor que nunca representou um gasto adicional real, apenas o mesmo lançamento
 relatado mais de uma vez.
 **Origem:** política do RH; desambiguado por AMB-007.
 **Aceite:** `d-006` e `d-007` são idênticos em todos os campos exceto `id`; `d-006`
 (primeiro na entrada) é avaliado normalmente; `d-007` é negado como duplicata de
-`d-006` e seu valor (R$54,90) não é somado em `valor_total_despesas`.
+`d-006` — justificativa citando `Almoco(d-006)` — e seu valor (R$54,90) não é somado
+em `valor_total_despesas`.
 
 ### RN-008 — Categorias fora da política
 
@@ -282,9 +284,10 @@ categoria por conta deste item da política.
 
 ### RN-013 — Ordem de aplicação das regras de negação
 
-**Regra:** ver §8 (Ordem de aplicação das regras). Cada despesa recebe exatamente uma justificativa, correspondente à
-primeira regra da ordem definida em §8 que a reprovar. Se nenhuma reprovar, o valor
-reembolsável é calculado pelo limite da categoria/dia (RN-001 a RN-004).
+**Regra:** ver `spec.md` §8 ("Ordem de aplicação das regras"). Cada despesa recebe
+exatamente uma justificativa, correspondente à primeira regra da ordem definida em
+`spec.md` §8 ("Ordem de aplicação das regras") que a reprovar. Se nenhuma reprovar, o
+valor reembolsável é calculado pelo limite da categoria/dia (RN-001 a RN-004).
 **Origem:** consequência das ambiguidades AMB-001 a AMB-011 combinadas.
 **Aceite:** `d-004` é negado citando nota fiscal ausente (RN-005), não o limite diário
 já esgotado por `d-003` — ver AMB-004.

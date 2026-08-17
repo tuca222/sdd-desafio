@@ -28,7 +28,7 @@
   - **Commit:** `bc88987`
 
 - [x] **T-004** — Parser: leitura do JSON de entrada com `Decimal` (`parse_float=Decimal`) e construção dos dataclasses
-  - **Atende:** spec.md §4
+  - **Atende:** spec.md §4 ("Entrada e saída")
   - **Aceite:** `tests/test_parser.py::test_parse_carrega_campos_da_entrada` — carrega `despesas-exemplo.json` e confirma tipos/valores
   - **Commit:** `accc227`
 
@@ -69,7 +69,7 @@
   - **Aceite:** `tests/test_regras.py::test_rn005_nota_fiscal_obrigatoria_acima_de_100` + `test_rn005_valor_exatamente_100_nao_exige` (`d-003`)
   - **Commit:**
 
-- [ ] **T-012** — Pipeline de filtros em `motor.py`, aplicados na ordem da spec.md §8, uma única justificativa por despesa
+- [ ] **T-012** — Pipeline de filtros em `motor.py`, aplicados na ordem da spec.md §8 ("Ordem de aplicação das regras"), uma única justificativa por despesa
   - **Atende:** RN-005, RN-006, RN-007, RN-008, RN-009, RN-013
   - **Aceite:** `tests/test_motor.py::test_pipeline_aplica_filtros_na_ordem_definida` (`d-004`: negado por nota fiscal ausente, não por limite diário já esgotado — AMB-004)
   - **Commit:**
@@ -97,7 +97,7 @@
   - **Commit:**
 
 - [ ] **T-017** — Despesa em fim de semana, sem regra especial
-  - **Atende:** (confirma ausência de regra — spec.md §7)
+  - **Atende:** (confirma ausência de regra — spec.md §7, "Casos de borda")
   - **Aceite:** `tests/test_casos_borda.py::test_despesa_fim_de_semana_sem_regra_especial` (`d-012`)
   - **Commit:**
 
@@ -114,17 +114,17 @@
 ## Fase 4 — Saída e CLI
 
 - [ ] **T-020** — `saida.py`: monta o dict de saída completo (`valor_total_despesas`, `valor_total_reembolsavel`, `detalhamento_despesas[].motor_reembolso_output`), conversão `Decimal → float` só na borda
-  - **Atende:** spec.md §4
+  - **Atende:** spec.md §4 ("Entrada e saída")
   - **Aceite:** `tests/test_saida.py::test_monta_saida_conforme_schema`
   - **Commit:**
 
 - [ ] **T-021** — `cli.py`: subcomando `calcular --input --output`, orquestra parser → motor → saida → escrita em arquivo
-  - **Atende:** interface fixa do desafio (`DESAFIO.md`), spec.md §4
+  - **Atende:** interface fixa do desafio (`DESAFIO.md`), spec.md §4 ("Entrada e saída")
   - **Aceite:** `tests/test_cli.py::test_cli_calcular_gera_arquivo_de_saida`
   - **Commit:**
 
-- [ ] **T-022** — Teste de integração ponta a ponta contra todos os critérios de aceite da spec.md §9
-  - **Atende:** spec.md §9 (todos os itens, incluindo `valor_total_despesas = 1806.94` e `valor_total_reembolsavel = 585.43`)
+- [ ] **T-022** — Teste de integração ponta a ponta contra todos os critérios de aceite da spec.md §9 ("Critérios de aceite")
+  - **Atende:** spec.md §9 ("Critérios de aceite") — todos os itens, incluindo `valor_total_despesas = 1806.94` e `valor_total_reembolsavel = 585.43`
   - **Aceite:** `tests/test_integracao.py::test_exemplo_completo_bate_com_criterios_de_aceite`
   - **Commit:**
 
