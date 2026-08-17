@@ -14,14 +14,15 @@
 |---|---|---|---|
 | Linguagem | Python 3.12.3, stdlib apenas (`argparse`, `json`, `decimal`, `dataclasses`) | Fixado em `CLAUDE.md`. Nenhuma dependência externa é necessária para o escopo do desafio (uma CLI de um único subcomando fixo, sem HTTP, sem banco). | Typer/Click para a CLI — dependência externa desnecessária para `calcular --input --output`, que não precisa de mais do que `argparse` oferece. |
 | Testes | pytest | Fixado em `CLAUDE.md`. | — |
-| Parsing/validação | `json.load(f, parse_float=decimal.Decimal)` | Evita que qualquer valor monetário passe por `float`, mesmo que só na leitura — o valor chega em `Decimal` desde o primeiro instante em que existe no programa. | Pydantic/`jsonschema` para validar o schema de entrada — a spec (§3) assume entrada bem formada; dado problemático (valor negativo, casas decimais em excesso) é tratado por regra de negócio, não rejeitado como erro de schema. |
+| Parsing/validação | `json.load(f, parse_float=decimal.Decimal)` | Evita que qualquer valor monetário passe por `float`, mesmo que só na leitura — o valor chega em `Decimal` desde o primeiro instante em que existe no programa. | Pydantic/`jsonschema` para validar o schema de entrada — a spec.md §3 ("Fora de escopo") assume entrada bem formada; dado problemático (valor negativo, casas decimais em excesso) é tratado por regra de negócio, não rejeitado como erro de schema. |
 | Aritmética monetária | `decimal.Decimal` do parse à escrita; truncamento com `Decimal.quantize(Decimal("0.01"), rounding=ROUND_DOWN)` | Fixado em `CLAUDE.md`; reforçado pela RN-010 (truncar, não arredondar). Ponto flutuante em dinheiro acumula erro de arredondamento. | `round()`/`float` em qualquer ponto do pipeline de cálculo — é exatamente o bug que `CLAUDE.md` proíbe. |
 
 ## 2. Arquitetura
 
 ```
 despesas.json → parser.py (parse + Decimal + truncamento RN-010)
-             → motor.py (orquestra a ordem de aplicação §8 +
+             → motor.py (orquestra a ordem de aplicação definida na
+                          spec.md §8 "Ordem de aplicação das regras" +
                           agregação de limite diário, chamando
                           as funções puras de regras.py)
              → saida.py (monta o JSON de saída, Decimal → float)
@@ -31,7 +32,8 @@ cli.py orquestra as quatro etapas (parser → motor → saida → escrita).
 ```
 
 **Fronteiras:** `regras.py` (uma função pura por RN, sem estado, sem I/O) e
-`motor.py` (orquestração da ordem de §8 e da agregação de limite diário) são
+`motor.py` (orquestração da ordem definida na spec.md §8, "Ordem de aplicação
+das regras", e da agregação de limite diário) são
 o núcleo de regra de negócio puro — recebem dados já parseados e devolvem
 decisão + justificativa, nunca tocam em filesystem. `parser.py`, `saida.py` e
 `cli.py` são I/O. Essa linha é o que permite testar toda regra de negócio sem
@@ -71,7 +73,7 @@ outra regra.
 
 ### DT-001 — Ordem de aplicação como pipeline sequencial de funções puras
 
-**Contexto:** a spec (§8) define uma ordem estrita de 6 verificações; cada
+**Contexto:** a spec.md §8 ("Ordem de aplicação das regras") define uma ordem estrita de 6 verificações; cada
 despesa para na primeira que a reprovar.
 **Decisão:** `motor.py` mantém uma lista ordenada de funções-filtro
 (`filtro_valor_negativo`, `filtro_categoria_invalida`, `filtro_fora_periodo`,
@@ -100,7 +102,8 @@ já está correto; simplifica cada função de regra individual.
 
 ### DT-003 — Duplicata é detectada antes da agregação de limite diário
 
-Decorre diretamente da ordem definida em RN-013/§8, não é uma escolha técnica
+Decorre diretamente da ordem definida em RN-013 / spec.md §8 ("Ordem de
+aplicação das regras"), não é uma escolha técnica
 livre: `filtro_duplicata` compara cada despesa sobrevivente das verificações
 1–3 às despesas anteriores já aceitas (mesmos `data`, `categoria`,
 `descricao`, `fornecedor`, `valor`, `tem_nota_fiscal`), na ordem em que
@@ -130,13 +133,13 @@ com `Decimal`.
 - **Nível:** majoritariamente unitário — uma função de regra em `regras.py` é
   testada isoladamente, com um teste de integração ponta a ponta rodando
   `exemplos/despesas-exemplo.json` completo e comparando o resultado contra
-  `exemplos/resultado-exemplo.json` e os critérios de aceite da spec §9
-  (incluindo `valor_total_despesas = 1806.94` e
+  `exemplos/resultado-exemplo.json` e os critérios de aceite da spec.md §9
+  ("Critérios de aceite") (incluindo `valor_total_despesas = 1806.94` e
   `valor_total_reembolsavel = 585.43`).
 - **Cada `RN-NNN` tem teste?** Sim — `tests/test_regras.py` tem uma função de
   teste por RN, nomeada `test_rn001_...`, `test_rn002_...` etc., cada uma
   usando o(s) caso(s) de aceite descrito(s) na própria spec para aquela regra.
-- **Casos de borda da §7 da spec:** cobertos em `tests/test_casos_borda.py`,
+- **Casos de borda da spec.md §7 ("Casos de borda"):** cobertos em `tests/test_casos_borda.py`,
   um teste por linha da tabela (ex.: `test_valor_exatamente_no_limite_nota_fiscal`,
   `test_ordem_nota_fiscal_antes_de_limite_diario` para AMB-004,
   `test_despesa_fim_de_semana_sem_regra_especial`).
@@ -153,5 +156,5 @@ com `Decimal`.
 | Risco | Probabilidade | O que faço se acontecer |
 |---|---|---|
 | Valor monetário passa por `float` em algum ponto do pipeline e acumula erro de arredondamento | Baixa | `Decimal` do parse (DT-002) até a borda de saída (DT-004); o teste de integração compara contra os totais exatos da spec e pega qualquer desvio de centavo. |
-| Mudança de requisito do dia 2 (envelope) exigir novo filtro, reordenar a ordem de §8, ou mudar um limite | Alta — é o próprio desafio | DT-001 isola a ordem numa lista explícita em `motor.py`; §4 isola os valores em `politica.py`. Ambos são pontos de alteração únicos, sem precisar tocar em `parser.py`, `saida.py` ou `cli.py`. |
+| Mudança de requisito do dia 2 (envelope) exigir novo filtro, reordenar a ordem definida na spec.md §8 ("Ordem de aplicação das regras"), ou mudar um limite | Alta — é o próprio desafio | DT-001 isola a ordem numa lista explícita em `motor.py`; este plan.md §4 ("Como a política é representada") isola os valores em `politica.py`. Ambos são pontos de alteração únicos, sem precisar tocar em `parser.py`, `saida.py` ou `cli.py`. |
 | Ordem entre nota fiscal ausente e limite diário esgotado (AMB-004) implementada errada | Média | Teste de integração usa exatamente `d-003`/`d-004` do exemplo — é o caso de aceite que a própria spec define para essa ordem (RN-013). |

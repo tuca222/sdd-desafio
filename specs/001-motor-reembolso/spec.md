@@ -22,10 +22,10 @@ verificável para cada decisão, sem intervenção humana.
 - Não persiste dados em banco — entrada e saída são arquivos JSON.
 - Não expõe API HTTP nem faz autenticação.
 - Não tem interface gráfica.
-- Não aplica o adicional de 50% para colaborador "em viagem" (política, item 6) —
-  a entrada não tem campo que identifique viagem; ver RN-012, AMB-005 e §10 (O que fica em aberto).
+- Não aplica o adicional de 50% para colaborador "em viagem" —
+  a entrada não tem campo que identifique viagem; ver RN-012, AMB-005 e §10 ("O que fica em aberto").
 - Não infere o número de diárias de uma hospedagem a partir de texto livre na
-  descrição — a entrada não tem campo estruturado para isso; ver RN-003, AMB-006 e §10.
+  descrição — a entrada não tem campo estruturado para isso; ver RN-003, AMB-006 e §10 ("O que fica em aberto").
 - Não solicita nem sugere correção de dado ao usuário — despesas com dado
   problemático (valor com casas decimais em excesso, valor negativo) são tratadas
   automaticamente conforme as regras desta spec, não rejeitadas como erro.
@@ -167,7 +167,7 @@ Cada regra recebe um ID (`RN-001`, ...). As tasks precisam referenciar esses IDs
 **Regra:** despesas de categoria `alimentacao` do mesmo dia são somadas, na ordem em
 que aparecem na entrada; a soma é limitada a R$60,00/dia; a(s) primeira(s) despesa(s)
 na ordem consomem o limite, as seguintes recebem R$0,00 quando o limite já foi atingido.
-**Origem:** política do RH, item 1; desambiguado por AMB-001.
+**Origem:** política do RH; desambiguado por AMB-001.
 **Aceite:** com `d-001` (R$72,50) e `d-002` (R$38,00) no mesmo dia, `d-001` reembolsa
 R$60,00 (parcial) e `d-002` reembolsa R$0,00 (nenhum).
 
@@ -175,7 +175,7 @@ R$60,00 (parcial) e `d-002` reembolsa R$0,00 (nenhum).
 
 **Regra:** mesma mecânica de RN-001, aplicada à categoria `transporte_urbano`, com
 limite de R$80,00/dia.
-**Origem:** política do RH, item 2; desambiguado por AMB-001.
+**Origem:** política do RH; desambiguado por AMB-001.
 **Aceite:** `d-003` (R$100,00, único sobrevivente às verificações anteriores no dia)
 reembolsa R$80,00 (parcial).
 
@@ -184,7 +184,7 @@ reembolsa R$80,00 (parcial).
 **Regra:** cada despesa de categoria `hospedagem` é tratada como uma diária única e
 limitada a R$250,00, sem dividir o valor pelo número de noites (a entrada não traz
 esse dado de forma estruturada — ver AMB-006).
-**Origem:** política do RH, item 3; desambiguado por AMB-006.
+**Origem:** política do RH; desambiguado por AMB-006.
 **Aceite:** `d-010` (R$480,00, com nota fiscal) reembolsa R$250,00 (parcial).
 
 ### RN-004 — Reembolso parcial
@@ -193,7 +193,7 @@ esse dado de forma estruturada — ver AMB-006).
 seja, não foi negada por nenhuma delas) mas seu valor — somado ao de despesas
 anteriores da mesma categoria e dia — excede o limite da categoria, reembolsa-se
 exatamente o limite restante daquele dia/categoria; o excedente não é reembolsado.
-**Origem:** política do RH, item 4; desambiguado por AMB-002.
+**Origem:** política do RH; desambiguado por AMB-002.
 **Aceite:** ver RN-001, RN-002 e RN-003.
 
 ### RN-005 — Nota fiscal obrigatória
@@ -203,7 +203,7 @@ exatamente o limite restante daquele dia/categoria; o excedente não é reembols
 (`valor_reembolsavel = 0,00`), independentemente de haver ou não limite de categoria
 disponível naquele dia. Despesas com `valor` igual a R$100,00 **não** exigem nota
 fiscal.
-**Origem:** política do RH, item 5; desambiguado por AMB-003 e AMB-004.
+**Origem:** política do RH; desambiguado por AMB-003 e AMB-004.
 **Aceite:** `d-003` (R$100,00, sem nota fiscal) não é negado por este motivo; `d-004`
 (R$100,01, sem nota fiscal, mesmo dia/categoria de `d-003` que já esgotou o limite
 diário) é negado citando a nota fiscal ausente, não o limite diário.
@@ -213,7 +213,7 @@ diário) é negado citando a nota fiscal ausente, não o limite diário.
 **Regra:** uma despesa só é elegível a reembolso se sua `data` estiver entre
 `periodo.inicio` e `periodo.fim`, incluindo os dois extremos. Fora disso, é negada
 integralmente.
-**Origem:** política do RH, item 7; desambiguado por AMB-011.
+**Origem:** política do RH; desambiguado por AMB-011.
 **Aceite:** `d-008` (data `2026-04-15`, fora de `2026-07-01`–`2026-07-31`) é negado
 citando o período de competência.
 
@@ -228,7 +228,7 @@ despesa original. As ocorrências negadas como duplicata também **não entram**
 `valor_total_despesas` — contá-las infla o total bruto de despesas do período com um
 valor que nunca representou um gasto adicional real, apenas o mesmo lançamento
 relatado mais de uma vez.
-**Origem:** política do RH, item 8; desambiguado por AMB-007.
+**Origem:** política do RH; desambiguado por AMB-007.
 **Aceite:** `d-006` e `d-007` são idênticos em todos os campos exceto `id`; `d-006`
 (primeiro na entrada) é avaliado normalmente; `d-007` é negado como duplicata de
 `d-006` e seu valor (R$54,90) não é somado em `valor_total_despesas`.
@@ -237,7 +237,7 @@ relatado mais de uma vez.
 
 **Regra:** despesas cuja categoria, normalizada para minúsculas (RN-011), não é
 `alimentacao`, `transporte_urbano` nem `hospedagem`, são integralmente negadas.
-**Origem:** política do RH, item 9.
+**Origem:** política do RH.
 **Aceite:** `d-005` (categoria `coworking`) é negado citando categoria fora da
 política.
 
@@ -273,10 +273,10 @@ normalmente ao limite diário da categoria.
 ### RN-012 — Adicional de viagem (não implementado)
 
 **Regra:** o adicional de 50% nos limites de alimentação e transporte urbano para
-colaborador "em viagem" (política, item 6) **não é aplicado nesta versão**, em nenhuma
+colaborador "em viagem" **não é aplicado nesta versão**, em nenhuma
 circunstância. Toda despesa é avaliada pelos limites padrão (RN-001, RN-002),
 independentemente do que o período ou outras despesas sugiram.
-**Origem:** política do RH, item 6; desambiguado por AMB-005. Ver limitação em §10.
+**Origem:** política do RH; desambiguado por AMB-005. Ver limitação em §10 ("O que fica em aberto").
 **Aceite:** nenhuma despesa do exemplo recebe reembolso acima do limite padrão de sua
 categoria por conta deste item da política.
 
@@ -350,7 +350,7 @@ diário da categoria.
 (dado ausente inviabiliza a análise), enquanto o limite diário é uma questão de
 quanto reembolsar entre despesas já elegíveis — faz sentido filtrar a elegibilidade
 antes de calcular quanto do orçamento diário sobra para as demais.
-**Regra afetada:** RN-005, RN-013; ver ordem completa em §8.
+**Regra afetada:** RN-005, RN-013; ver ordem completa em §8 ("Ordem de aplicação das regras").
 
 ### AMB-005 — O que caracteriza colaborador "em viagem" (dado ausente)
 
@@ -542,11 +542,11 @@ O sistema está pronto quando, rodando `exemplos/despesas-exemplo.json`:
 
 ## 10. O que fica em aberto
 
-- **Adicional de viagem (item 6 da política, RN-012 / AMB-005):** não implementado.
+- **Adicional de viagem (RN-012 / AMB-005):** não implementado.
   A entrada não tem campo que identifique viagem, e qualquer inferência seria uma
   regra de negócio nova não solicitada pelo RH. Se um campo explícito de viagem for
   adicionado à entrada no futuro, esta regra precisa ser reaberta.
-- **Limite de hospedagem por diária real (item 3 da política, RN-003 / AMB-006):** o
+- **Limite de hospedagem por diária real (RN-003 / AMB-006):** o
   sistema trata cada lançamento como uma diária única porque a entrada não tem campo
   estruturado de número de noites. Isso pode ser mais restritivo do que a política
   pretende em lançamentos que cobrem várias noites (ex.: `d-010`, R$480,00 por 2

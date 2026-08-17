@@ -112,7 +112,7 @@ histórico da conversa, exportado em `docs/sessions/planejamento_spec.txt`.
 
 **O que ele propôs:** na primeira versão completa da spec, o Claude calculou
 manualmente os totais esperados para o arquivo de exemplo e propôs, no
-critério de aceite (§9), `valor_total_despesas = R$1.861,84`.
+critério de aceite (spec.md §9, "Critérios de aceite"), `valor_total_despesas = R$1.861,84`.
 
 **Por que estava errado:** o Claude já tinha escrito a regra RN-007
 (duplicatas), que dizia que a ocorrência duplicada (`d-007`) não gera
@@ -131,7 +131,7 @@ diferença exata (R$54,90) apontava direto para `d-007`.
 **O que eu fiz:** pedi para o Claude incluir a decisão explicitamente na spec.
 Ele corrigiu RN-007 e AMB-007 para deixar a regra escrita ("as ocorrências
 duplicadas também não entram em `valor_total_despesas`"), atualizou a
-descrição do campo em §4 e os critérios de aceite em §9.
+descrição do campo em spec.md §4 ("Entrada e saída") e os critérios de aceite em spec.md §9 ("Critérios de aceite").
 
 **Onde está a evidência:** `docs/sessions/planejamento_spec.txt`, linha ~1242,
 minha mensagem: "O valor de R$1.861,84 estava incorreto, o certo é R$1.806,94
