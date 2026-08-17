@@ -7,6 +7,10 @@ from src.parser import carregar_despesas
 CAMINHO_EXEMPLO = "exemplos/despesas-exemplo.json"
 
 
+def buscar_despesa(despesas: list[Despesa], id_despesa: str) -> Despesa:
+    return next(despesa for despesa in despesas if despesa.id == id_despesa)
+
+
 def test_parse_carrega_campos_da_entrada():
     colaborador, periodo, despesas = carregar_despesas(CAMINHO_EXEMPLO)
 
@@ -33,8 +37,7 @@ def test_parse_carrega_campos_da_entrada():
     assert isinstance(d001.valor, Decimal)
     assert d001.tem_nota_fiscal is True
 
-    d009 = despesas[8]
-    assert d009.id == "d-009"
+    d009 = buscar_despesa(despesas, "d-009")
     assert d009.valor == Decimal("-45.00")
     assert d009.tem_nota_fiscal is False
 
@@ -42,6 +45,6 @@ def test_parse_carrega_campos_da_entrada():
 def test_rn010_trunca_casas_decimais_excedentes():
     _, _, despesas = carregar_despesas(CAMINHO_EXEMPLO)
 
-    d011 = next(despesa for despesa in despesas if despesa.id == "d-011")
+    d011 = buscar_despesa(despesas, "d-011")
 
     assert d011.valor == Decimal("33.33")
