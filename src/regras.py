@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from src.modelos import Despesa, ResultadoDespesa
+from src.modelos import Despesa, Periodo, ResultadoDespesa
 from src.politica import CATEGORIAS_VALIDAS
 
 
@@ -31,6 +31,21 @@ def filtro_categoria_invalida(despesa: Despesa) -> ResultadoDespesa | None:
             justificativa=(
                 f"A categoria '{despesa.categoria}' está fora da política de "
                 "reembolso. Reembolso negado."
+            ),
+        )
+    return None
+
+
+def filtro_fora_periodo(despesa: Despesa, periodo: Periodo) -> ResultadoDespesa | None:
+    if despesa.data < periodo.inicio or despesa.data > periodo.fim:
+        return ResultadoDespesa(
+            despesa_reembolsavel=False,
+            tipo_reembolso="nenhum",
+            valor_reembolsavel=Decimal("0.00"),
+            justificativa=(
+                "Despesa lançada fora do período de competência "
+                f"({periodo.inicio.isoformat()} a {periodo.fim.isoformat()}). "
+                "Reembolso negado."
             ),
         )
     return None

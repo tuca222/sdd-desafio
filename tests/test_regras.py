@@ -1,8 +1,19 @@
 from datetime import date
 from decimal import Decimal
 
-from src.modelos import Despesa
-from src.regras import filtro_categoria_invalida, filtro_valor_negativo, normalizar_categoria
+from src.modelos import Despesa, Periodo
+from src.regras import (
+    filtro_categoria_invalida,
+    filtro_fora_periodo,
+    filtro_valor_negativo,
+    normalizar_categoria,
+)
+
+PERIODO_JULHO_2026 = Periodo(
+    competencia="2026-07",
+    inicio=date(2026, 7, 1),
+    fim=date(2026, 7, 31),
+)
 
 
 def test_rn011_normaliza_categoria_case_insensitive():
@@ -47,3 +58,47 @@ def test_rn008_categoria_fora_da_politica():
     assert resultado.tipo_reembolso == "nenhum"
     assert resultado.valor_reembolsavel == Decimal("0.00")
     assert "negado" in resultado.justificativa
+
+
+def test_rn006_fora_do_periodo_negado():
+    d008 = Despesa(
+        id="d-008",
+        data=date(2026, 4, 15),
+        categoria="alimentacao",
+        descricao="Almoco de abril lancado com atraso",
+        fornecedor="Restaurante Tavola",
+        valor=Decimal("41.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado = filtro_fora_periodo(d008, PERIODO_JULHO_2026)
+
+    assert resultado is not None
+    assert resultado.despesa_reembolsavel is False
+    assert resultado.tipo_reembolso == "nenhum"
+    assert resultado.valor_reembolsavel == Decimal("0.00")
+    assert "negado" in resultado.justificativa
+
+
+def test_rn006_data_no_extremo_do_periodo_aceita():
+    despesa_no_inicio = Despesa(
+        id="d-100",
+        data=PERIODO_JULHO_2026.inicio,
+        categoria="alimentacao",
+        descricao="Despesa no primeiro dia do periodo",
+        fornecedor="Fornecedor Teste",
+        valor=Decimal("10.00"),
+        tem_nota_fiscal=True,
+    )
+    despesa_no_fim = Despesa(
+        id="d-101",
+        data=PERIODO_JULHO_2026.fim,
+        categoria="alimentacao",
+        descricao="Despesa no ultimo dia do periodo",
+        fornecedor="Fornecedor Teste",
+        valor=Decimal("10.00"),
+        tem_nota_fiscal=True,
+    )
+
+    assert filtro_fora_periodo(despesa_no_inicio, PERIODO_JULHO_2026) is None
+    assert filtro_fora_periodo(despesa_no_fim, PERIODO_JULHO_2026) is None

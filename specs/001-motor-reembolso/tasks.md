@@ -54,10 +54,10 @@
   - **Aceite:** `tests/test_regras.py::test_rn008_categoria_fora_da_politica` (`d-005`, categoria `coworking`)
   - **Commit:** `af28133`
 
-- [ ] **T-009** — Filtro: fora do período de competência (limites inclusivos nos dois extremos)
+- [x] **T-009** — Filtro: fora do período de competência (limites inclusivos nos dois extremos)
   - **Atende:** RN-006
   - **Aceite:** `tests/test_regras.py::test_rn006_fora_do_periodo_negado` (`d-008`) + `test_rn006_data_no_extremo_do_periodo_aceita`
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-010** — Filtro: duplicata (todos os campos idênticos exceto `id`)
   - **Atende:** RN-007
