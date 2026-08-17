@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 1.1 · **Status:** primeira definição da spec · **Última alteração:** `16/08/2026`
+**Versão:** 1.2 · **Status:** revisão de referências e rastreabilidade · **Última alteração:** `17/08/2026`
 
 ---
 
