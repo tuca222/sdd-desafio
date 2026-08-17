@@ -44,10 +44,10 @@
   - **Aceite:** `tests/test_regras.py::test_rn011_normaliza_categoria_case_insensitive` (`d-014`: `ALIMENTACAO` → `alimentacao`)
   - **Commit:** `5defc0f`
 
-- [ ] **T-007** — Filtro: valor negativo / estorno
+- [x] **T-007** — Filtro: valor negativo / estorno
   - **Atende:** RN-009
   - **Aceite:** `tests/test_regras.py::test_rn009_valor_negativo_ignorado` (`d-009`)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-008** — Filtro: categoria fora da política (usa a normalização de T-006)
   - **Atende:** RN-008, RN-011
