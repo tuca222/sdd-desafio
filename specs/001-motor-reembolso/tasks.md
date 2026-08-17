@@ -22,10 +22,10 @@
   - **Aceite:** `tests/test_modelos.py` — instancia cada dataclass e confirma imutabilidade (`frozen=True`)
   - **Commit:** `81e46b0`
 
-- [ ] **T-003** — Constantes de política (`src/politica.py`: `LIMITE_ALIMENTACAO`, `LIMITE_TRANSPORTE_URBANO`, `LIMITE_HOSPEDAGEM`, `LIMITE_NOTA_FISCAL`, `CATEGORIAS_VALIDAS`)
+- [x] **T-003** — Constantes de política (`src/politica.py`: `LIMITE_ALIMENTACAO`, `LIMITE_TRANSPORTE_URBANO`, `LIMITE_HOSPEDAGEM`, `LIMITE_NOTA_FISCAL`, `CATEGORIAS_VALIDAS`)
   - **Atende:** RN-001, RN-002, RN-003, RN-005, RN-008
   - **Aceite:** `tests/test_politica.py` — confirma o valor exato de cada constante
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-004** — Parser: leitura do JSON de entrada com `Decimal` (`parse_float=Decimal`) e construção dos dataclasses
   - **Atende:** spec.md §4
