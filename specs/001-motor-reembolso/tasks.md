@@ -57,7 +57,7 @@
 - [x] **T-009** — Filtro: fora do período de competência (limites inclusivos nos dois extremos)
   - **Atende:** RN-006
   - **Aceite:** `tests/test_regras.py::test_rn006_fora_do_periodo_negado` (`d-008`) + `test_rn006_data_no_extremo_do_periodo_aceita`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `07e0e4f`
 
 - [ ] **T-010** — Filtro: duplicata (todos os campos idênticos exceto `id`)
   - **Atende:** RN-007
