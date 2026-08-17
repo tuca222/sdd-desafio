@@ -9,8 +9,8 @@
         "inicio": "2026-07-01",
         "fim": "2026-07-31"
     },
-    "valor_total_despesas": 0.00,
-    "valor_total_reembolsavel": 0.00,
+    "valor_total_despesas": 1806.94,
+    "valor_total_reembolsavel": 585.43,
     "detalhamento_despesas": [
         {
             "id": "d-001",
