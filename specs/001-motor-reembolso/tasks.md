@@ -82,7 +82,7 @@
 - [x] **T-014** — Limite diário de hospedagem (agregado por dia, como RN-001/RN-002; noites do texto livre ignoradas)
   - **Atende:** RN-003, RN-004
   - **Aceite:** `tests/test_regras.py::test_rn003_limite_diario_hospedagem` (`d-010`) + `tests/test_motor.py::test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `0fc3bd2`
 
 - [ ] **T-015** — Confirma que o adicional de viagem não é aplicado em nenhuma circunstância
   - **Atende:** RN-012
