@@ -74,10 +74,10 @@
   - **Aceite:** `tests/test_motor.py::test_pipeline_aplica_filtros_na_ordem_definida` (`d-004`: negado por nota fiscal ausente, não por limite diário já esgotado — AMB-004)
   - **Commit:** `292a7ee`
 
-- [ ] **T-013** — Agregação de limite diário: categorias `alimentacao` e `transporte_urbano` (soma por categoria+dia, ordem de entrada, corta excedente)
+- [x] **T-013** — Agregação de limite diário: categorias `alimentacao` e `transporte_urbano` (soma por categoria+dia, ordem de entrada, corta excedente)
   - **Atende:** RN-001, RN-002, RN-004
   - **Aceite:** `tests/test_regras.py::test_rn001_limite_diario_alimentacao` (`d-001`/`d-002`) + `test_rn002_limite_diario_transporte` (`d-003`)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-014** — Limite de hospedagem por lançamento (sem dividir pelo número de diárias)
   - **Atende:** RN-003, RN-004

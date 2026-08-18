@@ -97,3 +97,55 @@ def filtro_nota_fiscal(despesa: Despesa) -> ResultadoDespesa | None:
             ),
         )
     return None
+
+
+def _despesa_que_atingiu_limite(
+    limite: Decimal, reembolsos_anteriores: list[tuple[Despesa, Decimal]]
+) -> Despesa:
+    acumulado = Decimal("0.00")
+    for despesa, valor_reembolsado in reembolsos_anteriores:
+        acumulado += valor_reembolsado
+        if acumulado >= limite:
+            return despesa
+    return reembolsos_anteriores[-1][0]
+
+
+def aplicar_limite_diario(
+    despesa: Despesa,
+    limite: Decimal,
+    reembolsos_anteriores: list[tuple[Despesa, Decimal]],
+) -> ResultadoDespesa:
+    categoria = normalizar_categoria(despesa.categoria)
+    consumido = sum((valor for _, valor in reembolsos_anteriores), Decimal("0.00"))
+    disponivel = limite - consumido
+
+    if disponivel <= 0:
+        original = _despesa_que_atingiu_limite(limite, reembolsos_anteriores)
+        return ResultadoDespesa(
+            despesa_reembolsavel=False,
+            tipo_reembolso="nenhum",
+            valor_reembolsavel=Decimal("0.00"),
+            justificativa=(
+                f"A categoria {categoria} possui limite de reembolso de "
+                f"{formatar_reais(limite)} no dia. Este valor já foi atingido na "
+                f"despesa '{original.descricao}({original.id})'. Reembolso negado."
+            ),
+        )
+
+    if despesa.valor <= disponivel:
+        return ResultadoDespesa(
+            despesa_reembolsavel=True,
+            tipo_reembolso="total",
+            valor_reembolsavel=despesa.valor,
+            justificativa="Reembolso total aprovado de acordo com a política vigente.",
+        )
+
+    return ResultadoDespesa(
+        despesa_reembolsavel=True,
+        tipo_reembolso="parcial",
+        valor_reembolsavel=disponivel,
+        justificativa=(
+            f"A categoria {categoria} possui limite de reembolso de "
+            f"{formatar_reais(limite)} no dia. Reembolso parcial aprovado."
+        ),
+    )
