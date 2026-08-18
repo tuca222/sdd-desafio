@@ -28,7 +28,7 @@ def filtro_valor_negativo(despesa: Despesa) -> ResultadoDespesa | None:
 
 
 def filtro_categoria_invalida(despesa: Despesa) -> ResultadoDespesa | None:
-    if normalizar_categoria(despesa.categoria) not in CATEGORIAS_VALIDAS:
+    if despesa.categoria not in CATEGORIAS_VALIDAS:
         return ResultadoDespesa(
             despesa_reembolsavel=False,
             tipo_reembolso="nenhum",
@@ -115,7 +115,7 @@ def aplicar_limite_diario(
     limite: Decimal,
     reembolsos_anteriores: list[tuple[Despesa, Decimal]],
 ) -> ResultadoDespesa:
-    categoria = normalizar_categoria(despesa.categoria)
+    categoria = despesa.categoria
     consumido = sum((valor for _, valor in reembolsos_anteriores), Decimal("0.00"))
     disponivel = limite - consumido
 

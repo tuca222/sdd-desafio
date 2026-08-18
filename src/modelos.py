@@ -22,6 +22,7 @@ class Despesa:
     id: str
     data: date
     categoria: str
+    categoria_original: str
     descricao: str
     fornecedor: str
     valor: Decimal

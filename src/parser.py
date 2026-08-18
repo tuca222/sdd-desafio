@@ -3,6 +3,7 @@ from datetime import date
 from decimal import ROUND_DOWN, Decimal
 
 from src.modelos import Colaborador, Despesa, Periodo
+from src.regras import normalizar_categoria
 
 DUAS_CASAS_DECIMAIS = Decimal("0.01")
 
@@ -31,7 +32,8 @@ def carregar_despesas(caminho: str) -> tuple[Colaborador, Periodo, list[Despesa]
         Despesa(
             id=item["id"],
             data=date.fromisoformat(item["data"]),
-            categoria=item["categoria"],
+            categoria=normalizar_categoria(item["categoria"]),
+            categoria_original=item["categoria"],
             descricao=item["descricao"],
             fornecedor=item["fornecedor"],
             valor=_truncar_valor(item["valor"]),

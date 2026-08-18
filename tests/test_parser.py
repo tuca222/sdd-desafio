@@ -42,6 +42,18 @@ def test_parse_carrega_campos_da_entrada():
     assert d009.tem_nota_fiscal is False
 
 
+def test_rn011_normaliza_categoria_na_borda_de_entrada():
+    _, _, despesas = carregar_despesas(CAMINHO_EXEMPLO)
+
+    d014 = buscar_despesa(despesas, "d-014")
+
+    assert d014.categoria == "alimentacao"
+    assert d014.categoria_original == "ALIMENTACAO"
+
+    # Nenhuma despesa chega ao motor com categoria fora da forma normalizada.
+    assert all(despesa.categoria == despesa.categoria.lower() for despesa in despesas)
+
+
 def test_rn010_trunca_casas_decimais_excedentes():
     _, _, despesas = carregar_despesas(CAMINHO_EXEMPLO)
 

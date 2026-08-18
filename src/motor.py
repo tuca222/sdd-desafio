@@ -10,7 +10,6 @@ from src.regras import (
     filtro_fora_periodo,
     filtro_nota_fiscal,
     filtro_valor_negativo,
-    normalizar_categoria,
 )
 
 
@@ -46,7 +45,7 @@ def aplicar_limites(
             finais.append(resultado)
             continue
 
-        categoria = normalizar_categoria(despesa.categoria)
+        categoria = despesa.categoria
         limite = LIMITES_DIARIOS_POR_CATEGORIA[categoria]
         reembolsos_do_dia = reembolsos_por_categoria_dia.setdefault((categoria, despesa.data), [])
         resultado_limite = aplicar_limite_diario(despesa, limite, reembolsos_do_dia)

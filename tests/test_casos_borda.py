@@ -99,8 +99,8 @@ def test_hospedagem_multi_diaria_sem_campo_estruturado(exemplo: ExemploProcessad
 def test_categoria_maiuscula_concorre_ao_limite_diario(exemplo: ExemploProcessado):
     d014 = exemplo.despesas["d-014"]
 
-    assert d014.categoria == "ALIMENTACAO"
-    assert d014.categoria != normalizar_categoria(d014.categoria)
+    assert d014.categoria_original == "ALIMENTACAO"
+    assert d014.categoria == normalizar_categoria("ALIMENTACAO")
 
     resultado = exemplo.resultados["d-014"]
 
@@ -108,26 +108,19 @@ def test_categoria_maiuscula_concorre_ao_limite_diario(exemplo: ExemploProcessad
     assert resultado.valor_reembolsavel == LIMITE_ALIMENTACAO
     assert "alimentacao" in resultado.justificativa
 
-    em_minusculas = replace(
+    lancada_em_minusculas = replace(
         d014,
         id="d-014-minuscula",
-        categoria="alimentacao",
+        categoria_original="alimentacao",
         descricao="Almoco",
-        valor=Decimal("40.00"),
+        valor=Decimal("30.00"),
     )
-    em_maiusculas = replace(
-        d014,
-        id="d-014-maiuscula",
-        categoria="ALIMENTACAO",
-        descricao="Jantar",
-        valor=Decimal("40.00"),
-    )
-    despesas = [em_minusculas, em_maiusculas]
+    despesas = [lancada_em_minusculas, d014]
     resultados = aplicar_limites(despesas, aplicar_filtros(despesas, exemplo.periodo))
 
     assert resultados[0].tipo_reembolso == "total"
-    assert resultados[0].valor_reembolsavel == Decimal("40.00")
+    assert resultados[0].valor_reembolsavel == Decimal("30.00")
 
-    # Sem compartilhar o limite, a segunda tambem seria "total" de R$40,00.
+    # Sem dividir o balde com a grafia minuscula, d-014 levaria os R$60,00 inteiros.
     assert resultados[1].tipo_reembolso == "parcial"
-    assert resultados[1].valor_reembolsavel == LIMITE_ALIMENTACAO - Decimal("40.00")
+    assert resultados[1].valor_reembolsavel == LIMITE_ALIMENTACAO - Decimal("30.00")

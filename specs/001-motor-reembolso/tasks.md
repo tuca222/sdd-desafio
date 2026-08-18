@@ -111,6 +111,19 @@
   - **Aceite:** `tests/test_casos_borda.py::test_categoria_maiuscula_concorre_ao_limite_diario` (`d-014`)
   - **Commit:** `bfb4add`
 
+## Correções de rota
+
+> Tasks criadas **depois** do planejamento inicial, a partir de algo detectado
+> durante a implementação. A numeração continua de T-023 — não reinicia e não se
+> encaixa na numeração das fases, porque o eixo da rastreabilidade é o número da
+> task, não a posição dela no arquivo.
+
+- [x] **T-024** — Normalização de categoria na borda de entrada (`parser.py`), com a categoria original preservada para a saída
+  - **Atende:** RN-011, RN-007, AMB-009
+  - **Executar antes de:** T-020 (a saída depende de qual campo ecoar)
+  - **Aceite:** `tests/test_parser.py::test_rn011_normaliza_categoria_na_borda_de_entrada` (`d-014`: `categoria == "alimentacao"` e `categoria_original == "ALIMENTACAO"`) + `tests/test_regras.py::test_rn007_duplicata_ignora_capitalizacao_da_categoria`
+  - **Commit:**
+
 ## Fase 4 — Saída e CLI
 
 - [ ] **T-020** — `saida.py`: monta o dict de saída completo (`valor_total_despesas`, `valor_total_reembolsavel`, `detalhamento_despesas[].motor_reembolso_output`), conversão `Decimal → float` só na borda
