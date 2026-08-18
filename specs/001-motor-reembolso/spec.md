@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 1.4 · **Status:** em implementação (Fase 2 — regras de negócio) · **Última alteração:** `17/08/2026`
+**Versão:** 1.5 · **Status:** em implementação (Fase 2 — regras de negócio) · **Última alteração:** `18/08/2026`
 
 ---
 
@@ -186,13 +186,26 @@ limite de R$80,00/dia.
 **Aceite:** `d-003` (R$100,00, único sobrevivente às verificações anteriores no dia)
 reembolsa R$80,00 (parcial).
 
-### RN-003 — Limite de hospedagem por lançamento
+### RN-003 — Limite diário de hospedagem
 
-**Regra:** cada despesa de categoria `hospedagem` é tratada como uma diária única e
-limitada a R$250,00, sem dividir o valor pelo número de noites (a entrada não traz
-esse dado de forma estruturada — ver AMB-006).
+**Regra:** mesma mecânica de RN-001, aplicada à categoria `hospedagem`, com limite
+de R$250,00/dia. Ou seja: todas as despesas de `hospedagem` de uma mesma `data` são
+somadas na ordem em que aparecem na entrada e disputam **um único** limite de
+R$250,00 daquele dia — a(s) primeira(s) consomem o limite, as seguintes recebem
+R$0,00 quando ele já foi atingido.
+
+O número de noites que um lançamento cobre **não entra na conta em nenhuma
+hipótese**: a entrada não tem campo estruturado para isso e o sistema não extrai
+essa informação do texto livre da `descricao` (ver AMB-006). Um lançamento que
+cobre várias noites concorre ao limite de R$250,00 de **um único dia** — o da sua
+`data` —, exatamente como um lançamento de uma noite só. O limite nunca é
+multiplicado pelo número de noites, e também nunca é aplicado "por lançamento":
+dois lançamentos de `hospedagem` no mesmo dia dividem os mesmos R$250,00.
 **Origem:** política do RH; desambiguado por AMB-006.
-**Aceite:** `d-010` (R$480,00, com nota fiscal) reembolsa R$250,00 (parcial).
+**Aceite:** `d-010` (R$480,00, com nota fiscal, único lançamento de `hospedagem`
+em `2026-07-14`) reembolsa R$250,00 (parcial). Duas hospedagens na mesma data, de
+R$480,00 e R$300,00 nessa ordem, reembolsam R$250,00 (parcial) e R$0,00 (nenhum),
+respectivamente.
 
 ### RN-004 — Reembolso parcial
 
@@ -385,14 +398,20 @@ conhecida em vez de arriscar um critério arbitrário.
 — ele só aparece, às vezes, em texto livre na descrição (`d-010`: "Hotel Rio - 2
 diarias"; `d-013`: "Airbnb 3 noites"). Aplicar o limite "por diária" exigiria extrair
 essa quantidade de texto não padronizado.
-**Decisão:** cada lançamento de categoria `hospedagem` é tratado como uma diária
-única; o limite de R$250,00 é aplicado ao valor total do lançamento, sem dividir pelo
-número de noites.
-**Justificativa:** fazer parsing de texto livre para extrair quantidade de noites é
-frágil (formato não padronizado, sem garantia de estar sempre presente) e seria uma
-regra de interpretação de linguagem natural, não uma regra de negócio determinística.
-Tratar o lançamento como uma diária única é a leitura mais conservadora possível dado
-o formato real da entrada.
+**Decisão:** "diária" é lida como **dia de calendário**, não como noite de
+hospedagem nem como lançamento. O limite de R$250,00 vale para a `data` da despesa
+e agrega todas as despesas de `hospedagem` daquela data, exatamente como os limites
+de RN-001 e RN-002. O número de noites não é inferido nem usado em nenhum cálculo.
+**Justificativa:** duas leituras alternativas foram descartadas. (a) *Por noite*
+exigiria extrair a quantidade de noites de texto livre não padronizado — parsing
+frágil e sem garantia de estar presente, ou seja, interpretação de linguagem
+natural em vez de regra determinística. (b) *Por lançamento* (cada despesa de
+hospedagem com seus próprios R$250,00) tem um efeito colateral inaceitável: bastaria
+quebrar uma estadia em dois lançamentos na mesma data para receber R$500,00 no dia,
+transformando o limite em algo que o próprio lançador controla. Amarrar o limite ao
+único campo temporal estruturado que a entrada tem (`data`) é a leitura que usa o
+dado real disponível, não deixa brecha de fracionamento e mantém a mecânica
+idêntica à das outras duas categorias.
 **Regra afetada:** RN-003.
 
 ### AMB-007 — Critério de duplicata e qual ocorrência prevalece
@@ -487,7 +506,8 @@ Casos citados (`d-003`, `d-004`, etc.) são despesas de `exemplos/despesas-exemp
 | Despesa fora do período de competência | `d-008`, data em abril, período é julho | Negada por período de competência | RN-006 |
 | Valor negativo (estorno) | `d-009`, valor -R$45,00 | Ignorada; não soma em nenhum total | RN-009 |
 | Categoria fora da política | `d-005`, categoria `coworking` | Negada por categoria fora da política | RN-008 |
-| Hospedagem multi-diária sem campo estruturado de noites | `d-010` (2 diárias no texto), `d-013` (3 noites no texto) | Limite de R$250,00 aplicado ao lançamento inteiro, sem dividir pelas noites do texto | RN-003, AMB-006 |
+| Hospedagem multi-diária sem campo estruturado de noites | `d-010` (2 diárias no texto), `d-013` (3 noites no texto) | Limite de R$250,00 do **dia** da despesa; as noites citadas no texto livre são ignoradas | RN-003, AMB-006 |
+| Duas hospedagens na mesma data | dois lançamentos de `hospedagem` com a mesma `data` | Dividem o mesmo limite de R$250,00 do dia — não recebem R$250,00 cada | RN-003, AMB-006 |
 | Valor com mais de 2 casas decimais | `d-011`, valor `33.333` | Truncado para R$33,33 antes de qualquer verificação | RN-010 |
 | Despesa em fim de semana | `d-012`, sábado, "plantão" | Tratada normalmente — a política não distingue dia útil de fim de semana | (confirma ausência de regra especial) |
 | Categoria com grafia em maiúsculas | `d-014`, categoria `ALIMENTACAO` | Normalizada e tratada como `alimentacao` | RN-011, AMB-009 |
@@ -556,10 +576,11 @@ O sistema está pronto quando, rodando `exemplos/despesas-exemplo.json`:
   A entrada não tem campo que identifique viagem, e qualquer inferência seria uma
   regra de negócio nova não solicitada pelo RH. Se um campo explícito de viagem for
   adicionado à entrada no futuro, esta regra precisa ser reaberta.
-- **Limite de hospedagem por diária real (RN-003 / AMB-006):** o
-  sistema trata cada lançamento como uma diária única porque a entrada não tem campo
-  estruturado de número de noites. Isso pode ser mais restritivo do que a política
-  pretende em lançamentos que cobrem várias noites (ex.: `d-010`, R$480,00 por 2
-  noites reais, taxa real de R$240,00/noite dentro do limite de R$250,00, mas negado
-  como se fossem R$480,00 numa única diária). Se a entrada ganhar um campo estruturado
-  de número de diárias, esta regra precisa ser reaberta.
+- **Limite de hospedagem por noite real (RN-003 / AMB-006):** o sistema aplica o
+  limite de R$250,00 por **dia de calendário**, porque a entrada não tem campo
+  estruturado de número de noites. Isso é mais restritivo do que a política
+  provavelmente pretende quando um lançamento cobre várias noites (ex.: `d-010`,
+  R$480,00 por 2 noites reais — taxa real de R$240,00/noite, dentro do limite de
+  R$250,00 por noite, mas reembolsado como se fosse uma diária só, cortando em
+  R$250,00). Se a entrada ganhar um campo estruturado de número de diárias, esta
+  regra precisa ser reaberta.

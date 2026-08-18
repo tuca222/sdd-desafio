@@ -159,7 +159,7 @@
                 "despesa_reembolsavel": true,
                 "tipo_reembolso": "parcial",
                 "valor_reembolsavel": 250.00,
-                "justificativa": "A categoria hospedagem possui limite de reembolso de R$250,00 diário. Reembolso parcial aprovado."
+                "justificativa": "A categoria hospedagem possui limite de reembolso de R$250,00 no dia. Reembolso parcial aprovado."
             }
         },
         {

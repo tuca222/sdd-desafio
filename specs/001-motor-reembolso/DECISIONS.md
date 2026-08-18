@@ -10,6 +10,78 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-004 — Hospedagem: limite de R$250,00 é diário e agregado, não por lançamento · `18/08/2026`
+
+**Gatilho:** o agente implementou a T-014 tratando cada lançamento de
+`hospedagem` como tendo seu próprio limite de R$250,00 — e escreveu um teste,
+`test_rn003_hospedagem_nao_acumula_limite_entre_lancamentos_do_mesmo_dia`,
+afirmando que duas hospedagens no mesmo dia recebem R$250,00 **cada**. O
+usuário reprovou na revisão: a intenção sempre foi que os R$250,00 valem para
+**o dia**, agregando todas as hospedagens daquela data, igual a RN-001 e
+RN-002.
+
+**A spec estava errada, não só o código.** RN-003 dizia "cada despesa de
+categoria `hospedagem` é tratada como uma diária única e limitada a R$250,00"
+e a decisão de AMB-006 dizia "o limite de R$250,00 é aplicado ao valor total
+do lançamento". As duas frases descrevem literalmente o comportamento
+por-lançamento que foi implementado. Um desenvolvedor lendo só a spec chegaria
+ao mesmo resultado errado — que é o critério de qualidade que a `RUBRICA.md`
+usa.
+
+A origem da confusão: a frase "sem dividir o valor pelo número de noites"
+resolvia corretamente uma pergunta (*não fazer parsing de texto livre para
+achar quantas noites*) e, no mesmo fôlego, respondia sem querer a outra
+pergunta (*qual é a unidade do limite*) com a resposta errada. Eram duas
+decisões distintas coladas numa frase só.
+
+**O que mudou na spec:**
+- RN-003 mudou de título ("Limite de hospedagem por lançamento" → "Limite
+  diário de hospedagem") e passou a declarar a mecânica por referência a
+  RN-001, dizendo explicitamente as duas negativas: o limite **nunca** é
+  multiplicado pelo número de noites e **nunca** é aplicado por lançamento.
+  O aceite ganhou o caso de duas hospedagens na mesma data.
+- AMB-006 passou a decidir o que "diária" significa (**dia de calendário**) e
+  a registrar a alternativa *por lançamento* como descartada, com o motivo:
+  bastaria quebrar uma estadia em dois lançamentos na mesma data para receber
+  R$500,00 no dia — o limite viraria algo que o próprio lançador controla.
+- §7 ("Casos de borda") teve a linha de hospedagem corrigida e ganhou uma
+  linha nova para duas hospedagens na mesma data.
+- §10 ("O que fica em aberto") teve a limitação reescrita: continua sendo mais
+  restritivo que a política provavelmente pretende, mas pela razão certa.
+
+**Redação da justificativa unificada:** hospedagem usava "R$250,00 **diário**"
+enquanto as outras categorias usavam "R$250,00 **no dia**". Com a mecânica
+agora idêntica nas três, a redação passou a ser "no dia" para todas. Não é
+cosmético: "diário" foi exatamente a palavra que sugeriu unidade de tempo
+própria e ajudou a sustentar a leitura por-lançamento.
+
+**O que isso invalidou:** `src/regras.py` perdeu `aplicar_limite_hospedagem`
+(hospedagem agora entra em `LIMITES_DIARIOS_POR_CATEGORIA` e usa
+`aplicar_limite_diario`, como as outras); `src/motor.py` perdeu o desvio de
+hospedagem; `src/politica.py` perdeu `CATEGORIA_HOSPEDAGEM`, que só existia
+para esse desvio. `exemplos/resultado-exemplo.json` teve a justificativa de
+`d-010` ajustada ("diário" → "no dia").
+
+**Por que os testes não pegaram:** o arquivo de exemplo tem duas hospedagens
+(`d-010` e `d-013`), mas em datas diferentes — e `d-013` é barrada antes, por
+nota fiscal (RN-005). Nenhum par de hospedagens chega junto à etapa de limite,
+então agregado e por-lançamento produzem exatamente os mesmos totais
+(R$585,43). O exemplo é cego para essa distinção. O único artefato onde a
+interpretação errada ficava visível era o teste do agente — que afirmava o
+comportamento errado com confiança. Lição registrada: teste escrito pelo mesmo
+agente que interpretou a regra não é verificação independente da
+interpretação.
+
+**Tasks afetadas:** T-014 (reimplementada antes do commit; nada errado chegou
+a entrar no histórico). T-018 (caso de borda de hospedagem multi-diária) teve
+a descrição ajustada para a regra correta antes de ser executada.
+
+**Custo:** 7 arquivos (`spec.md`, `DECISIONS.md`, `plan.md`, `tasks.md`,
+`exemplos/resultado-exemplo.json`, `src/politica.py`, `src/regras.py`,
+`src/motor.py` + 2 arquivos de teste), resolvido dentro da própria T-014.
+
+---
+
 ## D-003 — `descricao(id)` vira o formato único de referência a despesa · `17/08/2026`
 
 **Gatilho:** ao implementar a T-013 (limite diário), o agente notou que a

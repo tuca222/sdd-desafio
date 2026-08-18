@@ -1,6 +1,6 @@
 # Plano Técnico — Motor de Cálculo de Reembolso
 
-**Versão:** 1.3 · **Baseado na spec:** 1.4
+**Versão:** 1.4 · **Baseado na spec:** 1.5
 
 ---
 
@@ -56,9 +56,12 @@ de criada):
 ## 4. Como a política é representada
 
 `src/politica.py`: constantes `Decimal` nomeadas — `LIMITE_ALIMENTACAO`,
-`LIMITE_TRANSPORTE_URBANO`, `LIMITE_HOSPEDAGEM`, `LIMITE_NOTA_FISCAL` — e o
+`LIMITE_TRANSPORTE_URBANO`, `LIMITE_HOSPEDAGEM`, `LIMITE_NOTA_FISCAL` — o
 conjunto `CATEGORIAS_VALIDAS = {"alimentacao", "transporte_urbano",
-"hospedagem"}`.
+"hospedagem"}` e o mapa `LIMITES_DIARIOS_POR_CATEGORIA`, que liga cada
+categoria ao seu limite diário. As três categorias entram nesse mapa: RN-001,
+RN-002 e RN-003 têm a mesma mecânica de limite agregado por categoria e dia,
+mudando só o valor.
 
 Decisão: constantes em código, não config externo (JSON/YAML carregado em
 runtime). Nada na spec pede reconfiguração sem redeploy; mudar um valor é uma
