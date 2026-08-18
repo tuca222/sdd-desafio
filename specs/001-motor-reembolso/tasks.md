@@ -177,10 +177,11 @@
   - **Aceite:** `tests/test_integracao.py::test_exemplo_completo_bate_com_criterios_de_aceite`
   - **Commit:** `d397c72`
 
-- [ ] **T-023** — `README.md` com instruções de rodar (`python -m src.cli calcular --input despesas.json --output resultado.json`) e testar (`pytest -v`)
+- [x] **T-023** — `README.md` com instruções de rodar (`python -m src.cli calcular --input despesas.json --output resultado.json`) e testar (`pytest -v`)
   - **Atende:** estrutura de entrega exigida pelo desafio
   - **Aceite:** seguir os passos do README do zero produz `resultado.json` sem intervenção manual
-  - **Commit:**
+  - **Verificado em:** checkout limpo via `git archive` (sem `.venv`), venv novo com pip 24.0 — rodar sem instalar nada gerou `resultado.json` idêntico ao exemplo; os passos de teste levaram a 57 testes passando e `ruff` limpo
+  - **Commit:** `<hash preenchido depois>`
 
 ---
 

@@ -1,101 +1,114 @@
-# Desafio Prático — Spec Driven Development
+# Motor de Cálculo de Reembolso
 
-Aula bônus de SDD, fechando a trilha:
+CLI que lê um JSON com as despesas de um colaborador num período de competência e
+escreve um JSON dizendo **quanto de cada despesa é reembolsável e por quê**.
 
-`AI Fluency` → `Claude 101` → `Claude Code 101` → `Building with the Claude API` → `Claude Code in Action` → `Módulo SDD` → **Desafio**
-
-**Individual · 2 dias · Claude Code**
-
----
-
-## Comece por aqui
-
-1. **[`DESAFIO.md`](DESAFIO.md)** — o enunciado. Leia inteiro antes de escrever qualquer coisa.
-2. **[`RUBRICA.md`](RUBRICA.md)** — como você é avaliado. É pública de propósito; leia antes de começar.
-3. **[`exemplos/despesas-exemplo.json`](exemplos/despesas-exemplo.json)** — a entrada de referência. Não é decoração: percorra item por item antes de escrever a spec.
-4. **[`FAQ.md`](FAQ.md)** — travou? Comece por aqui. **O instrutor está fora durante o desafio**, então o FAQ é o canal de suporte.
+Cada despesa da saída carrega uma justificativa em português citando a regra que
+decidiu o caso — a ideia é que alguém do financeiro consiga conferir a decisão sem
+abrir o código.
 
 ---
 
-## Como participar
+## Como rodar
 
-**1. Faça um fork deste repositório.** Ele precisa ser público, ou você não conseguirá compartilhar depois.
-
-**2. Clone o seu fork e prepare a estrutura de trabalho:**
+O motor usa **apenas a biblioteca padrão do Python**. Não há nada para instalar:
 
 ```bash
-git clone https://github.com/<seu-usuario>/sdd-desafio.git
-cd sdd-desafio
-cp template/CLAUDE.md .
-cp -r template/specs .
-cp -r template/docs .
-git add -A && git commit -m "chore: estrutura inicial a partir do template"
+python3 -m src.cli calcular --input exemplos/despesas-exemplo.json --output resultado.json
 ```
 
-<details>
-<summary>PowerShell</summary>
+**Requisito:** Python 3.12 ou superior (`python3 --version`).
 
-```powershell
-git clone https://github.com/<seu-usuario>/sdd-desafio.git
-cd sdd-desafio
-Copy-Item template\CLAUDE.md .
-Copy-Item template\specs . -Recurse
-Copy-Item template\docs . -Recurse
-git add -A; git commit -m "chore: estrutura inicial a partir do template"
-```
-</details>
+O arquivo de entrada não é alterado. Para usar suas próprias despesas, aponte
+`--input` para um arquivo no mesmo formato de
+[`exemplos/despesas-exemplo.json`](exemplos/despesas-exemplo.json).
 
-Os arquivos em `template/` são esqueletos com as perguntas que cada documento precisa responder. Deixe a pasta `template/` onde está — ela serve de referência.
+## Como testar
 
-**3. Trabalhe no seu fork**, seguindo as três regras do jogo descritas no [`DESAFIO.md`](DESAFIO.md):
+Os testes precisam do `pytest`, que não vem com o Python. Em muitas distribuições o
+Python do sistema é *externally managed* e recusa instalação direta, então use um
+ambiente virtual:
 
-- Nenhum commit sem task
-- Explicação no chat que não está na spec é bug de spec
-- Interações exportadas (`/export`) e commitadas em `docs/sessions/`
+```bash
+python3 -m venv .venv
+.venv/bin/pip install --upgrade pip
+.venv/bin/pip install --group dev
 
-**4. No Dia 2, às 10h**, você recebe uma mudança de requisito pelo canal da turma. Ela é obrigatória e vale 20 pontos. Chegue nesse momento com o sistema base funcionando e testado.
-
-> Durante os dois dias o instrutor está de férias e não responde mensagens. Dúvida de processo: [`FAQ.md`](FAQ.md). Dúvida sobre o que a política do RH significa não tem resposta — decidir isso é o exercício.
-
-**5. Entregue** enviando o link do seu fork no formulário. Prazo: **Dia 2, 18h**.
-
----
-
-## O que o seu fork precisa conter ao final
-
-```
-seu-fork/
-├── CLAUDE.md                     # convenções do projeto para o agente
-├── README.md                     # como rodar e como testar o SEU projeto
-├── specs/
-│   └── 001-motor-reembolso/
-│       ├── spec.md               # o QUÊ e o PORQUÊ
-│       ├── plan.md               # o COMO
-│       ├── tasks.md              # T-001..T-0NN, com critério de aceite
-│       └── DECISIONS.md          # log de mudanças de spec
-├── src/
-├── tests/
-└── docs/
-    ├── sessions/                 # exports das suas conversas com o Claude
-    └── RELATORIO.md              # o relatório final
+.venv/bin/pytest -v
 ```
 
-Sobre o `README.md`: substitua este arquivo pelo README do **seu** projeto — como rodar, como testar, o que você construiu. Um README que não permite rodar o projeto custa pontos.
+As versões de `pytest` e `ruff` vêm do grupo `dev` do
+[`pyproject.toml`](pyproject.toml). O `--upgrade pip` não é decorativo: um venv novo
+costuma vir com pip 24, e a flag `--group` só existe a partir do pip 25.1.
 
----
+Lint e formatação:
 
-## Antes de começar, confirme que o `/export` funciona
+```bash
+.venv/bin/ruff check .
+.venv/bin/ruff format .
+```
 
-Abra o Claude Code, troque duas mensagens, rode `/export` e confirme que o arquivo foi gerado.
+## O que o motor decide
 
-Faça isso **agora**, não no Dia 2. Sem `docs/sessions/`, o critério de relatório vale zero — e já aconteceu de gente que fez tudo certo descobrir no último dia que não tinha registro nenhum do trabalho.
+| Regra | Comportamento |
+|---|---|
+| Limites diários | R$60,00 alimentação · R$80,00 transporte urbano · R$250,00 hospedagem. O limite é **por categoria e por dia**, somando todas as despesas daquela categoria naquela data |
+| Acima do limite | Reembolsa o que resta do limite do dia e corta o excedente (reembolso parcial) |
+| Nota fiscal | Obrigatória para despesas **estritamente acima** de R$100,00. R$100,00 exatos dispensam |
+| Período de competência | Data fora do intervalo `inicio`–`fim` (inclusivo nos dois extremos) é negada |
+| Duplicatas | Despesas idênticas em tudo menos o `id` contam uma vez só — e a repetida não entra no total de despesas |
+| Categoria fora da política | Negada integralmente |
+| Valores negativos | Estornos são ignorados e não entram em nenhum total |
+| Valores com mais de 2 casas | Truncados (não arredondados) antes de qualquer cálculo |
 
-Exporte ao final de **cada** sessão, nomeando `docs/sessions/01-descricao-curta.md`, `02-...`, e assim por diante.
+A ordem em que essas verificações se aplicam importa, e está definida em
+`specs/001-motor-reembolso/spec.md` §8 ("Ordem de aplicação das regras"). Cada despesa
+recebe **uma única** justificativa: a da primeira regra que a reprovar.
 
----
+**Duas sutilezas da saída**, ambas propositais:
 
-## O resumo em um parágrafo
+- `categoria` e `valor` saem **exatamente como entraram** (`ALIMENTACAO`, `33.333`),
+  mesmo que internamente o motor use a categoria normalizada e o valor truncado para
+  decidir. O relatório precisa bater com o comprovante anexado.
+- Tudo que o motor **produz** (`valor_reembolsavel` e os dois totais) é derivado do
+  valor truncado e nunca passa de 2 casas decimais.
 
-Você vai receber uma política de reembolso escrita por um RH, com a redação ruim que uma política de RH real tem. Ela é ambígua em vários pontos, e você não tem acesso a ninguém para tirar dúvida. O trabalho não é implementar — é **especificar**: encontrar cada ambiguidade, decidir explicitamente, justificar e registrar. O produto funcionando vale **10 dos 100 pontos**. Os outros 90 estão na spec, na rastreabilidade `spec → tasks → commits → testes`, na resposta à mudança de requisito do Dia 2 e no relatório.
+## Estrutura
 
-Isso é deliberado. Um projeto que roda perfeitamente com spec fraca tira nota baixa; um projeto com bug conhecido, spec impecável e trilha limpa tira nota alta.
+```
+src/
+  cli.py        # subcomando `calcular`, orquestra as etapas
+  parser.py     # lê o JSON; trunca valores e normaliza categorias na entrada
+  modelos.py    # dataclasses imutáveis que trafegam entre as etapas
+  regras.py     # uma função pura por regra de negócio, sem estado e sem I/O
+  motor.py      # aplica as regras na ordem da spec e calcula os totais
+  saida.py      # monta o dict de saída; único ponto que converte Decimal → float
+  politica.py   # os limites e as categorias válidas, em um lugar só
+tests/          # espelha src/, mais casos de borda e integração ponta a ponta
+specs/001-motor-reembolso/
+  spec.md       # o QUÊ e o PORQUÊ — regras, ambiguidades resolvidas, critérios
+  plan.md       # o COMO — stack, arquitetura, decisões técnicas
+  tasks.md      # T-001..T-026, cada uma com critério de aceite e commit
+  DECISIONS.md  # log de toda mudança de spec, com o gatilho e o custo
+docs/
+  RELATORIO.md  # o relatório final
+  sessions/     # exports das sessões de trabalho
+```
+
+Valores monetários usam `decimal.Decimal` do início ao fim do cálculo — `float` só
+aparece no momento de escrever o JSON.
+
+## Limitações conhecidas
+
+Duas coisas ficaram deliberadamente de fora, ambas por falta de dado estruturado na
+entrada. Estão registradas em `specs/001-motor-reembolso/spec.md` §10 ("O que fica em
+aberto"):
+
+- **Adicional de viagem.** A política do RH prevê limites 50% maiores para
+  colaborador em viagem, mas a entrada não tem campo que identifique viagem. O
+  adicional não é aplicado em nenhuma circunstância — inferir viagem a partir de
+  outro dado seria criar uma regra que ninguém pediu.
+- **Hospedagem por noite.** O limite de R$250,00 é aplicado **por dia**, não por
+  noite, porque o número de noites só aparece em texto livre na descrição
+  (`"Hotel Rio - 2 diarias"`). Isso é mais restritivo do que a política provavelmente
+  pretende em estadias de várias noites.
