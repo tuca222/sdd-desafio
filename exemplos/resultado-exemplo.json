@@ -84,7 +84,7 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
-                "justificativa": "A categoria coworking está fora da política de reembolso atual. Reembolso negado."
+                "justificativa": "A categoria 'coworking' está fora da política de reembolso. Reembolso negado."
             }
         },
         {
@@ -129,7 +129,7 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
-                "justificativa": "Despesa lançada fora do período de competência. Reembolso negado."
+                "justificativa": "Despesa lançada fora do período de competência (2026-07-01 a 2026-07-31). Reembolso negado."
             }
         },
         {
@@ -144,7 +144,7 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
-                "justificativa": "Identificado como extorno por conta de valor negativo. Reembolso negado."
+                "justificativa": "Despesa com valor negativo, identificada como estorno. Reembolso negado."
             }
         },
         {
