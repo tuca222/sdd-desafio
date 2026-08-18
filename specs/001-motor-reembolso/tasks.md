@@ -104,7 +104,7 @@
 - [x] **T-018** — Hospedagem multi-diária: noites do texto livre ignoradas, limite é o do dia (`d-010` com nota fiscal, `d-013` sem nota fiscal)
   - **Atende:** RN-003, RN-005, AMB-006
   - **Aceite:** `tests/test_casos_borda.py::test_hospedagem_multi_diaria_sem_campo_estruturado`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `274e21d`
 
 - [ ] **T-019** — Categoria em maiúsculas concorrendo normalmente ao limite diário
   - **Atende:** RN-011, AMB-009
