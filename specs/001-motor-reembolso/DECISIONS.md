@@ -10,6 +10,62 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-006 — A saída ecoa o `valor` lançado, não o truncado · `18/08/2026`
+
+**Gatilho:** ao fechar a T-025, o agente rodou pela primeira vez o pipeline
+inteiro (`parser → motor → saida`) contra `exemplos/despesas-exemplo.json` e
+comparou o dicionário gerado com `exemplos/resultado-exemplo.json` campo a
+campo. Apareceu uma divergência que nenhum teste unitário tinha como pegar:
+`d-011` entra com `33.333`, o arquivo de exemplo espera `"valor": 33.333` no
+detalhamento, e o motor estava emitindo `33.33`.
+
+**O que mudou na spec:** §4 ("Entrada e saída") ganhou a seção **"O que
+'campos originais' significa"**, que substitui a nota que existia só sobre
+`categoria`. A seção agora enuncia a regra geral — **o valor tratado serve
+para calcular, o valor lançado serve para exibir** — e lista os dois casos em
+que entrada e uso interno divergem (`categoria` por RN-011, `valor` por
+RN-010). Declara também que tudo que o motor *produz* (`valor_reembolsavel` e
+os dois totais) deriva do valor truncado e por isso nunca passa de 2 casas
+decimais; só campos ecoados da entrada podem ter mais.
+
+**Por quê:** que o truncado é o correto para calcular estava provado pelo
+próprio número da spec — somar os truncados dá exatamente `1806.94`, somar os
+originais daria `1806.943`. O que faltava era dizer o que exibir. Exibir o
+truncado quebraria a auditoria: a linha mostraria R$33,33 para uma nota de
+R$33,333, e quem confere veria uma divergência criada pelo sistema. A spec
+tinha essa informação implícita no arquivo de exemplo, mas em lugar nenhum
+por escrito — um desenvolvedor lendo só a spec emitiria o truncado, como o
+agente emitiu.
+
+**O que isso invalidou:** `Despesa` ganhou `valor_original: Decimal` e
+`saida.py` passou a ecoar esse campo em `detalhamento_despesas[].valor`.
+Nenhum cálculo mudou: `valor` continua truncado e continua sendo o único que
+as regras leem. As construções de `Despesa` nos testes passaram a informar
+`valor_original`.
+
+**Por que os testes não pegaram antes:** todo teste até aqui exercitava ou uma
+regra isolada (`regras.py`), ou o motor (`motor.py`), ou a serialização com um
+`ResultadoFinal` montado à mão (`saida.py`). Nenhum atravessava
+`parser → motor → saida` com o arquivo real, que é o único caminho em que
+`valor_original` e `valor` divergem. É a mesma lição de [[D-004]], por outro
+ângulo: o erro só aparece na junção, e a junção não tinha teste. A T-022
+existe justamente para fechar isso.
+
+**Tasks afetadas:** T-026, criada para esta mudança. T-022 (integração ponta a
+ponta) depende dela — sem isso, a comparação da saída inteira falharia em
+`d-011`.
+
+**Custo:** resolvido dentro da própria T-026. Arquivos alterados:
+`specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`,
+`specs/001-motor-reembolso/tasks.md`,
+`src/modelos.py`, `src/parser.py`, `src/saida.py`,
+`tests/test_modelos.py`, `tests/test_regras.py`, `tests/test_motor.py`,
+`tests/test_casos_borda.py`, `tests/test_saida.py`.
+
+---
+
 ## D-005 — Normalização de categoria migra para a borda de entrada · `18/08/2026`
 
 **Gatilho:** ao escrever o teste da T-019, o agente precisou dar descrições

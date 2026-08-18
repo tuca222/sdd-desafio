@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 1.6 · **Status:** em implementação (Fase 2 — regras de negócio) · **Última alteração:** `18/08/2026`
+**Versão:** 1.7 · **Status:** em implementação (Fase 2 — regras de negócio) · **Última alteração:** `18/08/2026`
 
 ---
 
@@ -61,12 +61,31 @@ verificável para cada decisão, sem intervenção humana.
 | `periodo` | objeto | Copiado da entrada, sem alteração |
 | `valor_total_despesas` | número | Soma do `valor` (já truncado, ver RN-010) de todas as despesas da entrada, **exceto** as ignoradas por valor negativo (RN-009) e as identificadas como duplicata (RN-007) |
 | `valor_total_reembolsavel` | número | Soma do campo `valor_reembolsavel` de todas as despesas dentro de detalhamento_despesas |
-| `detalhamento_despesas[]` | array | Lista com os mesmos objetos da lista `despesas` de entrada, na mesma ordem, com os mesmos campos originais, porém com a adição do objeto `motor_reembolso_output`. "Campos originais" é literal: `categoria` sai com a grafia exata que entrou, mesmo tendo sido normalizada internamente para decidir (RN-011) |
+| `detalhamento_despesas[]` | array | Lista com os mesmos objetos da lista `despesas` de entrada, na mesma ordem, com os mesmos campos originais, porém com a adição do objeto `motor_reembolso_output`. Ver abaixo o que "campos originais" significa |
 | `detalhamento_despesas[].motor_reembolso_output` | objeto | Objeto com os dados de saída gerados pelo motor para cada despesa |
 | `detalhamento_despesas[].motor_reembolso_output.despesa_reembolsavel` | booleano | `true` se `valor_reembolsavel > 0`. Ou seja, se reembolso parcial `despesa_reembolsavel == true`|
 | `detalhamento_despesas[].motor_reembolso_output.tipo_reembolso` | string (`total`\|`parcial`\|`nenhum`) | Definição do tipo do reembolso. Sendo `total` se reembolsa o valor cheio, `parcial` se reembolsa apenas uma parte do valor da despesa, `nenhum` se nada é reembolsado |
 | `detalhamento_despesas[].motor_reembolso_output.valor_reembolsavel` | número | Valor efetivamente reembolsável desta despesa |
 | `detalhamento_despesas[].motor_reembolso_output.justificativa` | string | Explicação em português da decisão, citando a regra aplicada e, quando relevante, a despesa relacionada (ex.: duplicata, limite estourado por conta de outra despesa). Ver abaixo o formato obrigatório de referência a outra despesa |
+
+**O que "campos originais" significa (obrigatório):** os campos que
+`detalhamento_despesas[]` repete da entrada saem **exatamente como entraram**, mesmo
+quando o motor usou internamente uma versão tratada deles para decidir. São dois os
+casos em que entrada e uso interno divergem:
+
+- `categoria` sai com a grafia exata que entrou (`ALIMENTACAO`), embora a decisão
+  use a forma normalizada (RN-011).
+- `valor` sai com o número exato que entrou (`33.333`), embora a decisão use o valor
+  truncado em 2 casas (RN-010).
+
+A regra geral é: **o valor tratado serve para calcular, o valor lançado serve para
+exibir.** Tudo que o motor *produz* — `valor_reembolsavel`, `valor_total_despesas` e
+`valor_total_reembolsavel` — é derivado do valor truncado e, portanto, sempre tem no
+máximo 2 casas decimais. Só os campos ecoados da entrada podem ter mais.
+
+O motivo é auditoria: o relatório precisa bater com o comprovante que o colaborador
+anexou. Se `valor` saísse truncado, a linha exibiria R$33,33 para uma nota de
+R$33,333, e quem confere veria uma divergência que o sistema criou sozinho.
 
 **Formato de referência a outra despesa (obrigatório em toda a saída):** sempre que
 uma `justificativa` citar outra despesa, a referência usa o formato

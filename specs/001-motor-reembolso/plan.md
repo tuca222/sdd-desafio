@@ -1,6 +1,6 @@
 # Plano Técnico — Motor de Cálculo de Reembolso
 
-**Versão:** 1.5 · **Baseado na spec:** 1.6
+**Versão:** 1.6 · **Baseado na spec:** 1.7
 
 ---
 
@@ -53,12 +53,14 @@ de criada):
 - `Colaborador` — `id`, `nome`, `centro_custo`.
 - `Periodo` — `competencia`, `inicio`, `fim` (datas).
 - `Despesa` — campos da entrada (`id`, `data`, `categoria`, `descricao`,
-  `fornecedor`, `tem_nota_fiscal`), `valor: Decimal` já truncado (RN-010) e
-  `categoria` já normalizada (RN-011) no momento em que a instância é criada
-  em `parser.py`. Mantém também `categoria_original: str` com a grafia como
-  veio na entrada — usada **apenas** por `saida.py`, porque a spec.md §4
-  ("Entrada e saída") exige que a saída ecoe os campos originais. Toda regra
-  usa `categoria`; nenhuma usa `categoria_original`.
+  `fornecedor`, `tem_nota_fiscal`), com `valor: Decimal` já truncado (RN-010)
+  e `categoria` já normalizada (RN-011) no momento em que a instância é criada
+  em `parser.py`. Mantém em paralelo `categoria_original: str` e
+  `valor_original: Decimal`, com os dados como vieram na entrada — usados
+  **apenas** por `saida.py`, porque a spec.md §4 ("Entrada e saída") exige que
+  a saída ecoe os campos originais. A divisão é sempre a mesma: os campos
+  tratados (`categoria`, `valor`) alimentam as regras e os totais; os campos
+  `_original` só são exibidos. Nenhuma regra lê um campo `_original`.
 - `ResultadoDespesa` — `despesa_reembolsavel: bool`, `tipo_reembolso: str`,
   `valor_reembolsavel: Decimal`, `justificativa: str`. Corresponde 1:1 ao
   `motor_reembolso_output` da spec.
