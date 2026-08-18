@@ -170,7 +170,7 @@
 - [x] **T-021** — `cli.py`: subcomando `calcular --input --output`, orquestra parser → motor → saida → escrita em arquivo
   - **Atende:** interface fixa do desafio (`DESAFIO.md`), spec.md §4 ("Entrada e saída"), spec.md §3 ("Fora de escopo" — não altera a entrada)
   - **Aceite:** `tests/test_cli.py::test_cli_calcular_gera_arquivo_de_saida`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `62714b8`
 
 - [ ] **T-022** — Teste de integração ponta a ponta contra todos os critérios de aceite da spec.md §9 ("Critérios de aceite")
   - **Atende:** spec.md §9 ("Critérios de aceite") — todos os itens, incluindo `valor_total_despesas = 1806.94` e `valor_total_reembolsavel = 585.43`
