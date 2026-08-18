@@ -126,10 +126,10 @@
 
 ## Fase 4 — Saída e CLI
 
-- [ ] **T-020** — `saida.py`: monta o dict de saída completo (`valor_total_despesas`, `valor_total_reembolsavel`, `detalhamento_despesas[].motor_reembolso_output`), conversão `Decimal → float` só na borda
+- [x] **T-020** — `saida.py`: monta o dict de saída completo (`valor_total_despesas`, `valor_total_reembolsavel`, `detalhamento_despesas[].motor_reembolso_output`), conversão `Decimal → float` só na borda
   - **Atende:** spec.md §4 ("Entrada e saída")
   - **Aceite:** `tests/test_saida.py::test_monta_saida_conforme_schema`
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-021** — `cli.py`: subcomando `calcular --input --output`, orquestra parser → motor → saida → escrita em arquivo
   - **Atende:** interface fixa do desafio (`DESAFIO.md`), spec.md §4 ("Entrada e saída")
