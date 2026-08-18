@@ -87,7 +87,7 @@
 - [x] **T-015** — Confirma que o adicional de viagem não é aplicado em nenhuma circunstância
   - **Atende:** RN-012
   - **Aceite:** `tests/test_regras.py::test_rn012_sem_adicional_de_viagem` + `tests/test_motor.py::test_rn012_hospedagem_no_periodo_nao_amplia_limites` (cenário que AMB-005 proíbe inferir)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `57b8d27`
 
 ## Fase 3 — Casos de borda
 
