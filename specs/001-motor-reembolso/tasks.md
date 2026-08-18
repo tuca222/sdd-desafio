@@ -141,7 +141,7 @@
     `valor_total_reembolsavel == 585.43`
   - **Commit:** `147ce8d`
 
-- [ ] **T-026** — Saída ecoa o `valor` da despesa como veio na entrada, sem truncar
+- [x] **T-026** — Saída ecoa o `valor` da despesa como veio na entrada, sem truncar
   - **Atende:** spec.md §4 ("Entrada e saída"), RN-010
   - **Por que existe:** detectado ao rodar `parser → motor → saida` completo
     contra o exemplo. `d-011` entra com `33.333`; o `resultado-exemplo.json`
@@ -158,7 +158,7 @@
   - **Executar antes de:** T-022 (a integração compara a saída inteira)
   - **Aceite:** `tests/test_saida.py::test_saida_ecoa_o_valor_como_veio_na_entrada`
     (`d-011`: `valor == 33.333` e `motor_reembolso_output.valor_reembolsavel == 33.33`)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 ## Fase 4 — Saída e CLI
 

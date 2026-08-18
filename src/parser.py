@@ -37,6 +37,7 @@ def carregar_despesas(caminho: str) -> tuple[Colaborador, Periodo, list[Despesa]
             descricao=item["descricao"],
             fornecedor=item["fornecedor"],
             valor=_truncar_valor(item["valor"]),
+            valor_original=item["valor"],
             tem_nota_fiscal=item["tem_nota_fiscal"],
         )
         for item in dados["despesas"]

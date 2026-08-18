@@ -26,6 +26,7 @@ class Despesa:
     descricao: str
     fornecedor: str
     valor: Decimal
+    valor_original: Decimal
     tem_nota_fiscal: bool
 
 

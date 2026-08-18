@@ -36,6 +36,7 @@ def test_despesa_e_imutavel():
         descricao="Almoco com cliente",
         fornecedor="Restaurante Tavola",
         valor=Decimal("72.50"),
+        valor_original=Decimal("72.50"),
         tem_nota_fiscal=True,
     )
 
@@ -68,6 +69,7 @@ def test_resultado_final_e_imutavel():
         descricao="Almoco com cliente",
         fornecedor="Restaurante Tavola",
         valor=Decimal("72.50"),
+        valor_original=Decimal("72.50"),
         tem_nota_fiscal=True,
     )
     resultado_despesa = ResultadoDespesa(

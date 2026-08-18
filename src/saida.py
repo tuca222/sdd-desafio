@@ -31,7 +31,7 @@ def _despesa_para_dict(despesa: Despesa, resultado: ResultadoDespesa) -> dict[st
         "categoria": despesa.categoria_original,
         "descricao": despesa.descricao,
         "fornecedor": despesa.fornecedor,
-        "valor": _valor(despesa.valor),
+        "valor": _valor(despesa.valor_original),
         "tem_nota_fiscal": despesa.tem_nota_fiscal,
         "motor_reembolso_output": {
             "despesa_reembolsavel": resultado.despesa_reembolsavel,

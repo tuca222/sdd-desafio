@@ -58,6 +58,7 @@ def test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia():
         descricao="Hotel noite 1",
         fornecedor="Hotel Copa Sul",
         valor=Decimal("480.00"),
+        valor_original=Decimal("480.00"),
         tem_nota_fiscal=True,
     )
     segunda = Despesa(
@@ -68,6 +69,7 @@ def test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia():
         descricao="Hotel noite 2",
         fornecedor="Outro Hotel",
         valor=Decimal("300.00"),
+        valor_original=Decimal("300.00"),
         tem_nota_fiscal=True,
     )
     despesas = [primeira, segunda]
@@ -92,6 +94,7 @@ def test_rn003_hospedagem_em_dias_diferentes_tem_limite_proprio():
             descricao="Hotel dia 14",
             fornecedor="Hotel Copa Sul",
             valor=Decimal("480.00"),
+            valor_original=Decimal("480.00"),
             tem_nota_fiscal=True,
         ),
         Despesa(
@@ -102,6 +105,7 @@ def test_rn003_hospedagem_em_dias_diferentes_tem_limite_proprio():
             descricao="Hotel dia 15",
             fornecedor="Hotel Copa Sul",
             valor=Decimal("480.00"),
+            valor_original=Decimal("480.00"),
             tem_nota_fiscal=True,
         ),
     ]
@@ -123,6 +127,7 @@ def test_rn012_hospedagem_no_periodo_nao_amplia_limites():
             descricao="Hotel - viagem a trabalho",
             fornecedor="Hotel Copa Sul",
             valor=Decimal("200.00"),
+            valor_original=Decimal("200.00"),
             tem_nota_fiscal=True,
         ),
         Despesa(
@@ -133,6 +138,7 @@ def test_rn012_hospedagem_no_periodo_nao_amplia_limites():
             descricao="Jantar durante a viagem",
             fornecedor="Restaurante do Hotel",
             valor=Decimal("90.00"),
+            valor_original=Decimal("90.00"),
             tem_nota_fiscal=True,
         ),
         Despesa(
@@ -143,6 +149,7 @@ def test_rn012_hospedagem_no_periodo_nao_amplia_limites():
             descricao="Corrida durante a viagem",
             fornecedor="TaxiApp",
             valor=Decimal("120.00"),
+            valor_original=Decimal("120.00"),
             tem_nota_fiscal=True,
         ),
     ]

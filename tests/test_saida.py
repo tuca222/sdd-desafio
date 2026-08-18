@@ -3,6 +3,7 @@ from datetime import date
 from decimal import Decimal
 
 from src.modelos import Colaborador, Despesa, Periodo, ResultadoDespesa, ResultadoFinal
+from src.parser import carregar_despesas
 from src.saida import montar_saida
 
 COLABORADOR = Colaborador(id="c-0417", nome="Marina Volpi", centro_custo="CC-ENG-PLATAFORMA")
@@ -16,6 +17,7 @@ DESPESA_MAIUSCULA = Despesa(
     descricao="Jantar de encerramento",
     fornecedor="Restaurante Tavola",
     valor=Decimal("61.00"),
+    valor_original=Decimal("61.00"),
     tem_nota_fiscal=True,
 )
 RESULTADO_PARCIAL = ResultadoDespesa(
@@ -95,6 +97,38 @@ def test_saida_ecoa_a_categoria_como_veio_na_entrada():
     assert item["categoria"] == "ALIMENTACAO"
     assert item["categoria"] == DESPESA_MAIUSCULA.categoria_original
     assert item["categoria"] != DESPESA_MAIUSCULA.categoria
+
+
+def test_saida_ecoa_o_valor_como_veio_na_entrada():
+    _, _, despesas = carregar_despesas("exemplos/despesas-exemplo.json")
+    d011 = next(despesa for despesa in despesas if despesa.id == "d-011")
+
+    assert d011.valor_original == Decimal("33.333")
+    assert d011.valor == Decimal("33.33")
+
+    resultado_final = ResultadoFinal(
+        colaborador=COLABORADOR,
+        periodo=PERIODO,
+        valor_total_despesas=d011.valor,
+        valor_total_reembolsavel=d011.valor,
+        detalhamento=[
+            (
+                d011,
+                ResultadoDespesa(
+                    despesa_reembolsavel=True,
+                    tipo_reembolso="total",
+                    valor_reembolsavel=d011.valor,
+                    justificativa="Reembolso total aprovado de acordo com a política vigente.",
+                ),
+            )
+        ],
+    )
+
+    (item,) = montar_saida(resultado_final)["detalhamento_despesas"]
+
+    # O valor lancado sai inteiro; tudo que e calculado sai truncado em 2 casas.
+    assert item["valor"] == 33.333
+    assert item["motor_reembolso_output"]["valor_reembolsavel"] == 33.33
 
 
 def test_saida_converte_decimal_para_numero_serializavel():

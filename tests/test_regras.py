@@ -33,6 +33,7 @@ def test_rn009_valor_negativo_ignorado():
         descricao="Estorno de corrida cancelada",
         fornecedor="TaxiApp",
         valor=Decimal("-45.00"),
+        valor_original=Decimal("-45.00"),
         tem_nota_fiscal=False,
     )
 
@@ -54,6 +55,7 @@ def test_rn008_categoria_fora_da_politica():
         descricao="Diaria em espaco compartilhado",
         fornecedor="HubOffice",
         valor=Decimal("89.00"),
+        valor_original=Decimal("89.00"),
         tem_nota_fiscal=True,
     )
 
@@ -75,6 +77,7 @@ def test_rn006_fora_do_periodo_negado():
         descricao="Almoco de abril lancado com atraso",
         fornecedor="Restaurante Tavola",
         valor=Decimal("41.00"),
+        valor_original=Decimal("41.00"),
         tem_nota_fiscal=True,
     )
 
@@ -96,6 +99,7 @@ def test_rn006_data_no_extremo_do_periodo_aceita():
         descricao="Despesa no primeiro dia do periodo",
         fornecedor="Fornecedor Teste",
         valor=Decimal("10.00"),
+        valor_original=Decimal("10.00"),
         tem_nota_fiscal=True,
     )
     despesa_no_fim = Despesa(
@@ -106,6 +110,7 @@ def test_rn006_data_no_extremo_do_periodo_aceita():
         descricao="Despesa no ultimo dia do periodo",
         fornecedor="Fornecedor Teste",
         valor=Decimal("10.00"),
+        valor_original=Decimal("10.00"),
         tem_nota_fiscal=True,
     )
 
@@ -122,6 +127,7 @@ def test_rn007_duplicata_negada_primeira_mantida():
         descricao="Almoco",
         fornecedor="Bistro Central",
         valor=Decimal("54.90"),
+        valor_original=Decimal("54.90"),
         tem_nota_fiscal=True,
     )
     d007 = Despesa(
@@ -132,6 +138,7 @@ def test_rn007_duplicata_negada_primeira_mantida():
         descricao="Almoco",
         fornecedor="Bistro Central",
         valor=Decimal("54.90"),
+        valor_original=Decimal("54.90"),
         tem_nota_fiscal=True,
     )
 
@@ -156,6 +163,7 @@ def test_rn007_duplicata_ignora_capitalizacao_da_categoria():
         descricao="Almoco",
         fornecedor="Bistro Central",
         valor=Decimal("54.90"),
+        valor_original=Decimal("54.90"),
         tem_nota_fiscal=True,
     )
     lancada_em_maiusculas = Despesa(
@@ -166,6 +174,7 @@ def test_rn007_duplicata_ignora_capitalizacao_da_categoria():
         descricao="Almoco",
         fornecedor="Bistro Central",
         valor=Decimal("54.90"),
+        valor_original=Decimal("54.90"),
         tem_nota_fiscal=True,
     )
 
@@ -186,6 +195,7 @@ def test_rn005_nota_fiscal_obrigatoria_acima_de_100():
         descricao="Corrida hotel",
         fornecedor="TaxiApp",
         valor=Decimal("100.01"),
+        valor_original=Decimal("100.01"),
         tem_nota_fiscal=False,
     )
 
@@ -207,6 +217,7 @@ def test_rn005_valor_acima_de_100_com_nota_fiscal_aceito():
         descricao="Hotel Rio - 2 diarias",
         fornecedor="Hotel Copa Sul",
         valor=Decimal("480.00"),
+        valor_original=Decimal("480.00"),
         tem_nota_fiscal=True,
     )
 
@@ -222,6 +233,7 @@ def test_rn005_valor_exatamente_100_nao_exige():
         descricao="Corrida aeroporto",
         fornecedor="TaxiApp",
         valor=Decimal("100.00"),
+        valor_original=Decimal("100.00"),
         tem_nota_fiscal=False,
     )
 
@@ -237,6 +249,7 @@ def test_rn001_limite_diario_alimentacao():
         descricao="Almoco com cliente",
         fornecedor="Restaurante Tavola",
         valor=Decimal("72.50"),
+        valor_original=Decimal("72.50"),
         tem_nota_fiscal=True,
     )
     d002 = Despesa(
@@ -247,6 +260,7 @@ def test_rn001_limite_diario_alimentacao():
         descricao="Jantar apos reuniao",
         fornecedor="Cantina do Porto",
         valor=Decimal("38.00"),
+        valor_original=Decimal("38.00"),
         tem_nota_fiscal=True,
     )
 
@@ -277,6 +291,7 @@ def test_rn002_limite_diario_transporte():
         descricao="Corrida aeroporto",
         fornecedor="TaxiApp",
         valor=Decimal("100.00"),
+        valor_original=Decimal("100.00"),
         tem_nota_fiscal=False,
     )
 
@@ -297,6 +312,7 @@ def test_rn004_valor_dentro_do_limite_reembolsa_total():
         descricao="Almoco",
         fornecedor="Bistro Central",
         valor=Decimal("54.90"),
+        valor_original=Decimal("54.90"),
         tem_nota_fiscal=True,
     )
 
@@ -317,6 +333,7 @@ def test_rn003_limite_diario_hospedagem():
         descricao="Hotel Rio - 2 diarias",
         fornecedor="Hotel Copa Sul",
         valor=Decimal("480.00"),
+        valor_original=Decimal("480.00"),
         tem_nota_fiscal=True,
     )
 
@@ -337,6 +354,7 @@ def test_rn012_sem_adicional_de_viagem():
         descricao="Almoco em viagem",
         fornecedor="Restaurante do Hotel",
         valor=Decimal("90.00"),
+        valor_original=Decimal("90.00"),
         tem_nota_fiscal=True,
     )
     corrida_acima_do_limite = Despesa(
@@ -347,6 +365,7 @@ def test_rn012_sem_adicional_de_viagem():
         descricao="Corrida em viagem",
         fornecedor="TaxiApp",
         valor=Decimal("120.00"),
+        valor_original=Decimal("120.00"),
         tem_nota_fiscal=True,
     )
 
@@ -372,6 +391,7 @@ def test_rn003_hospedagem_dentro_do_limite_reembolsa_total():
         descricao="Pousada 1 noite",
         fornecedor="Pousada Central",
         valor=Decimal("180.00"),
+        valor_original=Decimal("180.00"),
         tem_nota_fiscal=True,
     )
 

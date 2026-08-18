@@ -114,6 +114,7 @@ def test_categoria_maiuscula_concorre_ao_limite_diario(exemplo: ExemploProcessad
         categoria_original="alimentacao",
         descricao="Almoco",
         valor=Decimal("30.00"),
+        valor_original=Decimal("30.00"),
     )
     despesas = [lancada_em_minusculas, d014]
     resultados = aplicar_limites(despesas, aplicar_filtros(despesas, exemplo.periodo).resultados)
