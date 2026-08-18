@@ -77,7 +77,7 @@
 - [x] **T-013** — Agregação de limite diário: categorias `alimentacao` e `transporte_urbano` (soma por categoria+dia, ordem de entrada, corta excedente)
   - **Atende:** RN-001, RN-002, RN-004
   - **Aceite:** `tests/test_regras.py::test_rn001_limite_diario_alimentacao` (`d-001`/`d-002`) + `test_rn002_limite_diario_transporte` (`d-003`)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `0c6fb7c`
 
 - [ ] **T-014** — Limite de hospedagem por lançamento (sem dividir pelo número de diárias)
   - **Atende:** RN-003, RN-004
