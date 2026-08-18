@@ -139,7 +139,26 @@
     `exemplos/despesas-exemplo.json`, `valor_total_despesas == 1806.94` (exclui
     `d-007` e `d-009`, inclui `d-005` e `d-008`) e
     `valor_total_reembolsavel == 585.43`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `147ce8d`
+
+- [ ] **T-026** — Saída ecoa o `valor` da despesa como veio na entrada, sem truncar
+  - **Atende:** spec.md §4 ("Entrada e saída"), RN-010
+  - **Por que existe:** detectado ao rodar `parser → motor → saida` completo
+    contra o exemplo. `d-011` entra com `33.333`; o `resultado-exemplo.json`
+    espera `"valor": 33.333` no detalhamento, mas `valor_reembolsavel: 33.33`.
+    Hoje a saída emite o valor truncado nos dois lugares. A distinção é real e
+    verificável: somar os truncados dá exatamente `1806.94` (o número da spec),
+    somar os originais daria `1806.943`. Ou seja — **o truncado é para calcular,
+    o original é para exibir**. Mesma classe de problema de [[T-024]]
+    (`categoria`/`categoria_original`), que passou despercebida para `valor`.
+  - **Escopo:** `Despesa` ganha `valor_original`; `saida.py` ecoa esse campo em
+    `detalhamento_despesas[].valor`. Nada mais muda — `valor_reembolsavel` e os
+    dois totais continuam truncados em 2 casas, porque são calculados a partir
+    de `valor` (já truncado na borda por DT-002).
+  - **Executar antes de:** T-022 (a integração compara a saída inteira)
+  - **Aceite:** `tests/test_saida.py::test_saida_ecoa_o_valor_como_veio_na_entrada`
+    (`d-011`: `valor == 33.333` e `motor_reembolso_output.valor_reembolsavel == 33.33`)
+  - **Commit:**
 
 ## Fase 4 — Saída e CLI
 
@@ -188,7 +207,7 @@ exatamente a matriz que a correção vai montar.
 | RN-007 | T-010, T-024, T-025 | `test_rn007_duplicata_negada_primeira_mantida`, `test_rn007_duplicata_ignora_capitalizacao_da_categoria`, `test_calcula_totais_do_periodo` |
 | RN-008 | T-008 | `test_rn008_categoria_fora_da_politica` |
 | RN-009 | T-007, T-025 | `test_rn009_valor_negativo_ignorado`, `test_calcula_totais_do_periodo` |
-| RN-010 | T-005 | `test_rn010_trunca_casas_decimais_excedentes` |
+| RN-010 | T-005, T-026 | `test_rn010_trunca_casas_decimais_excedentes`, `test_saida_ecoa_o_valor_como_veio_na_entrada` |
 | RN-011 | T-006, T-008, T-019, T-024 | `test_rn011_normaliza_categoria_case_insensitive`, `test_categoria_maiuscula_concorre_ao_limite_diario` |
 | RN-012 | T-015 | `test_rn012_sem_adicional_de_viagem`, `test_rn012_hospedagem_no_periodo_nao_amplia_limites` |
 | RN-013 | T-012, T-016 | `test_pipeline_aplica_filtros_na_ordem_definida`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
