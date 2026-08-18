@@ -122,7 +122,7 @@
   - **Atende:** RN-011, RN-007, AMB-009
   - **Executar antes de:** T-020 (a saída depende de qual campo ecoar)
   - **Aceite:** `tests/test_parser.py::test_rn011_normaliza_categoria_na_borda_de_entrada` (`d-014`: `categoria == "alimentacao"` e `categoria_original == "ALIMENTACAO"`) + `tests/test_regras.py::test_rn007_duplicata_ignora_capitalizacao_da_categoria`
-  - **Commit:**
+  - **Commit:** `ddc5f6f`
 
 ## Fase 4 — Saída e CLI
 
