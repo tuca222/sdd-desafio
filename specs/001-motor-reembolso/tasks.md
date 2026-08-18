@@ -175,7 +175,7 @@
 - [x] **T-022** — Teste de integração ponta a ponta contra todos os critérios de aceite da spec.md §9 ("Critérios de aceite")
   - **Atende:** spec.md §9 ("Critérios de aceite") — todos os itens, incluindo `valor_total_despesas = 1806.94` e `valor_total_reembolsavel = 585.43`
   - **Aceite:** `tests/test_integracao.py::test_exemplo_completo_bate_com_criterios_de_aceite`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `d397c72`
 
 - [ ] **T-023** — `README.md` com instruções de rodar (`python -m src.cli calcular --input despesas.json --output resultado.json`) e testar (`pytest -v`)
   - **Atende:** estrutura de entrega exigida pelo desafio
