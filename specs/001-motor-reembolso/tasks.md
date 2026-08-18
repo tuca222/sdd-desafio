@@ -109,7 +109,7 @@
 - [x] **T-019** — Categoria em maiúsculas concorrendo normalmente ao limite diário
   - **Atende:** RN-011, AMB-009
   - **Aceite:** `tests/test_casos_borda.py::test_categoria_maiuscula_concorre_ao_limite_diario` (`d-014`)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `bfb4add`
 
 ## Fase 4 — Saída e CLI
 
