@@ -96,10 +96,10 @@
   - **Aceite:** `tests/test_casos_borda.py::test_valor_exatamente_no_limite_nota_fiscal` + `test_ordem_nota_fiscal_antes_de_limite_diario`
   - **Commit:** `a10891f`
 
-- [ ] **T-017** — Despesa em fim de semana, sem regra especial
+- [x] **T-017** — Despesa em fim de semana, sem regra especial
   - **Atende:** (confirma ausência de regra — spec.md §7, "Casos de borda")
   - **Aceite:** `tests/test_casos_borda.py::test_despesa_fim_de_semana_sem_regra_especial` (`d-012`)
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-018** — Hospedagem multi-diária: noites do texto livre ignoradas, limite é o do dia (`d-010` com nota fiscal, `d-013` sem nota fiscal)
   - **Atende:** RN-003, RN-005, AMB-006
