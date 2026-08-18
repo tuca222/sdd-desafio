@@ -181,7 +181,7 @@
   - **Atende:** estrutura de entrega exigida pelo desafio
   - **Aceite:** seguir os passos do README do zero produz `resultado.json` sem intervenção manual
   - **Verificado em:** checkout limpo via `git archive` (sem `.venv`), venv novo com pip 24.0 — rodar sem instalar nada gerou `resultado.json` idêntico ao exemplo; os passos de teste levaram a 57 testes passando e `ruff` limpo
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `cb7121c`
 
 ---
 
