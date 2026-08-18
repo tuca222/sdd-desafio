@@ -20,7 +20,8 @@ class ExemploProcessado:
 @pytest.fixture
 def exemplo() -> ExemploProcessado:
     _, periodo, despesas = carregar_despesas(CAMINHO_EXEMPLO)
-    resultados_filtros = aplicar_filtros(despesas, periodo)
+    filtros = aplicar_filtros(despesas, periodo)
+    resultados_filtros = filtros.resultados
     resultados_finais = aplicar_limites(despesas, resultados_filtros)
     ids = [despesa.id for despesa in despesas]
 

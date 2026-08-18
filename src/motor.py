@@ -1,7 +1,8 @@
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from src.modelos import Despesa, Periodo, ResultadoDespesa
+from src.modelos import Colaborador, Despesa, Periodo, ResultadoDespesa, ResultadoFinal
 from src.politica import LIMITES_DIARIOS_POR_CATEGORIA
 from src.regras import (
     aplicar_limite_diario,
@@ -13,25 +14,37 @@ from src.regras import (
 )
 
 
-def aplicar_filtros(despesas: list[Despesa], periodo: Periodo) -> list[ResultadoDespesa | None]:
+@dataclass(frozen=True)
+class ResultadoFiltros:
+    resultados: list[ResultadoDespesa | None]
+    ids_duplicatas: set[str]
+
+
+def aplicar_filtros(despesas: list[Despesa], periodo: Periodo) -> ResultadoFiltros:
     resultados: list[ResultadoDespesa | None] = []
+    ids_duplicatas: set[str] = set()
     despesas_ja_aceitas: list[Despesa] = []
 
     for despesa in despesas:
-        reprovacao_estrutural = (
+        reprovacao = (
             filtro_valor_negativo(despesa)
             or filtro_categoria_invalida(despesa)
             or filtro_fora_periodo(despesa, periodo)
-            or filtro_duplicata(despesa, despesas_ja_aceitas)
         )
-        if reprovacao_estrutural is not None:
-            resultados.append(reprovacao_estrutural)
+
+        if reprovacao is None:
+            reprovacao = filtro_duplicata(despesa, despesas_ja_aceitas)
+            if reprovacao is not None:
+                ids_duplicatas.add(despesa.id)
+
+        if reprovacao is not None:
+            resultados.append(reprovacao)
             continue
 
         despesas_ja_aceitas.append(despesa)
         resultados.append(filtro_nota_fiscal(despesa))
 
-    return resultados
+    return ResultadoFiltros(resultados=resultados, ids_duplicatas=ids_duplicatas)
 
 
 def aplicar_limites(
@@ -53,3 +66,30 @@ def aplicar_limites(
         finais.append(resultado_limite)
 
     return finais
+
+
+def calcular(
+    colaborador: Colaborador, periodo: Periodo, despesas: list[Despesa]
+) -> ResultadoFinal:
+    filtros = aplicar_filtros(despesas, periodo)
+    resultados = aplicar_limites(despesas, filtros.resultados)
+
+    valor_total_despesas = sum(
+        (
+            despesa.valor
+            for despesa in despesas
+            if despesa.valor >= 0 and despesa.id not in filtros.ids_duplicatas
+        ),
+        Decimal("0.00"),
+    )
+    valor_total_reembolsavel = sum(
+        (resultado.valor_reembolsavel for resultado in resultados), Decimal("0.00")
+    )
+
+    return ResultadoFinal(
+        colaborador=colaborador,
+        periodo=periodo,
+        valor_total_despesas=valor_total_despesas,
+        valor_total_reembolsavel=valor_total_reembolsavel,
+        detalhamento=list(zip(despesas, resultados, strict=True)),
+    )

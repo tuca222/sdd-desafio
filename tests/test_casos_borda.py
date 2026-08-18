@@ -63,7 +63,7 @@ def test_despesa_fim_de_semana_sem_regra_especial(exemplo: ExemploProcessado):
     assert em_dia_util.data.weekday() < SABADO
 
     despesas = [no_fim_de_semana, em_dia_util]
-    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, exemplo.periodo))
+    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, exemplo.periodo).resultados)
 
     assert resultados[0] == resultados[1]
 
@@ -88,7 +88,7 @@ def test_hospedagem_multi_diaria_sem_campo_estruturado(exemplo: ExemploProcessad
         replace(d010, id="d-010-dez-diarias", descricao="Hotel Rio - 10 diarias"),
     ]
     resultados_variantes = [
-        aplicar_limites([variante], aplicar_filtros([variante], exemplo.periodo))[0]
+        aplicar_limites([variante], aplicar_filtros([variante], exemplo.periodo).resultados)[0]
         for variante in variantes
     ]
 
@@ -116,7 +116,7 @@ def test_categoria_maiuscula_concorre_ao_limite_diario(exemplo: ExemploProcessad
         valor=Decimal("30.00"),
     )
     despesas = [lancada_em_minusculas, d014]
-    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, exemplo.periodo))
+    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, exemplo.periodo).resultados)
 
     assert resultados[0].tipo_reembolso == "total"
     assert resultados[0].valor_reembolsavel == Decimal("30.00")

@@ -2,7 +2,8 @@ from datetime import date
 from decimal import Decimal
 
 from src.modelos import Despesa, Periodo
-from src.motor import aplicar_filtros, aplicar_limites
+from src.motor import aplicar_filtros, aplicar_limites, calcular
+from src.parser import carregar_despesas
 from src.regras import (
     filtro_categoria_invalida,
     filtro_duplicata,
@@ -71,7 +72,7 @@ def test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia():
     )
     despesas = [primeira, segunda]
 
-    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, periodo))
+    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, periodo).resultados)
 
     assert resultados[0].tipo_reembolso == "parcial"
     assert resultados[0].valor_reembolsavel == Decimal("250.00")
@@ -105,7 +106,7 @@ def test_rn003_hospedagem_em_dias_diferentes_tem_limite_proprio():
         ),
     ]
 
-    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, periodo))
+    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, periodo).resultados)
 
     assert resultados[0].valor_reembolsavel == Decimal("250.00")
     assert resultados[1].valor_reembolsavel == Decimal("250.00")
@@ -146,7 +147,7 @@ def test_rn012_hospedagem_no_periodo_nao_amplia_limites():
         ),
     ]
 
-    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, periodo))
+    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, periodo).resultados)
 
     assert resultados[1].valor_reembolsavel == Decimal("60.00")
     assert resultados[2].valor_reembolsavel == Decimal("80.00")
@@ -158,3 +159,40 @@ def test_pipeline_da_uma_unica_justificativa_por_despesa(exemplo: ExemploProcess
         if resultado is not None:
             assert resultado.tipo_reembolso == "nenhum"
             assert "negado" in resultado.justificativa
+
+
+def test_calcula_totais_do_periodo():
+    colaborador, periodo, despesas = carregar_despesas("exemplos/despesas-exemplo.json")
+
+    resultado_final = calcular(colaborador, periodo, despesas)
+
+    assert resultado_final.valor_total_despesas == Decimal("1806.94")
+    assert resultado_final.valor_total_reembolsavel == Decimal("585.43")
+
+    por_id = {despesa.id: despesa for despesa in despesas}
+    soma_de_todas = sum((despesa.valor for despesa in despesas), Decimal("0.00"))
+
+    # O bruto exclui exatamente a duplicata (RN-007) e o estorno (RN-009) — e so eles.
+    assert resultado_final.valor_total_despesas == (
+        soma_de_todas - por_id["d-007"].valor - por_id["d-009"].valor
+    )
+
+    # d-005 (categoria fora da politica) e d-008 (fora do periodo) continuam no bruto.
+    assert resultado_final.valor_total_despesas > por_id["d-005"].valor + por_id["d-008"].valor
+
+    assert resultado_final.valor_total_reembolsavel == sum(
+        (resultado.valor_reembolsavel for _, resultado in resultado_final.detalhamento),
+        Decimal("0.00"),
+    )
+
+
+def test_calcular_preserva_colaborador_periodo_e_ordem_da_entrada():
+    colaborador, periodo, despesas = carregar_despesas("exemplos/despesas-exemplo.json")
+
+    resultado_final = calcular(colaborador, periodo, despesas)
+
+    assert resultado_final.colaborador == colaborador
+    assert resultado_final.periodo == periodo
+    assert [despesa.id for despesa, _ in resultado_final.detalhamento] == [
+        despesa.id for despesa in despesas
+    ]

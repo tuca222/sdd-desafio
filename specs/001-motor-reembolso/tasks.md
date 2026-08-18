@@ -124,7 +124,7 @@
   - **Aceite:** `tests/test_parser.py::test_rn011_normaliza_categoria_na_borda_de_entrada` (`d-014`: `categoria == "alimentacao"` e `categoria_original == "ALIMENTACAO"`) + `tests/test_regras.py::test_rn007_duplicata_ignora_capitalizacao_da_categoria`
   - **Commit:** `ddc5f6f`
 
-- [ ] **T-025** — `motor.calcular()`: monta o `ResultadoFinal` computando `valor_total_despesas` e `valor_total_reembolsavel`
+- [x] **T-025** — `motor.calcular()`: monta o `ResultadoFinal` computando `valor_total_despesas` e `valor_total_reembolsavel`
   - **Atende:** spec.md §4 ("Entrada e saída"), RN-007, RN-009
   - **Por que existe:** nenhuma task do planejamento original computava os dois
     totais. A T-020 (`saida.py`) apenas serializa o `ResultadoFinal`, e a T-021
@@ -139,7 +139,7 @@
     `exemplos/despesas-exemplo.json`, `valor_total_despesas == 1806.94` (exclui
     `d-007` e `d-009`, inclui `d-005` e `d-008`) e
     `valor_total_reembolsavel == 585.43`
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 ## Fase 4 — Saída e CLI
 
