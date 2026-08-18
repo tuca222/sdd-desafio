@@ -167,10 +167,10 @@
   - **Aceite:** `tests/test_saida.py::test_monta_saida_conforme_schema`
   - **Commit:** `5c090ad`
 
-- [ ] **T-021** — `cli.py`: subcomando `calcular --input --output`, orquestra parser → motor → saida → escrita em arquivo
-  - **Atende:** interface fixa do desafio (`DESAFIO.md`), spec.md §4 ("Entrada e saída")
+- [x] **T-021** — `cli.py`: subcomando `calcular --input --output`, orquestra parser → motor → saida → escrita em arquivo
+  - **Atende:** interface fixa do desafio (`DESAFIO.md`), spec.md §4 ("Entrada e saída"), spec.md §3 ("Fora de escopo" — não altera a entrada)
   - **Aceite:** `tests/test_cli.py::test_cli_calcular_gera_arquivo_de_saida`
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-022** — Teste de integração ponta a ponta contra todos os critérios de aceite da spec.md §9 ("Critérios de aceite")
   - **Atende:** spec.md §9 ("Critérios de aceite") — todos os itens, incluindo `valor_total_despesas = 1806.94` e `valor_total_reembolsavel = 585.43`
