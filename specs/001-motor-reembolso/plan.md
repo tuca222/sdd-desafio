@@ -16,20 +16,29 @@
 ## 2. Arquitetura
 
 ```
-despesas.json → parser.py (parse + Decimal + truncamento RN-010)
+despesas.json → parser.py (parse + Decimal + truncamento RN-010 +
+                          normalização de categoria RN-011)
              → motor.py (orquestra a ordem de aplicação definida na
                           spec.md §8 "Ordem de aplicação das regras" +
                           agregação de limite diário, chamando
-                          as funções puras de regras.py)
+                          as funções puras de regras.py; devolve um
+                          ResultadoFinal já com os dois totais do
+                          período calculados)
              → saida.py (monta o JSON de saída, Decimal → float)
              → resultado.json
 
 cli.py orquestra as quatro etapas (parser → motor → saida → escrita).
 ```
 
+Os totais do período são calculados no `motor.py`, não no `saida.py`: decidir
+o que entra em `valor_total_despesas` é regra de negócio (exclui RN-009 e
+RN-007, inclui RN-006 e RN-008), e depende de saber qual filtro reprovou cada
+despesa — informação que só existe dentro do pipeline. `saida.py` recebe os
+totais prontos e só os serializa.
+
 **Fronteiras:** `regras.py` (uma função pura por RN, sem estado, sem I/O) e
 `motor.py` (orquestração da ordem definida na spec.md §8, "Ordem de aplicação
-das regras", e da agregação de limite diário) são
+das regras", da agregação de limite diário e do cálculo dos totais) são
 o núcleo de regra de negócio puro — recebem dados já parseados e devolvem
 decisão + justificativa, nunca tocam em filesystem. `parser.py`, `saida.py` e
 `cli.py` são I/O. Essa linha é o que permite testar toda regra de negócio sem

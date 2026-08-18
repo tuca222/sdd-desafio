@@ -124,6 +124,23 @@
   - **Aceite:** `tests/test_parser.py::test_rn011_normaliza_categoria_na_borda_de_entrada` (`d-014`: `categoria == "alimentacao"` e `categoria_original == "ALIMENTACAO"`) + `tests/test_regras.py::test_rn007_duplicata_ignora_capitalizacao_da_categoria`
   - **Commit:** `ddc5f6f`
 
+- [ ] **T-025** — `motor.calcular()`: monta o `ResultadoFinal` computando `valor_total_despesas` e `valor_total_reembolsavel`
+  - **Atende:** spec.md §4 ("Entrada e saída"), RN-007, RN-009
+  - **Por que existe:** nenhuma task do planejamento original computava os dois
+    totais. A T-020 (`saida.py`) apenas serializa o `ResultadoFinal`, e a T-021
+    (`cli.py`) apenas orquestra — o cálculo ficou sem dono. Não é soma trivial:
+    `valor_total_despesas` exclui negativos (RN-009) e duplicatas (RN-007), mas
+    **inclui** despesas negadas por categoria fora da política (RN-008) e por
+    período (RN-006). Saber quais foram duplicatas é conhecimento que só existe
+    dentro de `aplicar_filtros`, e hoje é descartado quando a função retorna.
+  - **Executar antes de:** T-021 e T-022 (sem os totais, a integração não fecha
+    `valor_total_despesas = 1806.94`)
+  - **Aceite:** `tests/test_motor.py::test_calcula_totais_do_periodo` — sobre
+    `exemplos/despesas-exemplo.json`, `valor_total_despesas == 1806.94` (exclui
+    `d-007` e `d-009`, inclui `d-005` e `d-008`) e
+    `valor_total_reembolsavel == 585.43`
+  - **Commit:**
+
 ## Fase 4 — Saída e CLI
 
 - [x] **T-020** — `saida.py`: monta o dict de saída completo (`valor_total_despesas`, `valor_total_reembolsavel`, `detalhamento_despesas[].motor_reembolso_output`), conversão `Decimal → float` só na borda
@@ -168,11 +185,11 @@ exatamente a matriz que a correção vai montar.
 | RN-004 | T-013, T-014 | (definição validada pelos testes de RN-001/002/003) |
 | RN-005 | T-011, T-012, T-016, T-018 | `test_rn005_nota_fiscal_obrigatoria_acima_de_100`, `test_rn005_valor_exatamente_100_nao_exige`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
 | RN-006 | T-009 | `test_rn006_fora_do_periodo_negado`, `test_rn006_data_no_extremo_do_periodo_aceita` |
-| RN-007 | T-010 | `test_rn007_duplicata_negada_primeira_mantida` |
+| RN-007 | T-010, T-024, T-025 | `test_rn007_duplicata_negada_primeira_mantida`, `test_rn007_duplicata_ignora_capitalizacao_da_categoria`, `test_calcula_totais_do_periodo` |
 | RN-008 | T-008 | `test_rn008_categoria_fora_da_politica` |
-| RN-009 | T-007 | `test_rn009_valor_negativo_ignorado` |
+| RN-009 | T-007, T-025 | `test_rn009_valor_negativo_ignorado`, `test_calcula_totais_do_periodo` |
 | RN-010 | T-005 | `test_rn010_trunca_casas_decimais_excedentes` |
-| RN-011 | T-006, T-008, T-019 | `test_rn011_normaliza_categoria_case_insensitive`, `test_categoria_maiuscula_concorre_ao_limite_diario` |
+| RN-011 | T-006, T-008, T-019, T-024 | `test_rn011_normaliza_categoria_case_insensitive`, `test_categoria_maiuscula_concorre_ao_limite_diario` |
 | RN-012 | T-015 | `test_rn012_sem_adicional_de_viagem`, `test_rn012_hospedagem_no_periodo_nao_amplia_limites` |
 | RN-013 | T-012, T-016 | `test_pipeline_aplica_filtros_na_ordem_definida`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
 | AMB-001 | T-013 | `test_rn001_limite_diario_alimentacao` |
