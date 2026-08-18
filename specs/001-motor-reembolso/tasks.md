@@ -99,7 +99,7 @@
 - [x] **T-017** — Despesa em fim de semana, sem regra especial
   - **Atende:** (confirma ausência de regra — spec.md §7, "Casos de borda")
   - **Aceite:** `tests/test_casos_borda.py::test_despesa_fim_de_semana_sem_regra_especial` (`d-012`)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `f70db69`
 
 - [ ] **T-018** — Hospedagem multi-diária: noites do texto livre ignoradas, limite é o do dia (`d-010` com nota fiscal, `d-013` sem nota fiscal)
   - **Atende:** RN-003, RN-005, AMB-006
