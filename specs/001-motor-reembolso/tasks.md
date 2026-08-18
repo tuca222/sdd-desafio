@@ -84,10 +84,10 @@
   - **Aceite:** `tests/test_regras.py::test_rn003_limite_diario_hospedagem` (`d-010`) + `tests/test_motor.py::test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia`
   - **Commit:** `0fc3bd2`
 
-- [ ] **T-015** — Confirma que o adicional de viagem não é aplicado em nenhuma circunstância
+- [x] **T-015** — Confirma que o adicional de viagem não é aplicado em nenhuma circunstância
   - **Atende:** RN-012
-  - **Aceite:** `tests/test_regras.py::test_rn012_sem_adicional_de_viagem`
-  - **Commit:**
+  - **Aceite:** `tests/test_regras.py::test_rn012_sem_adicional_de_viagem` + `tests/test_motor.py::test_rn012_hospedagem_no_periodo_nao_amplia_limites` (cenário que AMB-005 proíbe inferir)
+  - **Commit:** `<hash preenchido depois>`
 
 ## Fase 3 — Casos de borda
 
@@ -160,13 +160,13 @@ exatamente a matriz que a correção vai montar.
 | RN-009 | T-007 | `test_rn009_valor_negativo_ignorado` |
 | RN-010 | T-005 | `test_rn010_trunca_casas_decimais_excedentes` |
 | RN-011 | T-006, T-008, T-019 | `test_rn011_normaliza_categoria_case_insensitive`, `test_categoria_maiuscula_concorre_ao_limite_diario` |
-| RN-012 | T-015 | `test_rn012_sem_adicional_de_viagem` |
+| RN-012 | T-015 | `test_rn012_sem_adicional_de_viagem`, `test_rn012_hospedagem_no_periodo_nao_amplia_limites` |
 | RN-013 | T-012, T-016 | `test_pipeline_aplica_filtros_na_ordem_definida`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
 | AMB-001 | T-013 | `test_rn001_limite_diario_alimentacao` |
 | AMB-002 | T-013, T-014 | (mesmos testes de RN-004) |
 | AMB-003 | T-016 | `test_valor_exatamente_no_limite_nota_fiscal` |
 | AMB-004 | T-012, T-016 | `test_pipeline_aplica_filtros_na_ordem_definida`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
-| AMB-005 | T-015 | `test_rn012_sem_adicional_de_viagem` |
+| AMB-005 | T-015 | `test_rn012_sem_adicional_de_viagem`, `test_rn012_hospedagem_no_periodo_nao_amplia_limites` |
 | AMB-006 | T-014, T-018 | `test_rn003_limite_diario_hospedagem`, `test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia`, `test_hospedagem_multi_diaria_sem_campo_estruturado` |
 | AMB-007 | T-010 | `test_rn007_duplicata_negada_primeira_mantida` |
 | AMB-008 | T-007 | `test_rn009_valor_negativo_ignorado` |

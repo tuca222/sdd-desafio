@@ -283,6 +283,39 @@ def test_rn003_limite_diario_hospedagem():
     assert "parcial" in resultado.justificativa
 
 
+def test_rn012_sem_adicional_de_viagem():
+    almoco_acima_do_limite = Despesa(
+        id="d-400",
+        data=date(2026, 7, 14),
+        categoria="alimentacao",
+        descricao="Almoco em viagem",
+        fornecedor="Restaurante do Hotel",
+        valor=Decimal("90.00"),
+        tem_nota_fiscal=True,
+    )
+    corrida_acima_do_limite = Despesa(
+        id="d-401",
+        data=date(2026, 7, 14),
+        categoria="transporte_urbano",
+        descricao="Corrida em viagem",
+        fornecedor="TaxiApp",
+        valor=Decimal("120.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado_alimentacao = aplicar_limite_diario(almoco_acima_do_limite, LIMITE_ALIMENTACAO, [])
+    resultado_transporte = aplicar_limite_diario(
+        corrida_acima_do_limite, LIMITE_TRANSPORTE_URBANO, []
+    )
+
+    # Os valores sao os limites padrao ampliados em 50% (60 -> 90, 80 -> 120):
+    # se o adicional fosse aplicado, ambos virariam reembolso total.
+    assert resultado_alimentacao.tipo_reembolso == "parcial"
+    assert resultado_alimentacao.valor_reembolsavel == Decimal("60.00")
+    assert resultado_transporte.tipo_reembolso == "parcial"
+    assert resultado_transporte.valor_reembolsavel == Decimal("80.00")
+
+
 def test_rn003_hospedagem_dentro_do_limite_reembolsa_total():
     hospedagem_barata = Despesa(
         id="d-200",

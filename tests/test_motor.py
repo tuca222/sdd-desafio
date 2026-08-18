@@ -118,6 +118,44 @@ def test_rn003_hospedagem_em_dias_diferentes_tem_limite_proprio():
     assert resultados[1].valor_reembolsavel == Decimal("250.00")
 
 
+def test_rn012_hospedagem_no_periodo_nao_amplia_limites():
+    periodo = Periodo(competencia="2026-07", inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
+    despesas = [
+        Despesa(
+            id="d-500",
+            data=date(2026, 7, 14),
+            categoria="hospedagem",
+            descricao="Hotel - viagem a trabalho",
+            fornecedor="Hotel Copa Sul",
+            valor=Decimal("200.00"),
+            tem_nota_fiscal=True,
+        ),
+        Despesa(
+            id="d-501",
+            data=date(2026, 7, 14),
+            categoria="alimentacao",
+            descricao="Jantar durante a viagem",
+            fornecedor="Restaurante do Hotel",
+            valor=Decimal("90.00"),
+            tem_nota_fiscal=True,
+        ),
+        Despesa(
+            id="d-502",
+            data=date(2026, 7, 14),
+            categoria="transporte_urbano",
+            descricao="Corrida durante a viagem",
+            fornecedor="TaxiApp",
+            valor=Decimal("120.00"),
+            tem_nota_fiscal=True,
+        ),
+    ]
+
+    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, periodo))
+
+    assert resultados[1].valor_reembolsavel == Decimal("60.00")
+    assert resultados[2].valor_reembolsavel == Decimal("80.00")
+
+
 def test_pipeline_da_uma_unica_justificativa_por_despesa():
     despesas, resultados, _ = resultados_por_id()
 
