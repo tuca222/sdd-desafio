@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 1.5 · **Status:** em implementação (Fase 2 — regras de negócio) · **Última alteração:** `18/08/2026`
+**Versão:** 1.6 · **Status:** em implementação (Fase 2 — regras de negócio) · **Última alteração:** `18/08/2026`
 
 ---
 
@@ -47,7 +47,7 @@ verificável para cada decisão, sem intervenção humana.
 | `despesas[]`  | array | Lista de despesas do colaborador lançadas naquele período. Cada elemento da lista é um objeto com os dados da despesa | Sim |
 | `despesas[].id` | string | Identificador único da despesa | Sim |
 | `despesas[].data` | string (AAAA-MM-DD) | Data em que a despesa ocorreu | Sim |
-| `despesas[].categoria` | string | Categoria da despesa (comparada de forma normalizada — ver RN-011) | Sim |
+| `despesas[].categoria` | string | Categoria da despesa. É normalizada para minúsculas na leitura da entrada, antes de qualquer regra — ver RN-011 | Sim |
 | `despesas[].descricao` | string | Descrição livre da despesa | Sim |
 | `despesas[].fornecedor` | string | Fornecedor/estabelecimento | Sim |
 | `despesas[].valor` | número | Valor da despesa em R$; pode ter mais de 2 casas decimais (ver RN-010) ou ser negativo (ver RN-009) | Sim |
@@ -61,7 +61,7 @@ verificável para cada decisão, sem intervenção humana.
 | `periodo` | objeto | Copiado da entrada, sem alteração |
 | `valor_total_despesas` | número | Soma do `valor` (já truncado, ver RN-010) de todas as despesas da entrada, **exceto** as ignoradas por valor negativo (RN-009) e as identificadas como duplicata (RN-007) |
 | `valor_total_reembolsavel` | número | Soma do campo `valor_reembolsavel` de todas as despesas dentro de detalhamento_despesas |
-| `detalhamento_despesas[]` | array | Lista com os mesmos objetos da lista `despesas` de entrada, na mesma ordem, com os mesmos campos originais, porém com a adição do objeto `motor_reembolso_output` |
+| `detalhamento_despesas[]` | array | Lista com os mesmos objetos da lista `despesas` de entrada, na mesma ordem, com os mesmos campos originais, porém com a adição do objeto `motor_reembolso_output`. "Campos originais" é literal: `categoria` sai com a grafia exata que entrou, mesmo tendo sido normalizada internamente para decidir (RN-011) |
 | `detalhamento_despesas[].motor_reembolso_output` | objeto | Objeto com os dados de saída gerados pelo motor para cada despesa |
 | `detalhamento_despesas[].motor_reembolso_output.despesa_reembolsavel` | booleano | `true` se `valor_reembolsavel > 0`. Ou seja, se reembolso parcial `despesa_reembolsavel == true`|
 | `detalhamento_despesas[].motor_reembolso_output.tipo_reembolso` | string (`total`\|`parcial`\|`nenhum`) | Definição do tipo do reembolso. Sendo `total` se reembolsa o valor cheio, `parcial` se reembolsa apenas uma parte do valor da despesa, `nenhum` se nada é reembolsado |
@@ -241,7 +241,10 @@ citando o período de competência.
 
 **Regra:** duas despesas cujos campos `data`, `categoria`, `descricao`, `fornecedor`,
 `valor` e `tem_nota_fiscal` são todos idênticos (o `id` é o único campo que pode
-diferir) são consideradas o mesmo lançamento repetido. Apenas a primeira ocorrência
+diferir) são consideradas o mesmo lançamento repetido. A comparação de `categoria`
+usa a forma normalizada (RN-011): `ALIMENTACAO` e `alimentacao` são a mesma
+categoria também aqui, então duas despesas que diferem só pela capitalização **são**
+duplicatas. Apenas a primeira ocorrência
 (pela ordem em que aparece na entrada) é avaliada normalmente pelas demais regras; as
 ocorrências seguintes são negadas integralmente, com a justificativa citando a
 despesa original (formato em `spec.md` §4, "Entrada e saída"). As
@@ -285,12 +288,21 @@ fiscal.
 
 ### RN-011 — Normalização de categoria
 
-**Regra:** a comparação de `categoria` contra as categorias da política
-(`alimentacao`, `transporte_urbano`, `hospedagem`) ignora diferença de
-maiúsculas/minúsculas.
+**Regra:** a `categoria` de cada despesa é normalizada para minúsculas **uma única
+vez, na leitura da entrada**, antes de qualquer regra ser avaliada. Daí em diante,
+toda regra desta spec — comparação com as categorias da política (RN-008),
+agrupamento por categoria+dia para o limite diário (RN-001, RN-002, RN-003) e
+comparação de campos para duplicata (RN-007) — enxerga apenas a forma normalizada.
+Nenhuma regra normaliza por conta própria, e portanto nenhuma pode divergir das
+outras nesse ponto.
+
+A grafia original **não é descartada**: ela é preservada e devolvida sem alteração
+no campo `categoria` de `detalhamento_despesas[]` (ver §4, "Entrada e saída"). A
+normalização existe para decidir, não para reescrever o que o colaborador lançou.
 **Origem:** dado de entrada; desambiguado por AMB-009.
 **Aceite:** `d-014` (categoria `ALIMENTACAO`) é tratado como `alimentacao` e concorre
-normalmente ao limite diário da categoria.
+normalmente ao limite diário da categoria, mas aparece na saída com a `categoria`
+ainda em `ALIMENTACAO`.
 
 ### RN-012 — Adicional de viagem (não implementado)
 
@@ -456,12 +468,21 @@ grafias diferentes.
 **O que não está claro:** `d-014` chega com categoria `ALIMENTACAO` (maiúsculo).
 Comparação estrita trataria isso como categoria desconhecida (igual a `d-005`,
 `coworking`); comparação normalizada trataria como `alimentacao`.
-**Decisão:** a comparação de categoria é normalizada (case-insensitive).
+**Decisão:** a comparação de categoria é normalizada (case-insensitive), e a
+normalização acontece **na borda de entrada**, não dentro de cada regra: o valor já
+chega normalizado a todas as verificações, inclusive à comparação de duplicata
+(RN-007). A grafia original é preservada e ecoada na saída.
 **Justificativa:** a variação de maiúsculas/minúsculas é um problema de formatação de
 dado, não uma categoria de negócio diferente; negar reembolso legítimo por causa de
 capitalização seria um efeito colateral não intencional de uma regra pensada para
-filtrar categorias realmente fora da política.
-**Regra afetada:** RN-008, RN-011.
+filtrar categorias realmente fora da política. Normalizar na borda, e não regra a
+regra, elimina a classe inteira de bug em que uma regra normaliza e outra esquece —
+que já apareceu aqui: enquanto a normalização era responsabilidade de cada regra,
+duas despesas idênticas exceto pela capitalização da categoria **não** eram
+detectadas como duplicata, porque RN-007 comparava a grafia crua. Preservar a grafia
+original para a saída mantém o relatório fiel ao que foi lançado, o que é o que
+permite conferir a decisão contra o comprovante.
+**Regra afetada:** RN-007, RN-008, RN-011.
 
 ### AMB-010 — Arredondamento de valores com mais de 2 casas decimais
 
@@ -510,7 +531,8 @@ Casos citados (`d-003`, `d-004`, etc.) são despesas de `exemplos/despesas-exemp
 | Duas hospedagens na mesma data | dois lançamentos de `hospedagem` com a mesma `data` | Dividem o mesmo limite de R$250,00 do dia — não recebem R$250,00 cada | RN-003, AMB-006 |
 | Valor com mais de 2 casas decimais | `d-011`, valor `33.333` | Truncado para R$33,33 antes de qualquer verificação | RN-010 |
 | Despesa em fim de semana | `d-012`, sábado, "plantão" | Tratada normalmente — a política não distingue dia útil de fim de semana | (confirma ausência de regra especial) |
-| Categoria com grafia em maiúsculas | `d-014`, categoria `ALIMENTACAO` | Normalizada e tratada como `alimentacao` | RN-011, AMB-009 |
+| Categoria com grafia em maiúsculas | `d-014`, categoria `ALIMENTACAO` | Normalizada e tratada como `alimentacao` para decidir; devolvida como `ALIMENTACAO` na saída | RN-011, AMB-009 |
+| Duas despesas idênticas exceto pela capitalização da categoria | duas despesas iguais em tudo, uma com `alimentacao` e outra com `ALIMENTACAO` | São duplicatas — a comparação de RN-007 usa a categoria já normalizada | RN-007, RN-011, AMB-009 |
 | Despesa datada exatamente no primeiro ou último dia do período | qualquer despesa com `data == periodo.inicio` ou `data == periodo.fim` | Dentro do período (inclusivo) | RN-006, AMB-011 |
 
 ## 8. Ordem de aplicação das regras

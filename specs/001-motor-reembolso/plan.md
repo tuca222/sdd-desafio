@@ -1,6 +1,6 @@
 # Plano Técnico — Motor de Cálculo de Reembolso
 
-**Versão:** 1.4 · **Baseado na spec:** 1.5
+**Versão:** 1.5 · **Baseado na spec:** 1.6
 
 ---
 
@@ -44,8 +44,12 @@ de criada):
 - `Colaborador` — `id`, `nome`, `centro_custo`.
 - `Periodo` — `competencia`, `inicio`, `fim` (datas).
 - `Despesa` — campos da entrada (`id`, `data`, `categoria`, `descricao`,
-  `fornecedor`, `tem_nota_fiscal`) e `valor: Decimal` já truncado (RN-010) no
-  momento em que a instância é criada em `parser.py`.
+  `fornecedor`, `tem_nota_fiscal`), `valor: Decimal` já truncado (RN-010) e
+  `categoria` já normalizada (RN-011) no momento em que a instância é criada
+  em `parser.py`. Mantém também `categoria_original: str` com a grafia como
+  veio na entrada — usada **apenas** por `saida.py`, porque a spec.md §4
+  ("Entrada e saída") exige que a saída ecoe os campos originais. Toda regra
+  usa `categoria`; nenhuma usa `categoria_original`.
 - `ResultadoDespesa` — `despesa_reembolsavel: bool`, `tipo_reembolso: str`,
   `valor_reembolsavel: Decimal`, `justificativa: str`. Corresponde 1:1 ao
   `motor_reembolso_output` da spec.
@@ -98,6 +102,21 @@ limite — repete a lógica em vários pontos e arrisca esquecer um deles quando
 uma nova regra for adicionada (ex.: no envelope do dia 2).
 **Consequência:** toda regra em `regras.py` pode assumir que `despesa.valor`
 já está correto; simplifica cada função de regra individual.
+
+### DT-005 — Normalização de categoria (RN-011) na borda, como o truncamento
+
+**Contexto:** RN-011 normaliza `categoria` antes de qualquer regra. A versão
+anterior deixava cada regra chamar `normalizar_categoria` por conta própria.
+**Decisão:** o `parser.py` normaliza no momento em que constrói `Despesa`,
+guardando a grafia crua em `categoria_original`. `regras.py` e `motor.py` leem
+`despesa.categoria` direto, sem normalizar. Mesmo princípio de DT-002.
+**Alternativa descartada:** manter a normalização espalhada nas regras. Não é
+hipotética: enquanto era assim, `filtro_duplicata` comparava a grafia crua e
+duas despesas idênticas exceto pela capitalização não eram detectadas como
+duplicata (ver `DECISIONS.md` D-005).
+**Consequência:** não existe mais caminho pelo qual uma regra veja a categoria
+não normalizada, então o bug não pode voltar por esquecimento. O custo é o
+campo extra em `Despesa`, que só a saída lê.
 
 ### DT-003 — Duplicata é detectada antes da agregação de limite diário
 

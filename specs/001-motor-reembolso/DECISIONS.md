@@ -10,6 +10,71 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-005 — Normalização de categoria migra para a borda de entrada · `18/08/2026`
+
+**Gatilho:** ao escrever o teste da T-019, o agente precisou dar descrições
+diferentes às duas despesas do cenário para evitar que elas colidissem como
+duplicatas, e ao explicar por quê percebeu — e reportou — uma inconsistência:
+`filtro_duplicata` comparava `categoria` **crua**, enquanto RN-008 e o limite
+diário comparavam a versão **normalizada**. Consequência: duas despesas
+idênticas em tudo, diferindo só por `alimentacao` vs `ALIMENTACAO`, não eram
+detectadas como duplicata. A decisão do usuário foi normalizar na entrada,
+para que nenhuma verificação do motor precise se preocupar com isso.
+
+**O que mudou na spec:**
+- RN-011 deixou de ser "a comparação ignora maiúsculas/minúsculas" e passou a
+  dizer **onde** a normalização acontece: uma única vez, na leitura da
+  entrada, antes de qualquer regra. Lista explicitamente as regras que passam
+  a enxergar só a forma normalizada — RN-008, RN-001/002/003 e RN-007.
+- RN-007 passou a declarar que a comparação de `categoria` usa a forma
+  normalizada, e que duas despesas diferindo só pela capitalização **são**
+  duplicatas. É mudança de comportamento, não só de redação.
+- AMB-009 teve a decisão estendida (normalizar na borda, não regra a regra) e
+  a justificativa passou a citar o bug real como evidência.
+- §4 ("Entrada e saída") ganhou, nos dois lados: na entrada, que `categoria` é
+  normalizada na leitura; na saída, que `categoria` sai com a **grafia exata
+  que entrou**.
+- §7 ("Casos de borda") ganhou a linha da duplicata que difere só por
+  capitalização.
+
+**Por quê:** a forma antiga distribuía a mesma decisão por N pontos de
+chamada, e bastava um deles esquecer para a regra divergir de si mesma — que
+é exatamente o que aconteceu. Normalizar na borda transforma "toda regra
+precisa lembrar de normalizar" em "é impossível uma regra ver o valor não
+normalizado". A classe inteira de bug desaparece, em vez de ser corrigida
+caso a caso.
+
+**A parte não óbvia — por que a grafia original sobrevive:** §4 exige que
+`detalhamento_despesas[]` devolva "os mesmos campos originais", e
+`exemplos/resultado-exemplo.json` mostra `d-014` saindo com `ALIMENTACAO`.
+Normalizar destrutivamente na entrada quebraria isso. Por isso `Despesa`
+passou a ter **dois** campos: `categoria` (normalizada, é o que toda regra
+usa) e `categoria_original` (crua, existe só para a saída ecoar). A
+alternativa — `saida.py` reler o JSON de entrada para recuperar a grafia —
+foi descartada: faria a camada de saída depender do formato bruto do arquivo,
+furando a fronteira que o `plan.md` §2 ("Arquitetura") estabelece.
+
+**O que isso invalidou:** `normalizar_categoria` deixou de ser chamada em
+`filtro_categoria_invalida`, `aplicar_limite_diario` e `motor.py` — continua
+existindo, mas só o `parser.py` a chama. As construções de `Despesa` nos
+testes passaram a informar `categoria_original`.
+
+**Tasks afetadas:** T-024, criada para esta mudança (a numeração continua de
+T-023; ela não pertence a nenhuma fase do planejamento original). T-020 tinha
+de ser executada depois desta, porque a saída depende de qual dos dois campos
+ecoar — registrado na própria task.
+
+**Custo:** resolvido antes de a Fase 4 começar. Arquivos alterados:
+`specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`,
+`specs/001-motor-reembolso/tasks.md`,
+`src/modelos.py`, `src/parser.py`, `src/regras.py`, `src/motor.py`,
+`tests/test_modelos.py`, `tests/test_parser.py`, `tests/test_regras.py`,
+`tests/test_motor.py`, `tests/test_casos_borda.py`.
+
+---
+
 ## D-004 — Hospedagem: limite de R$250,00 é diário e agregado, não por lançamento · `18/08/2026`
 
 **Gatilho:** o agente implementou a T-014 tratando cada lançamento de
@@ -76,9 +141,14 @@ interpretação.
 a entrar no histórico). T-018 (caso de borda de hospedagem multi-diária) teve
 a descrição ajustada para a regra correta antes de ser executada.
 
-**Custo:** 7 arquivos (`spec.md`, `DECISIONS.md`, `plan.md`, `tasks.md`,
-`exemplos/resultado-exemplo.json`, `src/politica.py`, `src/regras.py`,
-`src/motor.py` + 2 arquivos de teste), resolvido dentro da própria T-014.
+**Custo:** resolvido dentro da própria T-014. Arquivos alterados:
+`specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`,
+`specs/001-motor-reembolso/tasks.md`,
+`exemplos/resultado-exemplo.json`,
+`src/politica.py`, `src/motor.py`,
+`tests/test_regras.py`, `tests/test_motor.py`.
 
 ---
 
@@ -118,9 +188,14 @@ corrigidos na mesma leva. Nenhum teste quebrou sem ser corrigido junto.
 estava no formato certo. Qualquer task futura que cite despesa na
 justificativa passa a ter a regra em um lugar só.
 
-**Custo:** 5 arquivos (`spec.md`, `DECISIONS.md`, `plan.md`,
-`exemplos/resultado-exemplo.json`, `src/regras.py` + teste), resolvido dentro
-da própria T-013.
+**Custo:** resolvido dentro da própria T-013. Arquivos alterados:
+`specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`,
+`specs/001-motor-reembolso/tasks.md`,
+`exemplos/resultado-exemplo.json`,
+`src/politica.py`, `src/regras.py`, `src/motor.py`,
+`tests/test_regras.py`.
 
 ---
 
@@ -171,9 +246,13 @@ já valida o formato novo (`"Almoco(d-006)" in resultado.justificativa`).
 T-022 (integração ponta a ponta) passa a ter um alvo consistente entre spec e
 exemplo para este item.
 
-**Custo:** 5 arquivos (`spec.md`, `DECISIONS.md`, `plan.md`,
-`exemplos/resultado-exemplo.json`, `src/regras.py` + teste), resolvido dentro
-da própria T-010, sem reabrir task anterior.
+**Custo:** resolvido dentro da própria T-010, sem reabrir task anterior.
+Arquivos alterados: `specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`,
+`specs/001-motor-reembolso/tasks.md`,
+`exemplos/resultado-exemplo.json`,
+`src/regras.py`, `tests/test_regras.py`.
 
 **Fica em aberto:** as demais justificativas de `resultado-exemplo.json`
 (`d-005` categoria, `d-008` período, `d-009` estorno) ainda diferem
@@ -222,8 +301,11 @@ regra ou decisão de ambiguidade mudou de sentido. Nenhum teste existe ainda
 **Tasks afetadas:** nenhuma — `tasks.md` ainda é só o template, a
 implementação não começou.
 
-**Custo:** 3 arquivos tocados (`spec.md`, `plan.md`, `docs/RELATORIO.md`),
-~30 linhas alteradas, resolvido em uma sessão. Commits `60995ad` e `fea2cc8`.
+**Custo:** ~30 linhas alteradas, resolvido em uma sessão. Commits `60995ad` e
+`fea2cc8`. Arquivos alterados: `specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/plan.md`, `docs/RELATORIO.md`.
+(`specs/001-motor-reembolso/DECISIONS.md` não entra na lista: esta entrada foi
+escrita depois, num commit à parte — ver a nota de processo abaixo.)
 
 **Nota de processo:** esta entrada foi escrita depois que o usuário apontou,
 corretamente, que a mudança de spec tinha sido commitada sem bump de versão
