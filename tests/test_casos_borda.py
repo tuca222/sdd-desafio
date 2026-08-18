@@ -3,8 +3,13 @@ from datetime import date
 from decimal import Decimal
 
 from src.motor import aplicar_filtros, aplicar_limites
-from src.politica import LIMITE_HOSPEDAGEM, LIMITE_NOTA_FISCAL, LIMITE_TRANSPORTE_URBANO
-from src.regras import aplicar_limite_diario, filtro_nota_fiscal
+from src.politica import (
+    LIMITE_ALIMENTACAO,
+    LIMITE_HOSPEDAGEM,
+    LIMITE_NOTA_FISCAL,
+    LIMITE_TRANSPORTE_URBANO,
+)
+from src.regras import aplicar_limite_diario, filtro_nota_fiscal, normalizar_categoria
 from tests.conftest import ExemploProcessado
 
 SABADO = 5
@@ -89,3 +94,40 @@ def test_hospedagem_multi_diaria_sem_campo_estruturado(exemplo: ExemploProcessad
 
     assert resultados_variantes[0] == resultados_variantes[1]
     assert resultados_variantes[0].valor_reembolsavel == LIMITE_HOSPEDAGEM
+
+
+def test_categoria_maiuscula_concorre_ao_limite_diario(exemplo: ExemploProcessado):
+    d014 = exemplo.despesas["d-014"]
+
+    assert d014.categoria == "ALIMENTACAO"
+    assert d014.categoria != normalizar_categoria(d014.categoria)
+
+    resultado = exemplo.resultados["d-014"]
+
+    assert resultado.tipo_reembolso == "parcial"
+    assert resultado.valor_reembolsavel == LIMITE_ALIMENTACAO
+    assert "alimentacao" in resultado.justificativa
+
+    em_minusculas = replace(
+        d014,
+        id="d-014-minuscula",
+        categoria="alimentacao",
+        descricao="Almoco",
+        valor=Decimal("40.00"),
+    )
+    em_maiusculas = replace(
+        d014,
+        id="d-014-maiuscula",
+        categoria="ALIMENTACAO",
+        descricao="Jantar",
+        valor=Decimal("40.00"),
+    )
+    despesas = [em_minusculas, em_maiusculas]
+    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, exemplo.periodo))
+
+    assert resultados[0].tipo_reembolso == "total"
+    assert resultados[0].valor_reembolsavel == Decimal("40.00")
+
+    # Sem compartilhar o limite, a segunda tambem seria "total" de R$40,00.
+    assert resultados[1].tipo_reembolso == "parcial"
+    assert resultados[1].valor_reembolsavel == LIMITE_ALIMENTACAO - Decimal("40.00")
