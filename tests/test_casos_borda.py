@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal
 
 from src.motor import aplicar_filtros, aplicar_limites
-from src.politica import LIMITE_NOTA_FISCAL, LIMITE_TRANSPORTE_URBANO
+from src.politica import LIMITE_HOSPEDAGEM, LIMITE_NOTA_FISCAL, LIMITE_TRANSPORTE_URBANO
 from src.regras import aplicar_limite_diario, filtro_nota_fiscal
 from tests.conftest import ExemploProcessado
 
@@ -61,3 +61,31 @@ def test_despesa_fim_de_semana_sem_regra_especial(exemplo: ExemploProcessado):
     resultados = aplicar_limites(despesas, aplicar_filtros(despesas, exemplo.periodo))
 
     assert resultados[0] == resultados[1]
+
+
+def test_hospedagem_multi_diaria_sem_campo_estruturado(exemplo: ExemploProcessado):
+    d010 = exemplo.despesas["d-010"]
+    d013 = exemplo.despesas["d-013"]
+
+    assert "2 diarias" in d010.descricao
+    assert "3 noites" in d013.descricao
+
+    resultado_d010 = exemplo.resultados["d-010"]
+
+    assert resultado_d010.tipo_reembolso == "parcial"
+    assert resultado_d010.valor_reembolsavel == LIMITE_HOSPEDAGEM
+    assert resultado_d010.valor_reembolsavel != 2 * LIMITE_HOSPEDAGEM
+
+    assert exemplo.resultados["d-013"] == filtro_nota_fiscal(d013)
+
+    variantes = [
+        replace(d010, id="d-010-sem-mencao", descricao="Hotel Rio"),
+        replace(d010, id="d-010-dez-diarias", descricao="Hotel Rio - 10 diarias"),
+    ]
+    resultados_variantes = [
+        aplicar_limites([variante], aplicar_filtros([variante], exemplo.periodo))[0]
+        for variante in variantes
+    ]
+
+    assert resultados_variantes[0] == resultados_variantes[1]
+    assert resultados_variantes[0].valor_reembolsavel == LIMITE_HOSPEDAGEM

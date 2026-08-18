@@ -101,10 +101,10 @@
   - **Aceite:** `tests/test_casos_borda.py::test_despesa_fim_de_semana_sem_regra_especial` (`d-012`)
   - **Commit:** `f70db69`
 
-- [ ] **T-018** — Hospedagem multi-diária: noites do texto livre ignoradas, limite é o do dia (`d-010` com nota fiscal, `d-013` sem nota fiscal)
+- [x] **T-018** — Hospedagem multi-diária: noites do texto livre ignoradas, limite é o do dia (`d-010` com nota fiscal, `d-013` sem nota fiscal)
   - **Atende:** RN-003, RN-005, AMB-006
   - **Aceite:** `tests/test_casos_borda.py::test_hospedagem_multi_diaria_sem_campo_estruturado`
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-019** — Categoria em maiúsculas concorrendo normalmente ao limite diário
   - **Atende:** RN-011, AMB-009
