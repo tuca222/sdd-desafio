@@ -3,7 +3,6 @@ from decimal import Decimal
 
 from src.modelos import Despesa, Periodo
 from src.motor import aplicar_filtros, aplicar_limites
-from src.parser import carregar_despesas
 from src.regras import (
     filtro_categoria_invalida,
     filtro_duplicata,
@@ -11,26 +10,16 @@ from src.regras import (
     filtro_nota_fiscal,
     filtro_valor_negativo,
 )
-
-CAMINHO_EXEMPLO = "exemplos/despesas-exemplo.json"
-
-
-def resultados_por_id(caminho: str = CAMINHO_EXEMPLO):
-    _, periodo, despesas = carregar_despesas(caminho)
-    resultados = aplicar_filtros(despesas, periodo)
-    return (
-        {despesa.id: despesa for despesa in despesas},
-        dict(zip((despesa.id for despesa in despesas), resultados, strict=True)),
-        periodo,
-    )
+from tests.conftest import ExemploProcessado
 
 
-def test_pipeline_aplica_filtros_na_ordem_definida():
-    despesas, resultados, periodo = resultados_por_id()
+def test_pipeline_aplica_filtros_na_ordem_definida(exemplo: ExemploProcessado):
+    despesas = exemplo.despesas
+    resultados = exemplo.resultados_filtros
 
     assert resultados["d-009"] == filtro_valor_negativo(despesas["d-009"])
     assert resultados["d-005"] == filtro_categoria_invalida(despesas["d-005"])
-    assert resultados["d-008"] == filtro_fora_periodo(despesas["d-008"], periodo)
+    assert resultados["d-008"] == filtro_fora_periodo(despesas["d-008"], exemplo.periodo)
     assert resultados["d-007"] == filtro_duplicata(despesas["d-007"], [despesas["d-006"]])
 
     # d-004 tem nota fiscal ausente E o limite diario de d-003 ja consumido (AMB-004):
@@ -39,11 +28,11 @@ def test_pipeline_aplica_filtros_na_ordem_definida():
     assert resultados["d-013"] == filtro_nota_fiscal(despesas["d-013"])
 
 
-def test_pipeline_deixa_sobreviventes_para_a_agregacao_de_limite():
-    _, resultados, _ = resultados_por_id()
-
+def test_pipeline_deixa_sobreviventes_para_a_agregacao_de_limite(exemplo: ExemploProcessado):
     sobreviventes = [
-        id_despesa for id_despesa, resultado in resultados.items() if resultado is None
+        id_despesa
+        for id_despesa, resultado in exemplo.resultados_filtros.items()
+        if resultado is None
     ]
 
     assert sobreviventes == [
@@ -156,11 +145,9 @@ def test_rn012_hospedagem_no_periodo_nao_amplia_limites():
     assert resultados[2].valor_reembolsavel == Decimal("80.00")
 
 
-def test_pipeline_da_uma_unica_justificativa_por_despesa():
-    despesas, resultados, _ = resultados_por_id()
-
-    assert len(resultados) == len(despesas)
-    for resultado in resultados.values():
+def test_pipeline_da_uma_unica_justificativa_por_despesa(exemplo: ExemploProcessado):
+    assert len(exemplo.resultados_filtros) == len(exemplo.despesas)
+    for resultado in exemplo.resultados_filtros.values():
         if resultado is not None:
             assert resultado.tipo_reembolso == "nenhum"
             assert "negado" in resultado.justificativa

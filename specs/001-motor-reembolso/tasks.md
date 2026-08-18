@@ -91,10 +91,10 @@
 
 ## Fase 3 — Casos de borda
 
-- [ ] **T-016** — Limite exato de nota fiscal (`d-003`, R$100,00) e ordem nota-fiscal-antes-de-limite-diário (`d-004`)
+- [x] **T-016** — Limite exato de nota fiscal (`d-003`, R$100,00) e ordem nota-fiscal-antes-de-limite-diário (`d-004`)
   - **Atende:** RN-005, RN-013, AMB-003, AMB-004
   - **Aceite:** `tests/test_casos_borda.py::test_valor_exatamente_no_limite_nota_fiscal` + `test_ordem_nota_fiscal_antes_de_limite_diario`
-  - **Commit:**
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-017** — Despesa em fim de semana, sem regra especial
   - **Atende:** (confirma ausência de regra — spec.md §7, "Casos de borda")
