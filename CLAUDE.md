@@ -51,6 +51,25 @@ vez de simplesmente implementar no modelo errado sem avisar.
   itens acima explicitamente. "Só mexi numa referência, não numa regra" não
   dispensa nenhum dos três — commit que toca `spec.md` sem versão/status
   atualizados e sem entrada em `DECISIONS.md` está incompleto.
+- **Formato de uma entrada em `DECISIONS.md`.** Toda entrada usa os mesmos
+  campos, nesta ordem, com o título `## D-NNN — <resumo> · \`DD/MM/AAAA\``:
+  **Gatilho** (o que expôs o problema, e quem/o quê detectou), **O que mudou
+  na spec** (o conteúdo alterado, seção por seção), **Por quê** (a razão da
+  escolha, incluindo a alternativa descartada e o efeito colateral que ela
+  teria), **O que isso invalidou** (código, testes e exemplos que deixaram de
+  valer), **Tasks afetadas** e **Custo**. Campos extras (ex.: **Fica em
+  aberto**, **Nota de processo**) entram no fim, quando houver.
+- **O campo `Custo` lista, nominalmente, todos os arquivos alterados** — de
+  produção, de spec, de exemplo e de teste, sem exceção e sem agrupar. Nada de
+  "5 arquivos (...) + teste" ou "3 arquivos de teste": cada caminho aparece
+  escrito. **Não escreva a contagem** ("7 arquivos") junto da lista — o número
+  desencontra da lista na primeira revisão e vira ruído; a lista já é a
+  contagem. A fonte da verdade é o `git`: antes de escrever o campo, rode
+  `git status --short` (mudança ainda não commitada) ou
+  `git show --name-only --format="" <hash>...` (já commitada) e transcreva o
+  que aparecer. Custo subcontado dá a impressão de que a mudança de spec foi
+  mais barata do que foi, que é exatamente o oposto do que este arquivo existe
+  para registrar.
 - Toda vez que `spec.md` mudar de versão, checar o campo `**Baseado na
   spec:**` no cabeçalho de `plan.md` e atualizá-lo para a nova versão. Esse
   ponteiro nunca deve ficar referenciando uma versão de spec mais antiga que
