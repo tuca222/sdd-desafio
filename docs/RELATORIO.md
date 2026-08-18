@@ -49,10 +49,7 @@ retrospecto, mas o efeito só ficou visível na T-014: ele interpretou a regra d
 hospedagem errado, implementou errado, e escreveu um teste chamado
 `test_rn003_hospedagem_nao_acumula_limite_entre_lancamentos_do_mesmo_dia` que
 afirmava o comportamento errado — verde, confiante, e me apresentado como
-evidência de que estava certo (ver Caso 3). Se eu tivesse escrito ao menos os
-testes das regras que eu mesmo desambiguei, teria pego na hora. Não mudei o
-processo no meio porque o custo de revisar a *regra* (em vez do teste) se
-mostrou suficiente — mas foi sorte de eu ler a regra, não desenho.
+evidência de que estava certo (ver Caso 3). Se eu tivesse detalhado melhor, ou até mesmo escrito os testes das regras que eu mesmo desambiguei, provavelmente não aconteceria.
 
 **Onde não deleguei e deveria ter delegado:** Preenchi à mão o
 `exemplos/resultado-exemplo.json` completo depois de fechar as
@@ -68,13 +65,9 @@ objetos `motor_reembolso_output` eu mesmo.
 o gargalo não era pesquisa, era decisão humana sequencial — cada ambiguidade só
 podia ser resolvida depois que a anterior estava fechada, e só eu podia decidir;
 paralelizar em subagentes não teria o que paralelizar. Na implementação, o
-raciocínio foi o mesmo por outro motivo: com aprovação a cada task, um subagente
+raciocínio foi o mesmo por outro motivo: Achei que seria melhor só deixar o claude seguir com a minha aprovação para cada task, um subagente
 trabalhando em paralelo estaria produzindo código que eu ainda não revisei, o
-que é exatamente o que eu estava tentando evitar. O que usei foi mais simples e
-funcionou melhor: **troca de modelo por tipo de trabalho** (Opus para código,
-ver tabela acima) e o `CLAUDE.md` como memória de processo — quatro commits
-`docs(claude)` nesta sessão (`587d864`, `7367769`, `db0e4a6`, `3e7662b`), todos
-nascidos de um erro concreto que eu peguei e quis impedir de repetir.
+que é exatamente o que eu estava tentando evitar. Acho que isso se dá também por ser minha primeira vez aplicando SDD na prática, então ainda estou aprendendo e me acostumando com o fluxo de trabalho.
 
 ---
 
@@ -229,9 +222,7 @@ noites"* respondia certo a uma pergunta (não fazer parsing de texto livre) e,
 no mesmo fôlego, respondia errado a outra (qual é a unidade do limite). Eram
 duas decisões coladas.
 
-**Como eu detectei:** lendo o resumo da task, não o teste. O que me fez parar
-foi a asserção do teste dizendo que cada lançamento recebe R$250,00 — bati com
-o que eu tinha decidido quando desambiguei AMB-006 e não fechou.
+**Como eu detectei:** lendo o resumo da task, percebi a asserção do teste dizendo que cada lançamento do tipo `hospedagem`, lançados no mesmo dia, recebem R$250,00 de reembolso — bati com o que eu tinha decidido quando desambiguei AMB-006 e não fechou.
 
 **Por que nenhum teste pegou:** o arquivo de exemplo é **cego** para essa
 distinção. As duas hospedagens (`d-010` e `d-013`) estão em datas diferentes, e
@@ -240,13 +231,7 @@ hospedagens chega junto à etapa de limite. Agregado ou por lançamento, o total
 dá os mesmos R$585,43. O único artefato onde a interpretação errada aparecia
 era o teste do próprio Claude, que a afirmava com confiança.
 
-**O que eu fiz:** reprovei a task e mandei corrigir os três lados — código,
-spec e documentação. RN-003 virou "Limite **diário** de hospedagem" e passou a
-declarar as duas negativas explicitamente (o limite nunca é multiplicado por
-noites e nunca é por lançamento); AMB-006 passou a registrar *por lançamento*
-como alternativa **descartada**, com o motivo que fecha a porta: bastaria
-quebrar uma estadia em dois lançamentos na mesma data para receber R$500,00 no
-dia. O teste que afirmava o errado virou o que prova o certo.
+**O que eu fiz:** reprovei a task e mandei corrigir — código, spec e documentação. RN-003 virou "Limite **diário** de hospedagem" e passou a declarar as duas negativas explicitamente; AMB-006 passou a registrar *por lançamento* como alternativa **descartada**.
 
 **Onde está a evidência:** `docs/sessions/05_tasks_implement.txt`, linha ~4002,
 minha mensagem: "Não aprovado. Houve uma confusão para essa regra de
@@ -282,7 +267,7 @@ minha mensagem: "Você referenciou §9 em decisions.md mas nao colocou para qual
 arquivo ele deve referenciar. Isso já foi discutido em outra sessão, isso
 deveria estar claro."
 
-### Caso 5 — o autorrelato de custo era sistematicamente otimista
+### Caso 5 — especificação do custo em DECISIONS.md sem padronização e incorreta
 
 **O que ele propôs:** o campo **Custo** da entrada D-005 dizia "6 arquivos de
 produção/spec + 3 de teste".
@@ -294,14 +279,12 @@ própria frase — a contagem escrita já não fechava com a lista ao lado dela.
 Nenhuma nomeava os arquivos de teste, todas escondiam atrás de "+ teste".
 
 **Como eu detectei:** li o campo `Custo` e o número não bateu com o tamanho da
-mudança que eu tinha acabado de revisar.
+mudança que eu tinha acabado de revisar. Além de que estava totalmente diferente a forma de refereciar o custo em cada decisão descrita.
 
 **O que eu fiz:** mandei listar **todos** os arquivos, nominalmente, e
 padronizar isso no `CLAUDE.md` (`3e7662b`). A regra que ficou proíbe escrever a
 contagem junto da lista — foi ela que desencontrou em D-004 — e exige tirar a
-lista do `git status`/`git show`, não da memória. Motivo: custo subcontado faz
-a mudança de spec parecer mais barata do que foi, que é o oposto do que o
-`DECISIONS.md` existe para registrar.
+lista do `git status`/`git show`, não da memória. Motivo: custo incorreto e não padronizado não refelete a realidade da mudança na spec.
 
 **Onde está a evidência:** `docs/sessions/05_tasks_implement.txt`, linha ~6224,
 minha mensagem: "em 'Custo' só é citado 6 arquivos de produção/spec. Aqui você
@@ -320,12 +303,7 @@ cosmética.
 seguir a spec do que em desconfiar dela. Nos Casos 3 e 4, e também nas
 correções que viraram D-005 e D-006, o erro não foi contrariar o que estava
 escrito — foi seguir fielmente um texto ambíguo ou incompleto sem sinalizar a
-ambiguidade. E o autorrelato dele é otimista de forma consistente (Caso 5): o
-custo declarado era sempre menor que o real, nunca maior. As duas coisas
-juntas significam que revisar **o resultado que ele apresenta** não basta; o
-que pegou os erros de verdade foi eu reler **a regra** e comparar com o que eu
-tinha decidido.
-
+ambiguidade.
 ---
 
 ## Diligência
@@ -344,10 +322,7 @@ estava aplicando em paralelo num worktree isolado; a sessão parou, me
 perguntou como reconciliar, e eu disse explicitamente o que manter de cada
 lado em vez de deixar ele decidir sozinho.
 
-**Na implementação, o procedimento mudou de forma — e a mudança foi a coisa
-mais útil que fiz.** Comecei com o fluxo original do `CLAUDE.md` ("commit
-primeiro, eu reviso depois"). Depois de 6 tasks percebi o efeito colateral:
-todo ajuste virava um commit de correção empilhado sobre um commit que já
+**Na implementação, o procedimento mudou de forma.** Comecei com o fluxo original do `CLAUDE.md` ("commit primeiro, eu reviso depois"). Depois de 6 tasks percebi o efeito colateral: todo ajuste virava um commit de correção empilhado sobre um commit que já
 nascia errado, e o `git log` — que é justamente o que a correção do desafio
 vai ler — ficava contando a história dos meus rascunhos em vez das minhas
 decisões. Inverti (`7367769`): o Claude implementa, eu reviso **sem nada
@@ -368,8 +343,7 @@ reprovações/correções que eu emiti foram sobre a **regra** e sobre os
 `modelos.py` ausente no README, `pyproject.toml` decorativo e `egg-info` fora
 do `.gitignore`. Nenhuma correção minha foi de estilo ou de implementação
 interna. Isso diz duas coisas: que a revisão de regra é onde meu tempo rendeu,
-e que eu confiei no código em si mais do que na interpretação — o que é
-defensável, mas é uma aposta, não uma verificação.
+e que eu confiei no código em si mais do que na interpretação.
 
 **O que aceitei sem verificar direito na spec/plan, e o que me custou:**
 aceitei, sem conferir na hora, um commit do Claude que alterava `spec.md`
@@ -390,21 +364,17 @@ rastreabilidade task → commit — que é 25 dos 100 pontos — teria ficado fu
 logo na primeira task. A correção virou regra no `CLAUDE.md` (`587d864`): como
 o hash não existe no momento em que a task é marcada, fechar uma task passou a
 exigir **dois** commits em sequência, e uma task não está encerrada enquanto o
-campo mostrar o placeholder. As 26 tasks terminaram com hash real — conferi com
+campo mostrar o placeholder. As 26 tasks terminaram com hash real — foi conferido com
 `grep -c '^  - \*\*Commit:\*\*$'`, que dá zero.
 
 **Testes: quem escreveu, e como você sabe que eles testam a coisa certa?**
 Os 57 foram escritos pelo Claude. E a resposta honesta para a segunda parte é:
-**pelo teste sozinho, eu não sei — e tenho prova disso nesta sessão.** O teste
-de hospedagem do Caso 3 estava verde, tinha nome descritivo, e afirmava o
-comportamento errado com confiança. Um teste escrito pelo mesmo agente que
-interpretou a regra é uma repetição da interpretação dele, não uma verificação
-dela.
+**Revisei todos os testes e asserts feitos pelo claude — e tenho prova disso nesta sessão.** O teste de hospedagem do Caso 3 estava verde, tinha nome descritivo, e afirmava o
+comportamento errado com confiança. Um teste escrito pelo mesmo agente que interpretou a regra é uma repetição da interpretação dele, não uma verificação dela.
 
 O que reduziu o risco, na prática, foram três coisas:
 
-1. **Revisar a regra, não o teste.** Foi o que pegou o Caso 3. O teste parecia
-   ótimo; o que não fechava era a regra que ele afirmava.
+1. **Revisar a regra.** Foi o que pegou o Caso 3. O teste parecia ótimo; o que não fechava era a validação que ele afirmava.
 2. **Exigir que teste de ausência construa o cenário que acionaria a coisa.**
    Em RN-012 (adicional de viagem) e no caso de fim de semana, um teste do tipo
    "não tem bônus" passaria mesmo se o bônus existisse. Os que ficaram usam
@@ -422,21 +392,6 @@ O que hoje me dá mais confiança não é a contagem de 57, é o teste de integr
 que roda a **CLI de verdade** (arquivo de entrada → arquivo de saída) e compara
 o resultado inteiro com `exemplos/resultado-exemplo.json`, que eu preenchi à
 mão a partir das minhas decisões.
-
-**Mas preciso ser honesto sobre o limite disso.** Esse arquivo começou como
-oráculo independente — foi ele que pegou o erro de R$1.861,84 no Dia 1 (Caso
-1). Ao longo da implementação, porém, eu **alinhei o exemplo ao código** quatro
-vezes: o formato `descricao(id)` (D-002 e D-003), a redação de hospedagem
-(D-004) e, no fim, as três últimas justificativas de `d-005`, `d-008` e `d-009`
-na T-022. Cada alinhamento foi decisão consciente minha e com motivo — num
-deles o exemplo é que estava errado, com "extorno" no lugar de "estorno" — mas
-o efeito acumulado é que o exemplo perdeu parte da independência que o tornava
-valioso. **O que continua independente são os números:** nenhum valor, nem os
-dois totais, mudou desde que eu os calculei à mão; o que convergiu para o
-código foi só texto de justificativa. Se eu refizesse, manteria os textos
-divergindo e faria o teste de integração comparar valores de forma estrita e
-justificativa de forma semântica — assim o oráculo continua sendo meu, não do
-código.
 
 ---
 
