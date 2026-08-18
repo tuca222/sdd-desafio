@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 1.3 · **Status:** em implementação (Fase 2 — regras de negócio) · **Última alteração:** `17/08/2026`
+**Versão:** 1.4 · **Status:** em implementação (Fase 2 — regras de negócio) · **Última alteração:** `17/08/2026`
 
 ---
 
@@ -66,7 +66,14 @@ verificável para cada decisão, sem intervenção humana.
 | `detalhamento_despesas[].motor_reembolso_output.despesa_reembolsavel` | booleano | `true` se `valor_reembolsavel > 0`. Ou seja, se reembolso parcial `despesa_reembolsavel == true`|
 | `detalhamento_despesas[].motor_reembolso_output.tipo_reembolso` | string (`total`\|`parcial`\|`nenhum`) | Definição do tipo do reembolso. Sendo `total` se reembolsa o valor cheio, `parcial` se reembolsa apenas uma parte do valor da despesa, `nenhum` se nada é reembolsado |
 | `detalhamento_despesas[].motor_reembolso_output.valor_reembolsavel` | número | Valor efetivamente reembolsável desta despesa |
-| `detalhamento_despesas[].motor_reembolso_output.justificativa` | string | Explicação em português da decisão, citando a regra aplicada e, quando relevante, a despesa relacionada (ex.: duplicata, limite estourado por conta de outra despesa) |
+| `detalhamento_despesas[].motor_reembolso_output.justificativa` | string | Explicação em português da decisão, citando a regra aplicada e, quando relevante, a despesa relacionada (ex.: duplicata, limite estourado por conta de outra despesa). Ver abaixo o formato obrigatório de referência a outra despesa |
+
+**Formato de referência a outra despesa (obrigatório em toda a saída):** sempre que
+uma `justificativa` citar outra despesa, a referência usa o formato
+`descricao(id)` — ex.: `'Almoco com cliente(d-001)'`. Vale em qualquer regra, sem
+exceção. A `descricao` sozinha é ambígua (duas despesas podem ter a mesma
+descrição) e o `id` sozinho é ilegível para quem confere a decisão no financeiro;
+os dois juntos são legíveis e verificáveis contra a entrada.
 
 Exemplo pequeno:
 
@@ -151,7 +158,7 @@ Saída:
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
-                "justificativa": "A categoria alimentacao possui limite de reembolso de R$60,00 no dia. Este valor já foi atingido na despesa 'Almoco com cliente'. Reembolso negado."
+                "justificativa": "A categoria alimentacao possui limite de reembolso de R$60,00 no dia. Este valor já foi atingido na despesa 'Almoco com cliente(d-001)'. Reembolso negado."
             }
         }
     ]
@@ -224,7 +231,7 @@ citando o período de competência.
 diferir) são consideradas o mesmo lançamento repetido. Apenas a primeira ocorrência
 (pela ordem em que aparece na entrada) é avaliada normalmente pelas demais regras; as
 ocorrências seguintes são negadas integralmente, com a justificativa citando a
-`descricao` e o `id` da despesa original, no formato `descricao(id)`. As
+despesa original (formato em `spec.md` §4, "Entrada e saída"). As
 ocorrências negadas como duplicata também **não entram** em
 `valor_total_despesas` — contá-las infla o total bruto de despesas do período com um
 valor que nunca representou um gasto adicional real, apenas o mesmo lançamento

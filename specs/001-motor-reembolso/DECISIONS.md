@@ -10,6 +10,48 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-003 — `descricao(id)` vira o formato único de referência a despesa · `17/08/2026`
+
+**Gatilho:** ao implementar a T-013 (limite diário), o agente notou que a
+justificativa de limite estourado citava a despesa que consumiu o limite só
+pela `descricao` (`'Almoco com cliente'`), enquanto a duplicata — decidida em
+[[D-002]] duas tasks antes — citava `descricao(id)`. Diferente do caso da
+D-002, aqui **não havia conflito**: `spec.md` §4 ("Entrada e saída") e
+`exemplos/resultado-exemplo.json` concordavam entre si no formato só-descrição.
+Era inconsistência interna, não bug. O agente reportou em vez de padronizar por
+conta própria, e a decisão do usuário foi padronizar.
+
+**O que mudou na spec:**
+- `spec.md` §4 ("Entrada e saída") ganhou uma regra geral, logo abaixo da
+  tabela de saída: **toda** referência a outra despesa em qualquer
+  `justificativa` usa `descricao(id)`, sem exceção.
+- RN-007 deixou de repetir o formato e passou a apontar para §4 — antes a
+  regra estava escrita em dois lugares, que é como duas versões divergem.
+- O exemplo de saída em §4 (`d-002`) passou a mostrar
+  `'Almoco com cliente(d-001)'`.
+
+**Por quê:** a decisão vale para o formato em si (`descricao` sozinha é
+ambígua, `id` sozinho é ilegível para quem confere no financeiro) e para o
+lugar onde ela mora. Regra de formatação de saída que vive dentro de uma `RN`
+específica só é descoberta por quem lê aquela regra — a próxima regra que
+citar uma despesa vai reinventar o formato, que foi exatamente o que
+aconteceu entre a T-010 e a T-013. Em §4, junto do schema de saída, ela é
+encontrada por qualquer um que vá gerar saída.
+
+**O que isso invalidou:** `exemplos/resultado-exemplo.json` (justificativa de
+`d-002`) e a asserção de `test_rn001_limite_diario_alimentacao`, ambos
+corrigidos na mesma leva. Nenhum teste quebrou sem ser corrigido junto.
+
+**Tasks afetadas:** T-013 (ajustada antes do commit, sem retrabalho). T-010 já
+estava no formato certo. Qualquer task futura que cite despesa na
+justificativa passa a ter a regra em um lugar só.
+
+**Custo:** 5 arquivos (`spec.md`, `DECISIONS.md`, `plan.md`,
+`exemplos/resultado-exemplo.json`, `src/regras.py` + teste), resolvido dentro
+da própria T-013.
+
+---
+
 ## D-002 — Formato da justificativa de duplicata: `descricao(id)` · `17/08/2026`
 
 **Gatilho:** durante a implementação da T-010 (filtro de duplicata), o agente

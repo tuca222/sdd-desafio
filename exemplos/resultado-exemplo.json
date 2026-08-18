@@ -39,7 +39,7 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
-                "justificativa": "A categoria alimentacao possui limite de reembolso de R$60,00 no dia. Este valor já foi atingido na despesa 'Almoco com cliente'. Reembolso negado."
+                "justificativa": "A categoria alimentacao possui limite de reembolso de R$60,00 no dia. Este valor já foi atingido na despesa 'Almoco com cliente(d-001)'. Reembolso negado."
             }
         },
         {
