@@ -35,10 +35,10 @@ def aplicar_filtros(despesas: list[Despesa], periodo: Periodo) -> list[Resultado
     return resultados
 
 
-def aplicar_limites_diarios(
+def aplicar_limites(
     despesas: list[Despesa], resultados: list[ResultadoDespesa | None]
-) -> list[ResultadoDespesa | None]:
-    finais: list[ResultadoDespesa | None] = []
+) -> list[ResultadoDespesa]:
+    finais: list[ResultadoDespesa] = []
     reembolsos_por_categoria_dia: dict[tuple[str, date], list[tuple[Despesa, Decimal]]] = {}
 
     for despesa, resultado in zip(despesas, resultados, strict=True):
@@ -47,11 +47,7 @@ def aplicar_limites_diarios(
             continue
 
         categoria = normalizar_categoria(despesa.categoria)
-        limite = LIMITES_DIARIOS_POR_CATEGORIA.get(categoria)
-        if limite is None:
-            finais.append(None)
-            continue
-
+        limite = LIMITES_DIARIOS_POR_CATEGORIA[categoria]
         reembolsos_do_dia = reembolsos_por_categoria_dia.setdefault((categoria, despesa.data), [])
         resultado_limite = aplicar_limite_diario(despesa, limite, reembolsos_do_dia)
         reembolsos_do_dia.append((despesa, resultado_limite.valor_reembolsavel))

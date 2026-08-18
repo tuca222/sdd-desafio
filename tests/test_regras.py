@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from src.modelos import Despesa, Periodo
-from src.politica import LIMITE_ALIMENTACAO, LIMITE_TRANSPORTE_URBANO
+from src.politica import LIMITE_ALIMENTACAO, LIMITE_HOSPEDAGEM, LIMITE_TRANSPORTE_URBANO
 from src.regras import (
     aplicar_limite_diario,
     filtro_categoria_invalida,
@@ -261,4 +261,42 @@ def test_rn004_valor_dentro_do_limite_reembolsa_total():
     assert resultado.despesa_reembolsavel is True
     assert resultado.tipo_reembolso == "total"
     assert resultado.valor_reembolsavel == Decimal("54.90")
+    assert "total" in resultado.justificativa
+
+
+def test_rn003_limite_diario_hospedagem():
+    d010 = Despesa(
+        id="d-010",
+        data=date(2026, 7, 14),
+        categoria="hospedagem",
+        descricao="Hotel Rio - 2 diarias",
+        fornecedor="Hotel Copa Sul",
+        valor=Decimal("480.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado = aplicar_limite_diario(d010, LIMITE_HOSPEDAGEM, [])
+
+    assert resultado.despesa_reembolsavel is True
+    assert resultado.tipo_reembolso == "parcial"
+    assert resultado.valor_reembolsavel == Decimal("250.00")
+    assert "parcial" in resultado.justificativa
+
+
+def test_rn003_hospedagem_dentro_do_limite_reembolsa_total():
+    hospedagem_barata = Despesa(
+        id="d-200",
+        data=date(2026, 7, 14),
+        categoria="hospedagem",
+        descricao="Pousada 1 noite",
+        fornecedor="Pousada Central",
+        valor=Decimal("180.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado = aplicar_limite_diario(hospedagem_barata, LIMITE_HOSPEDAGEM, [])
+
+    assert resultado.despesa_reembolsavel is True
+    assert resultado.tipo_reembolso == "total"
+    assert resultado.valor_reembolsavel == Decimal("180.00")
     assert "total" in resultado.justificativa

@@ -1,4 +1,8 @@
-from src.motor import aplicar_filtros
+from datetime import date
+from decimal import Decimal
+
+from src.modelos import Despesa, Periodo
+from src.motor import aplicar_filtros, aplicar_limites
 from src.parser import carregar_despesas
 from src.regras import (
     filtro_categoria_invalida,
@@ -52,6 +56,66 @@ def test_pipeline_deixa_sobreviventes_para_a_agregacao_de_limite():
         "d-012",
         "d-014",
     ]
+
+
+def test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia():
+    periodo = Periodo(competencia="2026-07", inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
+    primeira = Despesa(
+        id="d-300",
+        data=date(2026, 7, 14),
+        categoria="hospedagem",
+        descricao="Hotel noite 1",
+        fornecedor="Hotel Copa Sul",
+        valor=Decimal("480.00"),
+        tem_nota_fiscal=True,
+    )
+    segunda = Despesa(
+        id="d-301",
+        data=date(2026, 7, 14),
+        categoria="hospedagem",
+        descricao="Hotel noite 2",
+        fornecedor="Outro Hotel",
+        valor=Decimal("300.00"),
+        tem_nota_fiscal=True,
+    )
+    despesas = [primeira, segunda]
+
+    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, periodo))
+
+    assert resultados[0].tipo_reembolso == "parcial"
+    assert resultados[0].valor_reembolsavel == Decimal("250.00")
+    assert resultados[1].tipo_reembolso == "nenhum"
+    assert resultados[1].valor_reembolsavel == Decimal("0.00")
+    assert "Hotel noite 1(d-300)" in resultados[1].justificativa
+
+
+def test_rn003_hospedagem_em_dias_diferentes_tem_limite_proprio():
+    periodo = Periodo(competencia="2026-07", inicio=date(2026, 7, 1), fim=date(2026, 7, 31))
+    despesas = [
+        Despesa(
+            id="d-310",
+            data=date(2026, 7, 14),
+            categoria="hospedagem",
+            descricao="Hotel dia 14",
+            fornecedor="Hotel Copa Sul",
+            valor=Decimal("480.00"),
+            tem_nota_fiscal=True,
+        ),
+        Despesa(
+            id="d-311",
+            data=date(2026, 7, 15),
+            categoria="hospedagem",
+            descricao="Hotel dia 15",
+            fornecedor="Hotel Copa Sul",
+            valor=Decimal("480.00"),
+            tem_nota_fiscal=True,
+        ),
+    ]
+
+    resultados = aplicar_limites(despesas, aplicar_filtros(despesas, periodo))
+
+    assert resultados[0].valor_reembolsavel == Decimal("250.00")
+    assert resultados[1].valor_reembolsavel == Decimal("250.00")
 
 
 def test_pipeline_da_uma_unica_justificativa_por_despesa():

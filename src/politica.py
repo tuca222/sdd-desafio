@@ -10,4 +10,5 @@ CATEGORIAS_VALIDAS = {"alimentacao", "transporte_urbano", "hospedagem"}
 LIMITES_DIARIOS_POR_CATEGORIA = {
     "alimentacao": LIMITE_ALIMENTACAO,
     "transporte_urbano": LIMITE_TRANSPORTE_URBANO,
+    "hospedagem": LIMITE_HOSPEDAGEM,
 }

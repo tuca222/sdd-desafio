@@ -79,10 +79,10 @@
   - **Aceite:** `tests/test_regras.py::test_rn001_limite_diario_alimentacao` (`d-001`/`d-002`) + `test_rn002_limite_diario_transporte` (`d-003`)
   - **Commit:** `0c6fb7c`
 
-- [ ] **T-014** — Limite de hospedagem por lançamento (sem dividir pelo número de diárias)
+- [x] **T-014** — Limite diário de hospedagem (agregado por dia, como RN-001/RN-002; noites do texto livre ignoradas)
   - **Atende:** RN-003, RN-004
-  - **Aceite:** `tests/test_regras.py::test_rn003_limite_hospedagem_por_lancamento` (`d-010`)
-  - **Commit:**
+  - **Aceite:** `tests/test_regras.py::test_rn003_limite_diario_hospedagem` (`d-010`) + `tests/test_motor.py::test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia`
+  - **Commit:** `<hash preenchido depois>`
 
 - [ ] **T-015** — Confirma que o adicional de viagem não é aplicado em nenhuma circunstância
   - **Atende:** RN-012
@@ -101,7 +101,7 @@
   - **Aceite:** `tests/test_casos_borda.py::test_despesa_fim_de_semana_sem_regra_especial` (`d-012`)
   - **Commit:**
 
-- [ ] **T-018** — Hospedagem multi-diária sem campo estruturado de noites (`d-010` com nota fiscal, `d-013` sem nota fiscal)
+- [ ] **T-018** — Hospedagem multi-diária: noites do texto livre ignoradas, limite é o do dia (`d-010` com nota fiscal, `d-013` sem nota fiscal)
   - **Atende:** RN-003, RN-005, AMB-006
   - **Aceite:** `tests/test_casos_borda.py::test_hospedagem_multi_diaria_sem_campo_estruturado`
   - **Commit:**
@@ -151,7 +151,7 @@ exatamente a matriz que a correção vai montar.
 |---|---|---|
 | RN-001 | T-013 | `test_rn001_limite_diario_alimentacao` |
 | RN-002 | T-013 | `test_rn002_limite_diario_transporte` |
-| RN-003 | T-014, T-018 | `test_rn003_limite_hospedagem_por_lancamento`, `test_hospedagem_multi_diaria_sem_campo_estruturado` |
+| RN-003 | T-014, T-018 | `test_rn003_limite_diario_hospedagem`, `test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia`, `test_hospedagem_multi_diaria_sem_campo_estruturado` |
 | RN-004 | T-013, T-014 | (definição validada pelos testes de RN-001/002/003) |
 | RN-005 | T-011, T-012, T-016, T-018 | `test_rn005_nota_fiscal_obrigatoria_acima_de_100`, `test_rn005_valor_exatamente_100_nao_exige`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
 | RN-006 | T-009 | `test_rn006_fora_do_periodo_negado`, `test_rn006_data_no_extremo_do_periodo_aceita` |
@@ -167,7 +167,7 @@ exatamente a matriz que a correção vai montar.
 | AMB-003 | T-016 | `test_valor_exatamente_no_limite_nota_fiscal` |
 | AMB-004 | T-012, T-016 | `test_pipeline_aplica_filtros_na_ordem_definida`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
 | AMB-005 | T-015 | `test_rn012_sem_adicional_de_viagem` |
-| AMB-006 | T-014, T-018 | `test_rn003_limite_hospedagem_por_lancamento`, `test_hospedagem_multi_diaria_sem_campo_estruturado` |
+| AMB-006 | T-014, T-018 | `test_rn003_limite_diario_hospedagem`, `test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia`, `test_hospedagem_multi_diaria_sem_campo_estruturado` |
 | AMB-007 | T-010 | `test_rn007_duplicata_negada_primeira_mantida` |
 | AMB-008 | T-007 | `test_rn009_valor_negativo_ignorado` |
 | AMB-009 | T-006, T-019 | `test_rn011_normaliza_categoria_case_insensitive`, `test_categoria_maiuscula_concorre_ao_limite_diario` |
