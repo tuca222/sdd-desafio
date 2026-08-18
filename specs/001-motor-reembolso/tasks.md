@@ -158,7 +158,7 @@
   - **Executar antes de:** T-022 (a integração compara a saída inteira)
   - **Aceite:** `tests/test_saida.py::test_saida_ecoa_o_valor_como_veio_na_entrada`
     (`d-011`: `valor == 33.333` e `motor_reembolso_output.valor_reembolsavel == 33.33`)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `4b11965`
 
 ## Fase 4 — Saída e CLI
 
