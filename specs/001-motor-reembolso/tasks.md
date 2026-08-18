@@ -129,7 +129,7 @@
 - [x] **T-020** — `saida.py`: monta o dict de saída completo (`valor_total_despesas`, `valor_total_reembolsavel`, `detalhamento_despesas[].motor_reembolso_output`), conversão `Decimal → float` só na borda
   - **Atende:** spec.md §4 ("Entrada e saída")
   - **Aceite:** `tests/test_saida.py::test_monta_saida_conforme_schema`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `5c090ad`
 
 - [ ] **T-021** — `cli.py`: subcomando `calcular --input --output`, orquestra parser → motor → saida → escrita em arquivo
   - **Atende:** interface fixa do desafio (`DESAFIO.md`), spec.md §4 ("Entrada e saída")
