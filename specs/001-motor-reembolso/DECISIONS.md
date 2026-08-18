@@ -10,6 +10,42 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-007 — §9 marcada como atendida e status da spec atualizado · `18/08/2026`
+
+**Gatilho:** com a T-023 fechada, todas as 26 tasks estavam concluídas, mas
+`spec.md` continuava com os 14 critérios de aceite da §9 em `- [ ]` e com o
+**Status** dizendo "em implementação (Fase 2 — regras de negócio)" — uma fase
+que tinha terminado várias tasks antes. O cabeçalho estava mentindo sobre o
+estado do projeto.
+
+**O que mudou na spec:** os 14 itens da §9 ("Critérios de aceite") passaram a
+`- [x]`; o **Status** do cabeçalho passou a "implementada — todos os critérios
+de aceite da §9 verificados por teste automatizado". A §9 ganhou também uma
+nota curta explicando **por que** os itens estão marcados: cada um tem um
+teste em `tests/test_integracao.py`, que roda a CLI de verdade (arquivo de
+entrada → arquivo de saída) e percorre a lista item a item.
+
+**Por quê:** a hesitação registrada aqui foi se valia a pena editar a spec só
+para marcar checkbox — o argumento contra é que checkbox fica desatualizado e
+teste não. A nota resolve isso mudando o que a marcação significa: ela não
+afirma "alguém conferiu uma vez", afirma "existe teste que verifica". Se um
+critério deixar de valer, a suíte quebra antes de o checkbox virar mentira.
+O bump de versão se justifica sozinho pelo **Status**, que estava
+factualmente errado.
+
+**O que isso invalidou:** nada de comportamento. Antes de marcar, os 14
+critérios foram verificados um a um contra a saída real da CLI, num script à
+parte da suíte — para não marcar na confiança de que o teste que eu mesmo
+escrevi cobre o que diz cobrir.
+
+**Tasks afetadas:** nenhuma. Todas (T-001 a T-026) já estavam fechadas.
+
+**Custo:** `specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`.
+
+---
+
 ## D-006 — A saída ecoa o `valor` lançado, não o truncado · `18/08/2026`
 
 **Gatilho:** ao fechar a T-025, o agente rodou pela primeira vez o pipeline

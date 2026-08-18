@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 1.7 · **Status:** em implementação (Fase 2 — regras de negócio) · **Última alteração:** `18/08/2026`
+**Versão:** 1.8 · **Status:** implementada — todos os critérios de aceite da §9 verificados por teste automatizado · **Última alteração:** `18/08/2026`
 
 ---
 
@@ -585,30 +585,36 @@ deve "gastar" limite de outra despesa legítima do mesmo dia.
 
 O sistema está pronto quando, rodando `exemplos/despesas-exemplo.json`:
 
-- [ ] `d-001` reembolsa R$60,00 (parcial); `d-002` reembolsa R$0,00 (nenhum) — RN-001.
-- [ ] `d-003` reembolsa R$80,00 (parcial), sem exigir nota fiscal — RN-002, RN-005.
-- [ ] `d-004` reembolsa R$0,00, com justificativa citando nota fiscal ausente (não
+> Os itens abaixo estão marcados porque cada um tem um teste automatizado que o
+> verifica — a marcação não é registro manual de que "alguém conferiu". A cobertura
+> está em `tests/test_integracao.py`, que roda a CLI de verdade (arquivo de entrada
+> → arquivo de saída) e percorre esta lista item a item. Se um critério deixar de
+> valer, o teste quebra antes de o checkbox ficar desatualizado.
+
+- [x] `d-001` reembolsa R$60,00 (parcial); `d-002` reembolsa R$0,00 (nenhum) — RN-001.
+- [x] `d-003` reembolsa R$80,00 (parcial), sem exigir nota fiscal — RN-002, RN-005.
+- [x] `d-004` reembolsa R$0,00, com justificativa citando nota fiscal ausente (não
       limite diário) — RN-005, RN-013.
-- [ ] `d-005` reembolsa R$0,00, com justificativa citando categoria fora da política —
+- [x] `d-005` reembolsa R$0,00, com justificativa citando categoria fora da política —
       RN-008.
-- [ ] `d-006` reembolsa R$54,90 (total); `d-007` reembolsa R$0,00, com justificativa
+- [x] `d-006` reembolsa R$54,90 (total); `d-007` reembolsa R$0,00, com justificativa
       citando `d-006` como duplicata original, e o valor de `d-007` não é somado em
       `valor_total_despesas` — RN-007.
-- [ ] `d-008` reembolsa R$0,00, com justificativa citando período de competência —
+- [x] `d-008` reembolsa R$0,00, com justificativa citando período de competência —
       RN-006.
-- [ ] `d-009` aparece no detalhamento com R$0,00, mas não é somado em
+- [x] `d-009` aparece no detalhamento com R$0,00, mas não é somado em
       `valor_total_despesas` nem em `valor_total_reembolsavel` — RN-009.
-- [ ] `d-010` reembolsa R$250,00 (parcial) — RN-003.
-- [ ] `d-011` reembolsa R$33,33 (total, valor truncado de `33.333`) — RN-010.
-- [ ] `d-012` reembolsa R$47,20 (total), sem nenhuma restrição por ser fim de semana.
-- [ ] `d-013` reembolsa R$0,00, com justificativa citando nota fiscal ausente —
+- [x] `d-010` reembolsa R$250,00 (parcial) — RN-003.
+- [x] `d-011` reembolsa R$33,33 (total, valor truncado de `33.333`) — RN-010.
+- [x] `d-012` reembolsa R$47,20 (total), sem nenhuma restrição por ser fim de semana.
+- [x] `d-013` reembolsa R$0,00, com justificativa citando nota fiscal ausente —
       RN-005.
-- [ ] `d-014` reembolsa R$60,00 (parcial), com a categoria `ALIMENTACAO` tratada como
+- [x] `d-014` reembolsa R$60,00 (parcial), com a categoria `ALIMENTACAO` tratada como
       `alimentacao` — RN-011.
-- [ ] `valor_total_despesas` = R$1.806,94 (exclui a duplicata `d-007` e o estorno
+- [x] `valor_total_despesas` = R$1.806,94 (exclui a duplicata `d-007` e o estorno
       `d-009`) e `valor_total_reembolsavel` = R$585,43 para o arquivo de exemplo padrão
       (soma manual documentada nesta spec) — RN-007, RN-009.
-- [ ] Nenhuma despesa recebe o adicional de 50% por "viagem" em nenhuma circunstância —
+- [x] Nenhuma despesa recebe o adicional de 50% por "viagem" em nenhuma circunstância —
       RN-012.
 
 ## 10. O que fica em aberto
