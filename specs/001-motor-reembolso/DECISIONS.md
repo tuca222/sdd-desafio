@@ -10,6 +10,40 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-009 — Critério de escala decimal da §9 marcado como atendido · `18/08/2026`
+
+**Gatilho:** a [[D-008]] criou um critério novo na spec.md §9 ("Critérios de
+aceite") — o texto do JSON de saída idêntico ao de
+`exemplos/resultado-exemplo.json` — deixando-o em `- [ ]` porque, naquele
+commit, o teste que o verifica ainda não existia. Com a T-027 fechada, o teste
+existe e passa, e o checkbox virou a única parte da spec desatualizada.
+
+**O que mudou na spec:** o critério da spec.md §9 ("Critérios de aceite")
+passou a `- [x]`, e o **Status** do cabeçalho voltou de "em correção" para
+"implementada", agora dizendo também que a escala decimal é verificada sobre o
+texto do JSON gerado. Nenhuma regra, nenhum limite e nenhum campo mudaram.
+
+**Por quê:** vale aqui a mesma razão registrada em [[D-007]] — a marcação nesta
+spec não afirma "alguém conferiu uma vez", afirma "existe teste que verifica".
+`tests/test_integracao.py::test_saida_bate_com_o_exemplo_caractere_a_caractere`
+roda a CLI de verdade e compara os dois arquivos como texto, então se a escala
+regredir o teste quebra antes de o checkbox virar mentira. A alternativa
+descartada foi marcar o critério já na [[D-008]], junto da mudança da §4: o
+efeito colateral é um commit em que a spec afirma "verificado por teste" antes
+de o teste existir, ou seja, exatamente a mentira de cabeçalho que a [[D-007]]
+foi criada para desfazer.
+
+**O que isso invalidou:** nada. Nenhum código, teste ou exemplo muda de sentido.
+
+**Tasks afetadas:** nenhuma. A T-027 já estava fechada quando esta entrada foi
+escrita.
+
+**Custo:** `specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`.
+
+---
+
 ## D-008 — A escala decimal da saída vira contrato da spec, não detalhe de serialização · `18/08/2026`
 
 **Gatilho:** o usuário rodou o comando do `README.md` contra

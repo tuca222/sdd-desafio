@@ -1,6 +1,6 @@
 # Plano Técnico — Motor de Cálculo de Reembolso
 
-**Versão:** 1.8 · **Baseado na spec:** 1.9
+**Versão:** 1.9 · **Baseado na spec:** 1.10
 
 ---
 

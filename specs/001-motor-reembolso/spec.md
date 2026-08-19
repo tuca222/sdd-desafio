@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 1.9 · **Status:** em correção — a spec.md §4 ("Entrada e saída") passou a exigir escala decimal exata na saída; o critério correspondente da spec.md §9 ("Critérios de aceite") ainda não é atendido pelo código, e a T-027 existe para isso · **Última alteração:** `18/08/2026`
+**Versão:** 1.10 · **Status:** implementada — todos os critérios de aceite da spec.md §9 ("Critérios de aceite") verificados por teste automatizado; a escala decimal da saída passou a ser regra explícita na spec.md §4 ("Entrada e saída") e é verificada sobre o texto do JSON gerado · **Última alteração:** `18/08/2026`
 
 ---
 
@@ -626,7 +626,7 @@ O sistema está pronto quando, rodando `exemplos/despesas-exemplo.json`:
       (soma manual documentada nesta spec) — RN-007, RN-009.
 - [x] Nenhuma despesa recebe o adicional de 50% por "viagem" em nenhuma circunstância —
       RN-012.
-- [ ] O **texto** do JSON de saída é idêntico ao de `exemplos/resultado-exemplo.json`:
+- [x] O **texto** do JSON de saída é idêntico ao de `exemplos/resultado-exemplo.json`:
       `valor_reembolsavel` e os dois totais saem com exatamente 2 casas decimais
       (`60.00`, `0.00`), e os campos ecoados saem com a escala lançada (`72.50`,
       `33.333`) — spec.md §4 ("Entrada e saída"). Este critério é sobre o texto, não
