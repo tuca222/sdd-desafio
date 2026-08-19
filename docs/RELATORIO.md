@@ -2,12 +2,6 @@
 
 **Aluno:** `Arthur Lorenzetti da Rosa` · **Repositório:** `https://github.com/tuca222/sdd-desafio` · **Data:** `17–18/08/2026`
 
-> Isto não é redação. São **evidências**. Toda afirmação deve vir acompanhada de
-> arquivo, hash de commit ou trecho de sessão exportada. Um parágrafo bonito sem
-> evidência vale menos que uma frase curta com um hash.
->
-> Vale 20 dos 100 pontos, e é a seção que mais separa notas.
-
 ---
 
 ## Delegação

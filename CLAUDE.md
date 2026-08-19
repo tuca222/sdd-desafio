@@ -120,6 +120,37 @@ vez de simplesmente implementar no modelo errado sem avisar.
     **Commit** ainda mostrar o placeholder. Nunca usar `git commit
     --amend` para resolver isso (proibido por regra geral de git deste
     ambiente); é sempre um commit novo.
+- **`RELATORIO.md` é evidência, não redação.** Toda afirmação do relatório vem
+  acompanhada de arquivo, hash de commit ou trecho de sessão exportada. Um
+  parágrafo bonito sem evidência vale menos que uma frase curta com um hash.
+  Este arquivo é o único lugar onde essa regra mora — o relatório não a repete
+  como epígrafe, então não a reintroduza lá. Na prática:
+  - **Toda afirmação carrega a evidência na própria frase:** caminho de
+    arquivo, hash de commit, ou `docs/sessions/<arquivo>.txt` com o número da
+    linha. Parágrafo que não cita nenhum dos três não entra, por mais correto
+    que seja.
+  - **Nada de parágrafo interpretativo.** Lição generalizada, moral da
+    história, análise do que o episódio "ensina", reformulação com outras
+    palavras do que já foi dito: é redação, corta. Quem lê tira a conclusão do
+    fato citado — o que precisa estar no arquivo é o fato.
+  - **Um caso de `RELATORIO.md` ("Discernimento") cabe em ~40 linhas**, com os
+    cinco campos (**O que ele propôs**, **Por que estava errado**, **Como eu
+    detectei**, **O que eu fiz**, **Onde está a evidência**) em um parágrafo
+    curto cada. Não cabendo, o que sobra é quase sempre explicação, não prova.
+  - Explicar o mecanismo técnico de um bug é trabalho do `DECISIONS.md`, da
+    mensagem de commit e da sessão exportada — no relatório basta a conclusão
+    e o ponteiro para onde está a explicação.
+  - Antes de dar por pronta qualquer edição no relatório, releia parágrafo por
+    parágrafo perguntando "que arquivo, hash ou linha de sessão isto cita?".
+    Se a resposta for nenhum, o parágrafo sai.
+
+  **Por quê:** o Caso 6 nasceu com 79 linhas contra 23 a 43 dos Casos 1 a 5, e
+  quase todo o excedente era explicação do mecanismo do bug e uma conclusão
+  sobre o valor de testar — nada disso é evidência, e tudo isso já estava no
+  `git log` e na sessão exportada. A `RUBRICA.md` §4 ("Relatório e
+  discernimento") vale 20 pontos e põe "relatório narrativo sem evidência" na
+  faixa de 6–12, contra 18–20 para "commits citados, trechos de sessão
+  referenciados": texto a mais não soma e dilui o que soma.
 
 ## Fluxo de git
 
