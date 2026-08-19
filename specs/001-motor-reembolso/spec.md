@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 1.8 · **Status:** implementada — todos os critérios de aceite da §9 verificados por teste automatizado · **Última alteração:** `18/08/2026`
+**Versão:** 1.9 · **Status:** em correção — a spec.md §4 ("Entrada e saída") passou a exigir escala decimal exata na saída; o critério correspondente da spec.md §9 ("Critérios de aceite") ainda não é atendido pelo código, e a T-027 existe para isso · **Última alteração:** `18/08/2026`
 
 ---
 
@@ -76,16 +76,26 @@ casos em que entrada e uso interno divergem:
 - `categoria` sai com a grafia exata que entrou (`ALIMENTACAO`), embora a decisão
   use a forma normalizada (RN-011).
 - `valor` sai com o número exato que entrou (`33.333`), embora a decisão use o valor
-  truncado em 2 casas (RN-010).
+  truncado em 2 casas (RN-010). "Exato" inclui a **quantidade de casas decimais
+  lançada**: uma despesa que entra como `72.50` sai como `72.50`, não como `72.5`.
 
 A regra geral é: **o valor tratado serve para calcular, o valor lançado serve para
 exibir.** Tudo que o motor *produz* — `valor_reembolsavel`, `valor_total_despesas` e
-`valor_total_reembolsavel` — é derivado do valor truncado e, portanto, sempre tem no
-máximo 2 casas decimais. Só os campos ecoados da entrada podem ter mais.
+`valor_total_reembolsavel` — é derivado do valor truncado e sai com **exatamente 2
+casas decimais**, inclusive quando a última é zero: `60.00`, nunca `60.0`; `0.00`,
+nunca `0`. Só os campos ecoados da entrada podem ter mais de 2 casas, e esses saem
+com a escala que tinham na entrada.
 
 O motivo é auditoria: o relatório precisa bater com o comprovante que o colaborador
 anexou. Se `valor` saísse truncado, a linha exibiria R$33,33 para uma nota de
-R$33,333, e quem confere veria uma divergência que o sistema criou sozinho.
+R$33,333, e quem confere veria uma divergência que o sistema criou sozinho. A escala
+decimal é parte da mesma exigência — `R$60,00` é como o financeiro lê dinheiro e é
+como o comprovante está escrito; `R$60,0` obriga quem confere a parar e reinterpretar
+o número. Por isso a escala da saída é contrato desta spec, e não detalhe de
+formatação delegado à biblioteca de serialização: em JSON, `60.0` e `60.00` são o
+mesmo número, então nenhuma comparação que passe por *parsing* consegue distinguir os
+dois — a conformidade com esta regra só é verificável sobre o **texto** do arquivo
+gerado.
 
 **Formato de referência a outra despesa (obrigatório em toda a saída):** sempre que
 uma `justificativa` citar outra despesa, a referência usa o formato
@@ -616,6 +626,12 @@ O sistema está pronto quando, rodando `exemplos/despesas-exemplo.json`:
       (soma manual documentada nesta spec) — RN-007, RN-009.
 - [x] Nenhuma despesa recebe o adicional de 50% por "viagem" em nenhuma circunstância —
       RN-012.
+- [ ] O **texto** do JSON de saída é idêntico ao de `exemplos/resultado-exemplo.json`:
+      `valor_reembolsavel` e os dois totais saem com exatamente 2 casas decimais
+      (`60.00`, `0.00`), e os campos ecoados saem com a escala lançada (`72.50`,
+      `33.333`) — spec.md §4 ("Entrada e saída"). Este critério é sobre o texto, não
+      sobre o resultado do *parsing*: comparar os dois arquivos como estruturas de
+      dados não distingue `60.0` de `60.00`.
 
 ## 10. O que fica em aberto
 

@@ -1,6 +1,6 @@
 # Plano Técnico — Motor de Cálculo de Reembolso
 
-**Versão:** 1.7 · **Baseado na spec:** 1.8
+**Versão:** 1.8 · **Baseado na spec:** 1.9
 
 ---
 
@@ -24,10 +24,11 @@ despesas.json → parser.py (parse + Decimal + truncamento RN-010 +
                           as funções puras de regras.py; devolve um
                           ResultadoFinal já com os dois totais do
                           período calculados)
-             → saida.py (monta o JSON de saída, Decimal → float)
+             → saida.py (monta o dict de saída; Decimal segue Decimal)
              → resultado.json
 
-cli.py orquestra as quatro etapas (parser → motor → saida → escrita).
+cli.py orquestra as quatro etapas (parser → motor → saida → escrita) e é onde
+o Decimal vira texto, no encoder de DT-004.
 ```
 
 Os totais do período são calculados no `motor.py`, não no `saida.py`: decidir
@@ -142,20 +143,39 @@ da passada do pipeline.
 ### DT-004 — Serialização de `Decimal` na saída
 
 **Contexto:** o JSON de saída (`resultado.json`) precisa representar valores
-monetários como números.
-**Decisão:** `saida.py` converte `Decimal` para `float` só no momento de
-montar o dict final, imediatamente antes de `json.dump` — nunca antes disso
-no pipeline.
-**Alternativa descartada:** `json.JSONEncoder` customizado que emite o texto
-do `Decimal` diretamente como número (via override de `iterencode`) — resolve
-o mesmo problema com mais complexidade. Desnecessário aqui porque todo valor
-de saída já foi truncado/somado em no máximo 2 casas decimais antes desse
-ponto: não há mais aritmética depois da conversão, logo não há acúmulo de
-erro, e a representação textual do `float` resultante é exata para esses
-valores.
-**Consequência:** `saida.py` é o único lugar do código que sabe que `Decimal`
-vira `float`; todo o resto do pipeline (parser, regras, motor) trabalha só
-com `Decimal`.
+monetários como números, e a spec.md §4 ("Entrada e saída") exige que a
+**escala decimal** sobreviva até o arquivo: valor produzido pelo motor sai com
+exatamente 2 casas (`60.00`), valor ecoado da entrada sai com a escala lançada
+(`72.50`, `33.333`).
+**Decisão:** `saida.py` entrega o `Decimal` intacto no dict — não converte
+para `float` em ponto nenhum. `cli.py` serializa com um `json.JSONEncoder`
+próprio que emite o texto do `Decimal` como número literal do JSON.
+**Como o encoder funciona:** `json` não oferece gancho para números fora de
+`int`/`float` — `default()` só é consultado para tipos que ele não sabe
+serializar, e o que `default()` devolve volta pelo caminho normal (uma `str`
+devolvida sai entre aspas, virando string no JSON). O encoder contorna isso em
+dois passos: `default()` embrulha o texto do `Decimal` num marcador
+(`@decimal@60.00@decimal@`) e `iterencode()` remove, dos fragmentos já
+serializados, as aspas em volta do marcador. O resultado reparseia como número
+JSON. O marcador é escolhido entre caracteres que o `json` não escapa, para que
+o texto emitido seja o mesmo que o padrão procura, e é **sorteado a cada
+execução** (`uuid4`): a substituição varre todos os fragmentos, inclusive os de
+string, então um marcador fixo permitiria que uma `descricao` vinda da entrada
+imitasse um valor e virasse número na saída — corrupção silenciosa, porque o
+arquivo resultante continua sendo JSON válido.
+**Alternativa descartada:** manter `float(Decimal)` na borda, como esta DT
+decidia até a spec 1.9. A justificativa era que "a representação textual do
+`float` resultante é exata para esses valores" — verdadeira quanto ao *valor* e
+falsa quanto à *escala*. `float` não carrega escala: `Decimal("72.50")` sabe que
+tem duas casas, `float` só sabe que vale 72,5, e `json.dump` serializa pelo
+`repr`, produzindo `72.5`. Foi exatamente o defeito que a T-027 corrigiu.
+**Alternativa descartada:** emitir os valores monetários como string
+(`"60.00"`). Resolveria a escala, mas a spec.md §4 ("Entrada e saída") tipa
+esses campos como `número` — trocar o tipo do contrato de saída para contornar
+uma limitação da biblioteca de serialização é o rabo abanando o cachorro.
+**Consequência:** `Decimal` atravessa o pipeline inteiro, do `parse_float` do
+`parser.py` até o `json.dump` do `cli.py`, sem nunca virar `float`. `cli.py`
+passa a ser o único lugar do código que sabe como um `Decimal` vira texto.
 
 ## 6. Estratégia de testes
 

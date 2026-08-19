@@ -160,6 +160,63 @@
     (`d-011`: `valor == 33.333` e `motor_reembolso_output.valor_reembolsavel == 33.33`)
   - **Commit:** `4b11965`
 
+- [ ] **T-027** — Valores monetários da saída preservam a escala do `Decimal`: serialização deixa de passar por `float`
+  - **Atende:** spec.md §4 ("Entrada e saída") — os campos ecoados da entrada
+    saem "exatamente como entraram" e os valores produzidos pelo motor saem com
+    2 casas decimais
+  - **Depende de:** mudança em `spec.md` §4 ("Entrada e saída") trocando "sempre
+    tem no máximo 2 casas decimais" por "sempre sai com exatamente 2 casas
+    decimais" para `valor_reembolsavel`, `valor_total_despesas` e
+    `valor_total_reembolsavel`. A redação atual ("no máximo") permite `60.0`, que
+    é justamente o defeito — sem esse ajuste a task não tem regra que a sustente.
+    Mudança atômica em três partes (conteúdo + versão/status + entrada em
+    `DECISIONS.md`), feita **antes** desta task.
+  - **Por que existe:** detectado rodando o README ponta a ponta contra
+    `exemplos/despesas-exemplo.json`. A saída emite `"valor": 72.5` e
+    `"valor_reembolsavel": 60.0` onde `exemplos/resultado-exemplo.json` traz
+    `72.50` e `60.00`. A causa é `saida.py::_valor`, que faz `float(Decimal)`:
+    `Decimal("72.50")` carrega a escala (dois dígitos após a vírgula), `float`
+    não carrega nada — `json.dump` serializa pelo `repr` do `float` e a casa
+    decimal terminada em zero desaparece. Só escapam os valores cujo último
+    dígito não é zero (`1806.94`, `585.43`, `33.333`, `33.33`), o que fez o
+    defeito parecer localizado quando é geral.
+    O pipeline **já está correto**: `parser.py` lê com
+    `parse_float=Decimal`, `valor_original` guarda o texto exato da entrada
+    (`Decimal("72.50")`, `Decimal("33.333")`) e todo valor produzido pelo motor
+    já chega em `saida.py` com escala 2 (`Decimal("60.00")`,
+    `Decimal("0.00")`). Nenhum `quantize` novo é necessário — o defeito nasce e
+    morre na conversão para `float`.
+    Mesma classe de problema de [[T-024]] (`categoria`/`categoria_original`) e
+    [[T-026]] (`valor`/`valor_original`): o que o motor calcula e o que o
+    relatório exibe não são a mesma coisa. Aqui a diferença não é de valor, é de
+    **escala** — e a escala também é informação de auditoria: `R$60,00` é o que
+    o financeiro confere contra o comprovante, `R$60,0` não é formato de dinheiro.
+  - **Escopo:** `saida.py` deixa de converter para `float` e entrega o `Decimal`
+    intacto no dict; `cli.py` ganha um `json.JSONEncoder` que serializa `Decimal`
+    como número literal (via `default()` + substituição no `iterencode()`, já que
+    o encoder padrão não tem gancho para números fora de `int`/`float`). Nada
+    mais muda: nenhuma regra de negócio, nenhum limite, nenhum total.
+    Revisar também `plan.md` DT-004 ("Serialização de `Decimal` na saída"), que
+    hoje decide o contrário desta task e descarta explicitamente o encoder
+    customizado com a justificativa "a representação textual do `float`
+    resultante é exata para esses valores" — verdadeira quanto ao *valor*, falsa
+    quanto à *escala*. DT-004 precisa ser reescrita e `plan.md` ter a versão
+    incrementada no mesmo commit.
+  - **Aceite:** dois testes, ambos sobre o **texto** do arquivo gerado (a
+    comparação atual em `tests/test_integracao.py` faz `json.loads` dos dois
+    lados e compara dicts, então `72.5 == 72.50` passa — foi por isso que o
+    defeito atravessou a T-022):
+    1. `tests/test_cli.py::test_cli_escreve_valores_monetarios_com_duas_casas` —
+       no texto do `resultado.json` gerado, `"valor": 72.50`,
+       `"valor_reembolsavel": 60.00` e `"valor_reembolsavel": 0.00` aparecem
+       literalmente, e `d-011` mantém `"valor": 33.333` com
+       `"valor_reembolsavel": 33.33`
+    2. `tests/test_integracao.py::test_saida_bate_com_o_exemplo_caractere_a_caractere` —
+       o texto gerado é idêntico ao de `exemplos/resultado-exemplo.json`
+       (verificado: com a correção o `diff` acusa apenas a ausência de newline
+       final no arquivo de exemplo)
+  - **Commit:** `<hash preenchido depois>`
+
 ## Fase 4 — Saída e CLI
 
 - [x] **T-020** — `saida.py`: monta o dict de saída completo (`valor_total_despesas`, `valor_total_reembolsavel`, `detalhamento_despesas[].motor_reembolso_output`), conversão `Decimal → float` só na borda

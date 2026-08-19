@@ -10,6 +10,92 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-008 — A escala decimal da saída vira contrato da spec, não detalhe de serialização · `18/08/2026`
+
+**Gatilho:** o usuário rodou o comando do `README.md` contra
+`exemplos/despesas-exemplo.json` e leu o `resultado.json` gerado. Onde
+`exemplos/resultado-exemplo.json` traz `"valor": 72.50` e
+`"valor_reembolsavel": 60.00`, a saída real trazia `72.5` e `60.0` — uma casa
+decimal só, que para valor monetário não é formato válido. Quatro valores
+pareciam corretos (`1806.94`, `585.43`, `33.333`, `33.33`), o que fez o defeito
+parecer localizado em algumas despesas; na verdade eram os únicos cujo último
+dígito não é zero, ou seja, os únicos que não tinham nada a perder.
+
+**O que mudou na spec:**
+
+- spec.md §4 ("Entrada e saída"), regra geral dos campos produzidos: "sempre
+  tem no **máximo** 2 casas decimais" passou a "sai com **exatamente 2 casas
+  decimais**, inclusive quando a última é zero: `60.00`, nunca `60.0`; `0.00`,
+  nunca `0`". O parágrafo ganhou também a razão de a escala ser contrato de
+  spec e não detalhe delegado à biblioteca de serialização, e o registro de que
+  a conformidade só é verificável sobre o **texto** do arquivo.
+- spec.md §4 ("Entrada e saída"), campos ecoados: `"exato"` passou a incluir
+  explicitamente a quantidade de casas decimais lançada — `72.50` entra e sai
+  `72.50`, não `72.5`.
+- spec.md §9 ("Critérios de aceite"): novo critério exigindo que o texto do
+  JSON de saída seja idêntico ao de `exemplos/resultado-exemplo.json`.
+
+**Por quê:** a redação antiga era formalmente satisfeita pelo defeito — `60.0`
+tem "no máximo 2 casas decimais". Sem trocar "máximo" por "exatamente" não
+havia regra que sustentasse a correção, e a T-027 seria código sem spec. A
+razão de fundo é a mesma da §4 inteira, auditoria: `R$60,00` é como o
+comprovante está escrito e como o financeiro lê dinheiro; `R$60,0` obriga quem
+confere a parar e reinterpretar o número.
+A alternativa descartada foi tratar a escala como formatação — detalhe de
+apresentação fora da spec, resolvido no código. O efeito colateral seria que
+nenhum critério de aceite cobriria a escala e a próxima regressão passaria de
+novo pela suíte inteira sem quebrar nada, que é exatamente o que aconteceu
+aqui. Também foi descartado emitir os valores como string (`"60.00"`): resolve
+a escala, mas a spec.md §4 ("Entrada e saída") tipa esses campos como `número`,
+e mudar o tipo do contrato de saída para contornar limitação de biblioteca é o
+rabo abanando o cachorro.
+
+**O que isso invalidou:**
+
+- `plan.md` DT-004 ("Serialização de `Decimal` na saída") decidia o oposto:
+  converter `Decimal → float` em `saida.py`, descartando o encoder customizado
+  sob o argumento de que "a representação textual do `float` resultante é exata
+  para esses valores". Verdadeiro quanto ao *valor*, falso quanto à *escala* —
+  `float` não carrega escala. DT-004 foi reescrita.
+- `tests/test_saida.py::test_saida_converte_decimal_para_numero_serializavel`
+  afirmava o contrato antigo (`isinstance(..., float)`) e deixou de valer;
+  virou `test_saida_entrega_decimal_sem_passar_por_float`.
+- `tests/test_integracao.py::test_saida_e_identica_ao_resultado_esperado`
+  continua válido mas não era suficiente: compara os dois lados depois de
+  `json.loads`, e como estruturas de dados `60.0` e `60.00` são o mesmo valor.
+  Foi por isso que o defeito atravessou a T-022 sem quebrar nada.
+- `README.md` descrevia `saida.py` como "único ponto que converte Decimal →
+  float" e dizia que `float` aparece na escrita do JSON. Nenhuma das duas coisas
+  é mais verdade.
+
+**Tasks afetadas:** T-027, criada para esta mudança. T-020 e T-022 não são
+reabertas — o que elas entregaram continua valendo, o defeito estava na
+serialização, não no que elas cobriam.
+
+**Custo:** resolvido dentro da própria T-027. Arquivos alterados:
+`specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`,
+`specs/001-motor-reembolso/tasks.md`,
+`README.md`,
+`exemplos/resultado-exemplo.json`,
+`src/cli.py`, `src/saida.py`, `src/motor.py`, `src/regras.py`,
+`tests/test_cli.py`, `tests/test_integracao.py`, `tests/test_saida.py`.
+
+**Nota de processo:** `exemplos/resultado-exemplo.json` não tinha newline
+final; o usuário acrescentou uma durante esta mudança. Sem ela o novo critério
+da spec.md §9 ("Critérios de aceite") teria de ser redigido como "idêntico
+exceto pela newline final", que é o tipo de ressalva que envelhece mal. A
+mudança não altera nenhum valor do arquivo.
+
+`src/motor.py` e `src/regras.py` estavam fora do `ruff format` desde antes
+desta mudança (o `ruff check` sempre passou; era só formatação). Foram
+reformatados dentro da T-027, a pedido do usuário, em vez de num commit `style:`
+separado: commit que altera código sem task referenciada não existe neste
+projeto (ver `CLAUDE.md`, "Regras de trabalho").
+
+---
+
 ## D-007 — §9 marcada como atendida e status da spec atualizado · `18/08/2026`
 
 **Gatilho:** com a T-023 fechada, todas as 26 tasks estavam concluídas, mas
