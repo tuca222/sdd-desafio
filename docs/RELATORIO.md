@@ -290,6 +290,86 @@ lista do `git status`/`git show`, não da memória. Motivo: custo incorreto e n�
 minha mensagem: "em 'Custo' só é citado 6 arquivos de produção/spec. Aqui você
 deve citar exatamente todos os arquivos que sofreram alteração."
 
+### Caso 6 — todos casos de testes verde, e o entregável visivelmente errado
+
+**O que ele propôs:** o projeto fechado. As 26 tasks concluídas, 57 testes
+passando, `ruff` limpo, os 14 critérios de aceite da spec.md §9 ("Critérios de
+aceite") marcados, e o cabeçalho da spec em "implementada — todos os critérios
+de aceite verificados por teste automatizado". A T-023 ia além e registrava, no
+campo **Verificado em:**, que num checkout limpo "rodar sem instalar nada gerou
+`resultado.json` idêntico ao exemplo".
+
+**Por que estava errado:** o JSON de saída emitia os valores monetários com uma
+casa decimal — `"valor": 72.5`, `"valor_reembolsavel": 60.0`, `0.0` — onde
+`exemplos/resultado-exemplo.json` traz `72.50`, `60.00` e `0.00`. Para valor
+monetário isso não é formato válido: `R$60,0` não é o que está escrito no
+comprovante que o financeiro confere. A causa era `saida.py` fazendo
+`float(Decimal)`: o `Decimal` carrega a escala, o `float` não carrega nada, e
+`json.dump` serializa pelo `repr`, apagando a casa terminada em zero. E o
+"idêntico ao exemplo" da T-023 nunca tinha sido idêntico — a comparação tinha
+sido feita sobre o conteúdo interpretado, não sobre o texto do arquivo.
+
+**Como eu detectei:** rodei o sistema eu mesmo, pelo comando do `README.md`, e
+**li o arquivo de saída** conferindo valor por valor contra a entrada. Não
+confiei na suíte verde nem no relato de que a saída batia com o exemplo.
+
+Isso importa porque a suíte tinha um ponto cego sistemático, não uma lacuna de
+cobertura: existia um teste de integração ponta a ponta
+(`test_saida_e_identica_ao_resultado_esperado`) cuja função era exatamente
+comparar a saída real contra `exemplos/resultado-exemplo.json`. Ele passava. Ele
+comparava os dois lados **depois** de `json.loads`, e como estruturas de dados
+`60.0` e `60.00` são o mesmo número. Nenhum teste automatizado do projeto era
+capaz de enxergar esse defeito, porque todos olhavam o valor e o defeito estava
+na representação. Só a leitura humana do artefato entregue pegava.
+
+**O que eu fiz:** três coisas, e a ordem das duas primeiras é o que fez
+diferença.
+
+Primeiro, relatei com precisão em vez de dizer "os decimais estão errados":
+apontei que `valor_total_despesas`, `valor_total_reembolsavel` e os dois valores
+de `d-011` estavam **corretos**, e que o resto estava com uma casa só. Esses
+contra-exemplos eram o diagnóstico — `1806.94`, `585.43`, `33.333` e `33.33` têm
+o último dígito decimal diferente de zero, ou seja, não tinham nada a perder na
+conversão para `float` (o mesmo vale para o `100.01` de `d-004`, que também saiu
+intacto). Descrever o que estava certo levou direto ao mecanismo; um relato
+genérico teria levado a procurar erro de cálculo, que não existia.
+
+Segundo, pedi **análise e uma task**, não a correção. Isso forçou o fluxo a
+passar pela spec, e foi aí que apareceu o problema de fundo: a spec.md §4
+("Entrada e saída") dizia que os valores produzidos têm "no **máximo** 2 casas
+decimais" — redação que o defeito satisfazia formalmente. Não havia regra que
+sustentasse a correção. A spec foi para 1.9 trocando "máximo" por "exatamente"
+(`D-008`), e ganhou um critério novo na spec.md §9 ("Critérios de aceite")
+exigindo que o **texto** do arquivo seja idêntico ao do exemplo — o critério que
+teria pego isso no primeiro dia. A `plan.md` DT-004 ("Serialização de `Decimal`
+na saída") teve de ser reescrita: ela decidia exatamente o contrário, e
+descartava a solução correta com o argumento de que "a representação textual do
+`float` resultante é exata para esses valores" — verdadeiro quanto ao valor,
+falso quanto à escala.
+
+Terceiro, quando o Claude propôs resolver a formatação pendente de três arquivos
+num commit `style:` separado, recusei: commit que altera código sem task
+referenciada não existe neste projeto. Entrou no commit da T-027.
+
+**Onde está a evidência:** `docs/sessions/06_bugfix.txt`, linha ~8, minha
+mensagem: "Rodei o código desenvolvido como manda o @README.md (...) Encontrei
+um bug no json de saída. (...) Porém todos os outros valores das outras
+despesas, inclusive o valor reembolsável ficaram tudo com apenas 1 casa decimal.
+Que para valor monetário fica errado e feio."; e linha ~336, a recusa do commit
+sem task: "Não quero que você faça um commit alterando código, sem task."
+Correção nos commits `2620c98` (spec 1.9, `D-008`), `1e3b66e` (T-027), `153ac4a`
+(hash) e `2d0dc9d` (spec 1.10, `D-009`).
+
+**O que isso me ensinou sobre confiar em suíte verde:** teste automatizado
+verifica o que alguém pensou em verificar. Aqui, todo mundo — eu inclusive —
+tinha aceitado "a saída bate com o exemplo" como fato verificado, quando o que
+estava verificado era "a saída bate com o exemplo depois que os dois passam por
+um parser que normaliza justamente a diferença". A lição prática que ficou é que
+o artefato entregue precisa ser olhado como o usuário final o recebe — texto,
+arquivo, tela — pelo menos uma vez, por alguém, antes de o projeto se declarar
+pronto. Passei a tratar "rodei e li a saída" como etapa obrigatória, não como
+redundância do `pytest`.
+
 **Padrão que eu notei:** o Claude segue regras de conteúdo (o que a spec deve
 dizer) com mais disciplina do que regras de processo sobre o próprio ato de
 commitar (versionar, registrar). Mudanças que "parecem pequenas" no conteúdo
@@ -304,6 +384,7 @@ seguir a spec do que em desconfiar dela. Nos Casos 3 e 4, e também nas
 correções que viraram D-005 e D-006, o erro não foi contrariar o que estava
 escrito — foi seguir fielmente um texto ambíguo ou incompleto sem sinalizar a
 ambiguidade.
+
 ---
 
 ## Diligência
