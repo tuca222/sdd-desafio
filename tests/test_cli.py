@@ -1,4 +1,6 @@
 import json
+import re
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -33,7 +35,50 @@ def test_cli_escreve_exatamente_o_que_o_motor_produz(tmp_path: Path):
     colaborador, periodo, despesas = carregar_despesas(CAMINHO_EXEMPLO)
     esperado = montar_saida(calcular(colaborador, periodo, despesas))
 
-    assert json.loads(destino.read_text(encoding="utf-8")) == esperado
+    # parse_float=Decimal na releitura: o motor produz Decimal e e assim que o
+    # arquivo tem de reparsear, sem passar por float em ponto nenhum do caminho.
+    escrito = json.loads(destino.read_text(encoding="utf-8"), parse_float=Decimal)
+
+    assert escrito == esperado
+
+
+def test_cli_escreve_valores_monetarios_com_duas_casas(tmp_path: Path):
+    destino = tmp_path / "resultado.json"
+    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino)])
+
+    texto = destino.read_text(encoding="utf-8")
+
+    # spec.md §4 ("Entrada e saida"): o que o motor produz sai com exatamente 2
+    # casas decimais, inclusive quando a ultima e zero.
+    assert '"valor_total_despesas": 1806.94' in texto
+    assert '"valor_reembolsavel": 60.00' in texto
+    assert '"valor_reembolsavel": 0.00' in texto
+    assert '"valor_reembolsavel": 250.00' in texto
+
+    # E os campos ecoados saem com a escala lancada, nem truncada nem esticada.
+    assert '"valor": 72.50' in texto
+    assert '"valor": 33.333' in texto
+    assert '"valor": -45.00' in texto
+
+    # Nenhum valor monetario sai com 1 casa decimal so.
+    assert not re.search(r'"(valor|valor_reembolsavel|valor_total_\w+)": -?\d+\.\d(,|\n)', texto)
+
+
+def test_cli_nao_confunde_texto_da_entrada_com_valor_monetario(tmp_path: Path):
+    # O encoder de plan.md DT-004 marca os Decimal com um delimitador e o remove
+    # varrendo o JSON ja serializado — inclusive os fragmentos de string. Uma
+    # descricao que imitasse o delimitador viraria numero na saida se ele fosse fixo.
+    entrada = json.loads(Path(CAMINHO_EXEMPLO).read_text(encoding="utf-8"))
+    entrada["despesas"][0]["descricao"] = f"@{'a' * 32}@999.99@{'a' * 32}@"
+    arquivo = tmp_path / "despesas.json"
+    arquivo.write_text(json.dumps(entrada), encoding="utf-8")
+
+    destino = tmp_path / "resultado.json"
+    main(["calcular", "--input", str(arquivo), "--output", str(destino)])
+
+    escrito = json.loads(destino.read_text(encoding="utf-8"), parse_float=Decimal)
+
+    assert escrito["detalhamento_despesas"][0]["descricao"] == entrada["despesas"][0]["descricao"]
 
 
 def test_cli_nao_altera_o_arquivo_de_entrada(tmp_path: Path):

@@ -60,6 +60,7 @@ Lint e formatação:
 | Categoria fora da política | Negada integralmente |
 | Valores negativos | Estornos são ignorados e não entram em nenhum total |
 | Valores com mais de 2 casas | Truncados (não arredondados) antes de qualquer cálculo |
+| Escala da saída | O que o motor produz sai com exatamente 2 casas (`60.00`); o que é ecoado da entrada sai com a escala lançada |
 
 A ordem em que essas verificações se aplicam importa, e está definida em
 `specs/001-motor-reembolso/spec.md` §8 ("Ordem de aplicação das regras"). Cada despesa
@@ -67,11 +68,13 @@ recebe **uma única** justificativa: a da primeira regra que a reprovar.
 
 **Duas sutilezas da saída**, ambas propositais:
 
-- `categoria` e `valor` saem **exatamente como entraram** (`ALIMENTACAO`, `33.333`),
-  mesmo que internamente o motor use a categoria normalizada e o valor truncado para
-  decidir. O relatório precisa bater com o comprovante anexado.
+- `categoria` e `valor` saem **exatamente como entraram** (`ALIMENTACAO`, `33.333`,
+  `72.50` — com a escala lançada, não `72.5`), mesmo que internamente o motor use a
+  categoria normalizada e o valor truncado para decidir. O relatório precisa bater
+  com o comprovante anexado.
 - Tudo que o motor **produz** (`valor_reembolsavel` e os dois totais) é derivado do
-  valor truncado e nunca passa de 2 casas decimais.
+  valor truncado e sai com exatamente 2 casas decimais, inclusive quando a última é
+  zero: `60.00`, nunca `60.0`.
 
 ## Estrutura
 
@@ -82,7 +85,7 @@ src/
   modelos.py    # dataclasses imutáveis que trafegam entre as etapas
   regras.py     # uma função pura por regra de negócio, sem estado e sem I/O
   motor.py      # aplica as regras na ordem da spec e calcula os totais
-  saida.py      # monta o dict de saída; único ponto que converte Decimal → float
+  saida.py      # monta o dict de saída, com os valores ainda em Decimal
   politica.py   # os limites e as categorias válidas, em um lugar só
 tests/          # espelha src/, mais casos de borda e integração ponta a ponta
 specs/001-motor-reembolso/
@@ -95,8 +98,10 @@ docs/
   sessions/     # exports das sessões de trabalho
 ```
 
-Valores monetários usam `decimal.Decimal` do início ao fim do cálculo — `float` só
-aparece no momento de escrever o JSON.
+Valores monetários usam `decimal.Decimal` de ponta a ponta e **nunca** viram `float`:
+`cli.py` serializa o `Decimal` como número JSON com um encoder próprio. A razão está
+em `specs/001-motor-reembolso/plan.md` DT-004 ("Serialização de `Decimal` na saída") —
+`float` não carrega escala, e `R$60,00` virava `60.0` na saída.
 
 ## Limitações conhecidas
 

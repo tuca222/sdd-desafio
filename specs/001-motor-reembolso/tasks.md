@@ -160,7 +160,7 @@
     (`d-011`: `valor == 33.333` e `motor_reembolso_output.valor_reembolsavel == 33.33`)
   - **Commit:** `4b11965`
 
-- [ ] **T-027** — Valores monetários da saída preservam a escala do `Decimal`: serialização deixa de passar por `float`
+- [x] **T-027** — Valores monetários da saída preservam a escala do `Decimal`: serialização deixa de passar por `float`
   - **Atende:** spec.md §4 ("Entrada e saída") — os campos ecoados da entrada
     saem "exatamente como entraram" e os valores produzidos pelo motor saem com
     2 casas decimais
@@ -202,6 +202,13 @@
     resultante é exata para esses valores" — verdadeira quanto ao *valor*, falsa
     quanto à *escala*. DT-004 precisa ser reescrita e `plan.md` ter a versão
     incrementada no mesmo commit.
+  - **Achado durante a execução:** a primeira versão do encoder usava um
+    marcador fixo (`@decimal@`). Como a substituição varre todos os fragmentos
+    serializados, inclusive os de string, uma `descricao` da entrada contendo
+    esse texto era convertida em número na saída — o arquivo continuava sendo
+    JSON válido, então a corrupção seria silenciosa. O marcador passou a ser
+    sorteado a cada execução (`uuid4`), com regressão coberta por
+    `tests/test_cli.py::test_cli_nao_confunde_texto_da_entrada_com_valor_monetario`.
   - **Aceite:** dois testes, ambos sobre o **texto** do arquivo gerado (a
     comparação atual em `tests/test_integracao.py` faz `json.loads` dos dois
     lados e compara dicts, então `72.5 == 72.50` passa — foi por isso que o
@@ -265,7 +272,7 @@ exatamente a matriz que a correção vai montar.
 | RN-007 | T-010, T-024, T-025 | `test_rn007_duplicata_negada_primeira_mantida`, `test_rn007_duplicata_ignora_capitalizacao_da_categoria`, `test_calcula_totais_do_periodo` |
 | RN-008 | T-008 | `test_rn008_categoria_fora_da_politica` |
 | RN-009 | T-007, T-025 | `test_rn009_valor_negativo_ignorado`, `test_calcula_totais_do_periodo` |
-| RN-010 | T-005, T-026 | `test_rn010_trunca_casas_decimais_excedentes`, `test_saida_ecoa_o_valor_como_veio_na_entrada` |
+| RN-010 | T-005, T-026, T-027 | `test_rn010_trunca_casas_decimais_excedentes`, `test_saida_ecoa_o_valor_como_veio_na_entrada`, `test_cli_escreve_valores_monetarios_com_duas_casas`, `test_saida_bate_com_o_exemplo_caractere_a_caractere` |
 | RN-011 | T-006, T-008, T-019, T-024 | `test_rn011_normaliza_categoria_case_insensitive`, `test_categoria_maiuscula_concorre_ao_limite_diario` |
 | RN-012 | T-015 | `test_rn012_sem_adicional_de_viagem`, `test_rn012_hospedagem_no_periodo_nao_amplia_limites` |
 | RN-013 | T-012, T-016 | `test_pipeline_aplica_filtros_na_ordem_definida`, `test_ordem_nota_fiscal_antes_de_limite_diario` |

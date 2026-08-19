@@ -2,6 +2,8 @@ import json
 from datetime import date
 from decimal import Decimal
 
+import pytest
+
 from src.modelos import Colaborador, Despesa, Periodo, ResultadoDespesa, ResultadoFinal
 from src.parser import carregar_despesas
 from src.saida import montar_saida
@@ -83,9 +85,7 @@ def test_monta_saida_conforme_schema():
         "despesa_reembolsavel": True,
         "tipo_reembolso": "parcial",
         "valor_reembolsavel": 60.00,
-        "justificativa": (
-            "A categoria alimentacao possui limite de reembolso de R$60,00 no dia."
-        ),
+        "justificativa": ("A categoria alimentacao possui limite de reembolso de R$60,00 no dia."),
     }
 
 
@@ -127,19 +127,30 @@ def test_saida_ecoa_o_valor_como_veio_na_entrada():
     (item,) = montar_saida(resultado_final)["detalhamento_despesas"]
 
     # O valor lancado sai inteiro; tudo que e calculado sai truncado em 2 casas.
-    assert item["valor"] == 33.333
-    assert item["motor_reembolso_output"]["valor_reembolsavel"] == 33.33
+    assert item["valor"] == Decimal("33.333")
+    assert item["motor_reembolso_output"]["valor_reembolsavel"] == Decimal("33.33")
 
 
-def test_saida_converte_decimal_para_numero_serializavel():
+def test_saida_entrega_decimal_sem_passar_por_float():
     saida = montar_saida(montar_resultado_final())
 
-    assert isinstance(saida["valor_total_despesas"], float)
-    assert isinstance(saida["valor_total_reembolsavel"], float)
+    assert isinstance(saida["valor_total_despesas"], Decimal)
+    assert isinstance(saida["valor_total_reembolsavel"], Decimal)
 
     (item,) = saida["detalhamento_despesas"]
-    assert isinstance(item["valor"], float)
-    assert isinstance(item["motor_reembolso_output"]["valor_reembolsavel"], float)
+    assert isinstance(item["valor"], Decimal)
+    assert isinstance(item["motor_reembolso_output"]["valor_reembolsavel"], Decimal)
 
-    # json.dumps falharia com Decimal — e a prova de que a conversao aconteceu.
-    assert json.loads(json.dumps(saida)) == saida
+    # float nao carrega escala: e por isso que a conversao nao acontece aqui.
+    # Quem serializa e o CodificadorMonetario do cli.py (plan.md DT-004).
+    with pytest.raises(TypeError):
+        json.dumps(saida)
+
+
+def test_saida_preserva_a_escala_dos_valores_monetarios():
+    saida = montar_saida(montar_resultado_final())
+    (item,) = saida["detalhamento_despesas"]
+
+    assert str(saida["valor_total_despesas"]) == "61.00"
+    assert str(item["valor"]) == "61.00"
+    assert str(item["motor_reembolso_output"]["valor_reembolsavel"]) == "60.00"

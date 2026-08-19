@@ -68,9 +68,7 @@ def aplicar_limites(
     return finais
 
 
-def calcular(
-    colaborador: Colaborador, periodo: Periodo, despesas: list[Despesa]
-) -> ResultadoFinal:
+def calcular(colaborador: Colaborador, periodo: Periodo, despesas: list[Despesa]) -> ResultadoFinal:
     filtros = aplicar_filtros(despesas, periodo)
     resultados = aplicar_limites(despesas, filtros.resultados)
 

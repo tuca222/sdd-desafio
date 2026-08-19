@@ -74,6 +74,19 @@ def test_saida_e_identica_ao_resultado_esperado(resultado: dict):
     assert resultado == esperado
 
 
+def test_saida_bate_com_o_exemplo_caractere_a_caractere(tmp_path: Path):
+    destino = tmp_path / "resultado.json"
+    main(["calcular", "--input", CAMINHO_ENTRADA, "--output", str(destino)])
+
+    # spec.md §9 ("Criterios de aceite"): a comparacao e sobre o texto, nao sobre o
+    # resultado do parsing. Como dicts, 60.0 e 60.00 sao o mesmo valor — foi por
+    # isso que test_saida_e_identica_ao_resultado_esperado deixou passar a escala
+    # errada ate a T-027.
+    assert destino.read_text(encoding="utf-8") == Path(CAMINHO_RESULTADO_ESPERADO).read_text(
+        encoding="utf-8"
+    )
+
+
 def _truncado(valor: float) -> Decimal:
     return Decimal(str(valor)).quantize(Decimal("0.01"), rounding=ROUND_DOWN)
 

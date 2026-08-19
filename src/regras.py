@@ -20,8 +20,7 @@ def filtro_valor_negativo(despesa: Despesa) -> ResultadoDespesa | None:
             tipo_reembolso="nenhum",
             valor_reembolsavel=Decimal("0.00"),
             justificativa=(
-                "Despesa com valor negativo, identificada como estorno. "
-                "Reembolso negado."
+                "Despesa com valor negativo, identificada como estorno. Reembolso negado."
             ),
         )
     return None

@@ -1,11 +1,6 @@
-from decimal import Decimal
 from typing import Any
 
 from src.modelos import Colaborador, Despesa, Periodo, ResultadoDespesa, ResultadoFinal
-
-
-def _valor(valor: Decimal) -> float:
-    return float(valor)
 
 
 def _colaborador_para_dict(colaborador: Colaborador) -> dict[str, Any]:
@@ -31,12 +26,12 @@ def _despesa_para_dict(despesa: Despesa, resultado: ResultadoDespesa) -> dict[st
         "categoria": despesa.categoria_original,
         "descricao": despesa.descricao,
         "fornecedor": despesa.fornecedor,
-        "valor": _valor(despesa.valor_original),
+        "valor": despesa.valor_original,
         "tem_nota_fiscal": despesa.tem_nota_fiscal,
         "motor_reembolso_output": {
             "despesa_reembolsavel": resultado.despesa_reembolsavel,
             "tipo_reembolso": resultado.tipo_reembolso,
-            "valor_reembolsavel": _valor(resultado.valor_reembolsavel),
+            "valor_reembolsavel": resultado.valor_reembolsavel,
             "justificativa": resultado.justificativa,
         },
     }
@@ -46,8 +41,8 @@ def montar_saida(resultado_final: ResultadoFinal) -> dict[str, Any]:
     return {
         "colaborador": _colaborador_para_dict(resultado_final.colaborador),
         "periodo": _periodo_para_dict(resultado_final.periodo),
-        "valor_total_despesas": _valor(resultado_final.valor_total_despesas),
-        "valor_total_reembolsavel": _valor(resultado_final.valor_total_reembolsavel),
+        "valor_total_despesas": resultado_final.valor_total_despesas,
+        "valor_total_reembolsavel": resultado_final.valor_total_reembolsavel,
         "detalhamento_despesas": [
             _despesa_para_dict(despesa, resultado)
             for despesa, resultado in resultado_final.detalhamento
