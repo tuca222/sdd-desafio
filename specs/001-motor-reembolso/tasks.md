@@ -222,7 +222,7 @@
        o texto gerado é idêntico ao de `exemplos/resultado-exemplo.json`
        (verificado: com a correção o `diff` acusa apenas a ausência de newline
        final no arquivo de exemplo)
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `1e3b66e`
 
 ## Fase 4 — Saída e CLI
 
