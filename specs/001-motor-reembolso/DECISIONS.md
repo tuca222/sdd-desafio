@@ -10,6 +10,302 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-011 — Despesas internacionais: conversão pela taxa da data, e negação quando não há taxa · `19/08/2026`
+
+**Gatilho:** item B do comunicado do RH da v4 (`exemplos/rh_politica_v4.md`):
+*"A entrada agora pode trazer um campo `moeda` (ISO 4217). Quando ausente,
+assume-se `BRL`. A conversão usa a taxa da data da despesa, não a taxa de hoje.
+(...) Os limites da política são sempre em BRL."* O usuário trouxe três decisões
+prontas (moeda estrangeira não amplia limite; data sem cotação é negada; o
+arquivo de câmbio é a fonte da verdade sobre moedas) e três ambiguidades foram
+levantadas na revisão da spec: em que valor o teto de nota fiscal é comparado,
+como truncar o valor convertido, e se `moeda` entra na identidade de duplicata.
+
+**O que mudou na spec:**
+
+- **Cabeçalho** — versão 1.11 → 2.0, e **Status** passou a "especificada para a
+  Política de Reembolso v4", com os itens A e B cobertos e o item C fora de
+  escopo.
+- **spec.md §3 ("Fora de escopo")** — quatro itens novos: não busca cotação em
+  fonte externa e não infere taxa de outra data; não valida `moeda` contra a
+  norma ISO 4217; não converte a saída de volta para a moeda lançada; e os
+  arquivos de política e câmbio são entregues, não descobertos.
+- **spec.md §4 ("Entrada e saída")** — o motor passou de duas para **três**
+  entradas, com tabela de campos completa do arquivo de câmbio. O campo
+  `despesas[].moeda` entrou na tabela de despesas como opcional.
+  `motor_reembolso_output` ganhou `taxa_cambio` e `valor_convertido_brl`. O
+  bloco "o que campos originais significa" passou de dois para três casos, e
+  ganhou a regra de que despesa sem o campo `moeda` sai **sem** o campo, e não
+  com um `BRL` inventado pelo motor.
+- **spec.md §5 ("Regras de negócio")** — **RN-015** (conversão) e **RN-016**
+  (câmbio indisponível) são novas. RN-004, RN-005 e RN-010 passaram a operar
+  sobre o valor em BRL; RN-007 passou a incluir `moeda` na identidade de
+  duplicata.
+- **spec.md §6 ("Ambiguidades identificadas e decisões")** — **AMB-014** a
+  **AMB-019** são novas.
+- **spec.md §7 ("Casos de borda")** — sete linhas novas.
+- **spec.md §8 ("Ordem de aplicação das regras")** — a ordem passou de 6 para 7
+  passos, com "câmbio indisponível" entrando como passo 5.
+- **spec.md §9 ("Critérios de aceite")** — bloco novo para
+  `exemplos/envelope/despesas-envelope.json` e complemento do bloco de
+  `despesas-envelope-cc-desconhecido.json`, com os totais dos dois arquivos.
+- **spec.md §10 ("O que fica em aberto")** — cinco itens novos, sendo AMB-015 o
+  mais provável de ser reaberto.
+
+**Por quê:** as três decisões que não vinham prontas.
+
+*AMB-017 — o teto de nota fiscal compara o valor convertido.* O teto está
+escrito em reais; comparar contra ele um número em euro faz a exigência de nota
+depender da moeda e não do gasto. A alternativa (comparar o valor lançado) abre
+brecha concreta e verificável no próprio conjunto de despesas do envelope:
+`e-005` são USD 40,00 sem nota fiscal, e 40 é menor que 100 — passaria pela
+exigência valendo R$220,00.
+
+*AMB-018 — o valor convertido é truncado, `ROUND_DOWN`.* Mesma decisão de
+AMB-010, pelo mesmo motivo, e por um motivo adicional: `valor_convertido_brl` é
+publicado na saída, e um valor publicado com três casas decimais é o defeito de
+escala que a [[D-008]] já resolveu para os demais valores produzidos.
+
+*AMB-019 — `moeda` entra na identidade de duplicata.* Sem ela, EUR 22,00 e
+BRL 22,00 seriam duplicatas uma da outra e o total do período perderia um gasto
+real. Comparar o valor **convertido** em vez do lançado foi descartado porque
+faria a detecção de duplicata depender da taxa do dia — a mesma entrada
+produziria resultados diferentes se o arquivo de câmbio fosse corrigido.
+
+A decisão que o usuário trouxe pronta e que mais custou registro é AMB-015:
+negar a despesa internacional lançada em data sem cotação. A alternativa —
+usar a cotação do último dia útil anterior — é a prática de mercado, e o próprio
+arquivo de câmbio observa que só publica em dia útil. Ela foi descartada pelo
+critério que já governa AMB-005 e AMB-008 aqui: aplicar a taxa de outra data
+exige escolher sozinho qual data, quantos dias voltar e o que fazer no início do
+arquivo. O custo é conhecido e está em spec.md §10 ("O que fica em aberto"):
+`e-004`, um almoço de sábado em Lisboa, é uma despesa legítima negada por um
+motivo alheio a ela.
+
+**O que isso invalidou:**
+
+- **`plan.md` §3 ("Modelo de dados")** — `ResultadoDespesa` deixou de ser
+  espelho 1:1 de `motor_reembolso_output`: os dois campos novos de saída são
+  propriedade da despesa, não da decisão, e `saida.py` passou a montar o objeto
+  a partir de duas origens.
+- **`src/parser.py`** — `Despesa` ganha `moeda`, `moeda_original`, `valor_brl`
+  e `taxa_cambio`, e o parser passa a depender de um módulo de câmbio que ainda
+  não existe.
+- **`src/regras.py`** — `filtro_nota_fiscal` compara `despesa.valor`, que deixou
+  de ser o valor comparável; `_identidade_duplicata` não inclui `moeda`;
+  `aplicar_limite_diario` agrega `despesa.valor`, e não o valor em BRL.
+- **`src/motor.py`** — `valor_total_despesas` soma `despesa.valor` e não exclui
+  despesa sem câmbio.
+- **`src/saida.py`** — `motor_reembolso_output` não tem os dois campos novos, e
+  o dict de saída ecoa `categoria` e `valor` mas não `moeda`.
+- **`src/cli.py`** — não tem por onde receber o arquivo de câmbio.
+- **`exemplos/resultado-exemplo.json`** — além do que a [[D-010]] já invalidou,
+  agora toda despesa precisa sair com `taxa_cambio` e `valor_convertido_brl` em
+  `null`.
+- **Testes** — todos os que constroem `Despesa` diretamente, porque a dataclass
+  ganhou quatro campos: `tests/test_regras.py`, `tests/test_motor.py`,
+  `tests/test_casos_borda.py`, `tests/test_parser.py`, `tests/test_saida.py`.
+
+**Tasks afetadas:** nenhuma task fechada é reaberta. O trabalho entra na Fase 5
+de `tasks.md`, de T-028 em diante, junto com o que a [[D-010]] gerou.
+
+**Custo:** `exemplos/envelope/politica-v4.json`,
+`exemplos/envelope/cambio.json`,
+`exemplos/envelope/despesas-envelope.json`,
+`exemplos/envelope/despesas-envelope-cc-desconhecido.json`,
+`exemplos/rh_politica_v3.md`,
+`exemplos/rh_politica_v4.md`,
+`specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`,
+`specs/001-motor-reembolso/tasks.md`.
+
+As duas entradas compartilham este conjunto de arquivos porque os itens A e B do
+comunicado foram especificados no mesmo movimento, contra a mesma spec 1.10 — não
+há como atribuir um arquivo a uma e não à outra. O que está listado aqui é o custo
+de **spec**; o custo de **código** ainda não foi pago e está dimensionado na Fase 5
+de `tasks.md` (T-028 a T-045), que é a estimativa honesta do que estas duas decisões
+vão custar em `src/` e `tests/`.
+
+**Nota de processo:** o item B foi especificado em commit separado do item A
+([[D-010]]) de propósito, embora os dois tenham vindo do mesmo envelope e do
+mesmo dia. São duas mudanças com conjuntos de invalidação diferentes, e juntá-las
+num commit só produziria uma entrada de `DECISIONS.md` com dois gatilhos e um
+campo **Custo** que não distingue o que cada uma custou — que é exatamente a
+informação que este arquivo existe para preservar.
+
+---
+
+## D-010 — A política sai do código e passa a variar por centro de custo · `19/08/2026`
+
+**Gatilho:** o envelope do Dia 2 trouxe o comunicado do RH da Política de
+Reembolso v4 (`exemplos/rh_politica_v4.md`), item A: *"Os limites não são mais
+constantes. Cada centro de custo tem a sua tabela, mantida pelo financeiro num
+arquivo à parte, e ela muda sem aviso. O motor precisa ler a política de fora,
+não de dentro do código."* O usuário leu o comunicado, anotou as ambiguidades
+que enxergou e pediu revisão antes de qualquer código. Duas das ambiguidades
+desta entrada (AMB-012 e AMB-013) não estavam nas anotações e foram levantadas
+na revisão; a decisão de cada uma foi do usuário.
+
+**O que mudou na spec:**
+
+- **Cabeçalho** — versão 1.10 → 1.11, e **Status** passou de "implementada"
+  para "em migração para a Política de Reembolso v4", registrando que o item A
+  está especificado e o item B (despesas internacionais) ainda não.
+- **spec.md §3 ("Fora de escopo")** — dois itens novos: não descobre sozinho
+  qual arquivo de política aplicar, e não altera nem persiste o arquivo de
+  política. O item do adicional de viagem passou a citar
+  `acrescimo_em_viagem_percentual` em vez de "50%".
+- **spec.md §4 ("Entrada e saída")** — o motor deixou de ter uma entrada e
+  passou a ter duas: despesas e **política**. Tabela de campos completa do
+  arquivo de política, incluindo os três campos que existem e o motor **não**
+  usa (`versao`, `observacao`, `acrescimo_em_viagem_percentual`) — dizer
+  explicitamente que um campo é ignorado vale mais do que omiti-lo, porque
+  omitir deixa a próxima pessoa achando que esqueceram. `vigencia` entrou como
+  campo **obrigatório**, porque RN-017 depende dele. O exemplo pequeno da seção
+  foi recalculado — o colaborador é de `CC-ENG-PLATAFORMA`, cujo limite de
+  alimentação é R$75,00, então `d-001` passou de R$60,00 (parcial) para R$72,50
+  (total) e `d-002` de R$0,00 para R$2,50 (parcial) — e passou a mostrar a
+  política como entrada, e não só as despesas.
+- **spec.md §5 ("Regras de negócio")** — RN-001, RN-002 e RN-003 deixaram de
+  trazer o limite escrito e passaram a apontar para a tabela do centro de custo;
+  RN-005 passou a ler o teto de `nota_fiscal_obrigatoria_acima_de`; RN-008 foi
+  reescrita de "categorias fora da política" para "categorias não reembolsáveis
+  para o centro de custo", com duas cláusulas e duas justificativas distintas;
+  RN-012 passou a citar o campo da política que lê e ignora. **RN-014** é nova
+  e define como a tabela aplicável é resolvida; **RN-017** é nova e valida a
+  `vigencia` da política contra `periodo.competencia` antes de qualquer cálculo
+  — é a única regra desta spec que não decide sobre uma despesa, e a única cuja
+  reprovação impede a geração do arquivo de saída.
+- **spec.md §6 ("Ambiguidades identificadas e decisões")** — **AMB-012**
+  (granularidade de "aplica-se a política padrão"), **AMB-013** (categoria com
+  limite `0.00`) e **AMB-020** (o que "retroativa à competência atual" exige do
+  motor) são novas. AMB-005 e AMB-006 tiveram os valores fixos trocados por
+  referência à tabela, sem mudar decisão.
+- **spec.md §7 ("Casos de borda")** — dez linhas novas e duas reescritas; a
+  legenda passou a distinguir `d-NNN`, `e-NNN` e `f-NNN` por arquivo de origem.
+- **spec.md §8 ("Ordem de aplicação das regras")** — o passo 2 passou de
+  "categoria fora da política" para "categoria não reembolsável para o centro de
+  custo", cobrindo as duas cláusulas de RN-008. A ordem em si não mudou, mas a
+  seção ganhou a precondição de RN-017, que roda antes do passo 1 e vale para o
+  lote inteiro.
+- **spec.md §9 ("Critérios de aceite")** — reescrita. Todos os critérios foram
+  recalculados sob a v4 e **desmarcados**, porque o código ainda implementa a
+  v3. Bloco novo para `exemplos/envelope/despesas-envelope-cc-desconhecido.json`.
+- **spec.md §10 ("O que fica em aberto")** — três itens novos: `periodicidade`
+  ecoada e não interpretada, centro de custo com tabela incompleta, e a
+  ausência de `fim_vigencia` — RN-017 aceita indefinidamente uma política já
+  revogada, porque o arquivo não tem como dizer que foi substituída.
+
+**Por quê:** as duas decisões que não vinham prontas do comunicado foram
+tomadas assim.
+
+*AMB-012 — a tabela de um centro de custo é fechada.* A frase do RH nomeia
+"centros de custo" que "não têm entrada", não categorias que faltam. A
+alternativa descartada era o merge por categoria, em que o `padrao` completaria
+as lacunas de um centro de custo que existe. Ela foi descartada pelo efeito
+colateral: `CC-ADM` não lista `hospedagem`, e sob o merge herdaria R$250,00 do
+padrão — reembolsando exatamente o gasto que a tabela foi escrita para não
+cobrir, e sem nada no arquivo denunciando a herança. O preço da leitura fechada
+é conhecido e ficou registrado em spec.md §10 ("O que fica em aberto"): centro
+de custo cadastrado com categoria faltando nega despesa legítima.
+
+*AMB-013 — `limite: 0.00` é proibição, não orçamento zerado.* O valor
+reembolsado é o mesmo nas duas leituras; a justificativa não é. "Limite diário
+de R$0,00 já atingido na despesa X" manda quem confere procurar uma despesa que
+não existe, e o financeiro escreveu `"observacao": "nao reembolsavel"` ao lado
+do zero. Mais grave, a leitura como orçamento zerado produziria justificativa
+enganosa em combinação com RN-005: `d-013` (hospedagem sem nota fiscal em
+`CC-ENG-PLATAFORMA`) seria negada citando a nota, sugerindo a quem lê que
+anexar o comprovante resolveria — quando a categoria está vedada e não resolve.
+
+*AMB-020 — a validação de vigência é uma só, no lote.* "Retroativa **à**
+competência atual" fixa a fronteira da retroatividade, não abre uma reta, e o
+dado corrobora: o comunicado é do meio de julho e `vigencia` vale `2026-07-01`,
+ou seja, o RH já retroagiu até o início da competência e parou ali. Duas leituras
+foram descartadas. A primeira, de que a política nova julgaria despesas de meses
+anteriores, contraria a preposição e o campo. A segunda, de um check por despesa
+negando `data < vigencia`, se contradiz: ele só tem efeito quando a vigência cai
+no meio do período, e é exatamente nesse cenário que a frase do RH manda cobrir a
+competência inteira; fora dele, é redundante com RN-006. O operador de RN-017 é
+"igual ou anterior" porque um mês futuro pode não ter atualização de política — e
+aí a corrente precisa continuar valendo — enquanto um mês anterior precisa ser
+processado com a política que valia nele. O arquivo reforça: existe `vigencia` e
+não existe `fim_vigencia`, e uma data de início sem data de fim é aberta por
+construção.
+
+**O que isso invalidou:**
+
+- **`plan.md` §4 ("Como a política é representada"), na versão 1.9** — decidia
+  explicitamente *"constantes em código, não config externo (JSON/YAML carregado
+  em runtime). Nada na spec pede reconfiguração sem redeploy."* Revogada. A
+  seção foi reescrita mantendo o texto antigo citado, não apagado.
+- **`src/politica.py` inteiro** — `LIMITE_ALIMENTACAO`,
+  `LIMITE_TRANSPORTE_URBANO`, `LIMITE_HOSPEDAGEM`, `LIMITE_NOTA_FISCAL`,
+  `CATEGORIAS_VALIDAS` e `LIMITES_DIARIOS_POR_CATEGORIA` deixam de existir como
+  constantes.
+- **`src/regras.py`** — `filtro_categoria_invalida` e `filtro_nota_fiscal`
+  dependiam das constantes; `aplicar_limite_diario` monta justificativa sem
+  citar centro de custo.
+- **`src/motor.py`** — lê `LIMITES_DIARIOS_POR_CATEGORIA` diretamente.
+- **`src/cli.py`** — não tem por onde receber o arquivo de política.
+- **`exemplos/resultado-exemplo.json`** — regravado por inteiro: quatro
+  despesas mudam de valor ou de justificativa e `valor_total_reembolsavel` cai
+  de R$585,43 para R$351,43. `valor_total_despesas` sobrevive em R$1.806,94,
+  porque o total bruto não depende de limite.
+- **Testes** — `tests/test_politica.py`, `tests/test_regras.py`,
+  `tests/test_motor.py`, `tests/test_casos_borda.py` e
+  `tests/test_integracao.py` afirmam limites que deixaram de valer.
+
+**Tasks afetadas:** T-005 a T-022 permanecem fechadas — elas foram entregues
+contra a spec vigente na época e o histórico não é reescrito. O trabalho novo
+entra como Fase 5, de T-028 em diante, e a tabela **Cobertura** de `tasks.md`
+passa a apontar RN-001, RN-002, RN-003, RN-005 e RN-008 para as tasks novas
+além das antigas.
+
+**Custo:** `exemplos/envelope/politica-v4.json`,
+`exemplos/envelope/cambio.json`,
+`exemplos/envelope/despesas-envelope.json`,
+`exemplos/envelope/despesas-envelope-cc-desconhecido.json`,
+`exemplos/rh_politica_v3.md`,
+`exemplos/rh_politica_v4.md`,
+`specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`,
+`specs/001-motor-reembolso/tasks.md`.
+
+As duas entradas compartilham este conjunto de arquivos porque os itens A e B do
+comunicado foram especificados no mesmo movimento, contra a mesma spec 1.10 — não
+há como atribuir um arquivo a uma e não à outra. O que está listado aqui é o custo
+de **spec**; o custo de **código** ainda não foi pago e está dimensionado na Fase 5
+de `tasks.md` (T-028 a T-045), que é a estimativa honesta do que estas duas decisões
+vão custar em `src/` e `tests/`.
+
+**Fica em aberto:** o item B do comunicado (despesas internacionais) e o item C
+(fila de aprovação manual, opcional). O item B entra na próxima versão desta
+spec; o item C foi deixado fora por decisão do usuário.
+
+**Nota de processo:** RN-017 e AMB-020 não estavam na primeira versão desta
+entrada. Na primeira versão, a spec.md §3 ("Fora de escopo") declarava que o
+motor "não valida o campo `vigencia`", e a spec.md §10 ("O que fica em aberto")
+registrava isso como limitação conhecida. **Ninguém decidiu isso.** O agente
+encontrou um campo sem uso óbvio no arquivo de política e o declarou ignorado,
+porque declarar era mais barato do que perguntar — o mesmo movimento que este
+arquivo existe para tornar impossível. O usuário detectou na revisão, antes de
+qualquer commit, e determinou que a validação é obrigatória.
+
+Vale registrar o padrão, e não só o caso: a spec descreve **três** campos como
+"lidos e ignorados" (`versao`, `observacao`, `acrescimo_em_viagem_percentual`) e
+declara, na spec.md §10 ("O que fica em aberto"), que a consistência entre a
+`moeda_base` da política e a do câmbio não é verificada. Cada um desses é a mesma
+forma de decisão que o `vigencia` foi. Três deles têm justificativa que se
+sustenta sozinha (`versao` e `observacao` não afetam cálculo;
+`acrescimo_em_viagem_percentual` cai em AMB-005, que é decisão antiga e
+registrada). O da `moeda_base` não tem, e está em spec.md §10 ("O que fica em
+aberto") aguardando decisão, não como omissão silenciosa.
+
+---
+
 ## D-009 — Critério de escala decimal da §9 marcado como atendido · `18/08/2026`
 
 **Gatilho:** a [[D-008]] criou um critério novo na spec.md §9 ("Critérios de
