@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 2.0 · **Status:** especificada para a Política de Reembolso v4 — os itens A (limites por centro de custo, lidos de arquivo externo) e B (despesas internacionais em moeda estrangeira, convertidas pela taxa da data) estão ambos cobertos; o item C (fila de aprovação manual) está fora de escopo por decisão do usuário. O código e os testes ainda implementam a v3 e são reescritos pelas tasks T-028 em diante, por isso os critérios de aceite da spec.md §9 ("Critérios de aceite") estão desmarcados · **Última alteração:** `19/08/2026`
+**Versão:** 2.1 · **Status:** especificada para a Política de Reembolso v4 — os itens A (limites por centro de custo, lidos de arquivo externo) e B (despesas internacionais em moeda estrangeira, convertidas pela taxa da data) estão ambos cobertos; o item C (fila de aprovação manual) está fora de escopo por decisão do usuário. O código e os testes ainda implementam a v3 e são reescritos pelas tasks T-028 em diante, por isso os critérios de aceite da spec.md §9 ("Critérios de aceite") estão desmarcados. O campo `moeda_base` dos dois arquivos de entrada deixou de ser descrito como parâmetro: o BRL é fixado pelo texto da política, não lido do arquivo · **Última alteração:** `19/08/2026`
 
 ---
 
@@ -87,10 +87,10 @@ significado:
 |---|---|---|---|
 | `versao` | string | Versão da política. Não é lida pelo motor; serve para auditoria humana do arquivo | Não |
 | `vigencia` | string (AAAA-MM-DD) | Data a partir da qual a política vale. É **validada** contra `periodo.competencia` antes de qualquer cálculo — ver RN-017 | Sim |
-| `moeda_base` | string (ISO 4217) | Moeda em que todos os limites da política estão expressos | Sim |
+| `moeda_base` | string (ISO 4217) | Declaração de que os limites estão em BRL. **Não é lida pelo motor** — o BRL é fixado pelo texto da política, não por este campo; ver abaixo | Não |
 | `padrao` | objeto | Tabela de limites aplicada a centro de custo que não tem entrada própria em `centros_custo` — ver RN-014 | Sim |
 | `padrao.<categoria>` | objeto | Uma entrada por categoria reembolsável na política padrão. A chave é o nome da categoria, comparado com a `categoria` já normalizada da despesa (RN-011) | Sim |
-| `padrao.<categoria>.limite` | número | Limite da categoria, na `moeda_base`. O valor `0.00` significa categoria **não reembolsável**, não orçamento zerado — ver RN-008 e AMB-013 | Sim |
+| `padrao.<categoria>.limite` | número | Limite da categoria, em BRL. O valor `0.00` significa categoria **não reembolsável**, não orçamento zerado — ver RN-008 e AMB-013 | Sim |
 | `padrao.<categoria>.periodicidade` | string | Unidade do limite. Ecoada e não interpretada: `"dia"` e `"diaria"` são ambos aplicados como dia de calendário, pela decisão de AMB-006 | Sim |
 | `padrao.<categoria>.observacao` | string | Texto livre do financeiro. **Não é lido pelo motor** e não influencia nenhuma decisão | Não |
 | `centros_custo` | objeto | Mapa de centro de custo para a sua tabela de limites | Sim |
@@ -102,12 +102,21 @@ significado:
 
 | Campo | Tipo | Significado | Obrigatório |
 |---|---|---|---|
-| `moeda_base` | string (ISO 4217) | Moeda de destino de toda conversão. É a mesma `moeda_base` da política — os limites e as taxas precisam falar a mesma moeda para que a comparação de RN-015 faça sentido | Sim |
+| `moeda_base` | string (ISO 4217) | Declaração de que as taxas convertem para BRL. **Não é lida pelo motor**, pela mesma razão do campo homônimo da política; ver abaixo | Não |
 | `fonte` | string | Origem das cotações. Não é lida pelo motor; serve para auditoria humana | Não |
 | `observacao` | string | Texto livre. **Não é lida pelo motor** — em particular, a observação de que só há cotação em dia útil bancário não autoriza o motor a inferir a taxa de outro dia; ver AMB-015 | Não |
 | `taxas` | objeto | Mapa de data para as cotações daquela data | Sim |
 | `taxas.<AAAA-MM-DD>` | objeto | Cotações publicadas naquela data. A ausência de uma data é ausência de cotação, não erro do arquivo | Sim |
-| `taxas.<AAAA-MM-DD>.<MOEDA>` | número | Quantas unidades de `moeda_base` vale uma unidade de `<MOEDA>` naquela data. A chave é o código ISO 4217 em maiúsculas | Sim |
+| `taxas.<AAAA-MM-DD>.<MOEDA>` | número | Quantas unidades de BRL vale uma unidade de `<MOEDA>` naquela data. A chave é o código ISO 4217 em maiúsculas | Sim |
+
+**O BRL não é configurável.** Ele é fixado pelo texto da política — "Os limites da
+política são sempre em BRL" e "quando ausente, assume-se `BRL`" (`exemplos/rh_politica_v4.md`)
+— e as duas frases são categóricas. Os campos `moeda_base` dos dois arquivos declaram
+esse fato para quem lê o JSON; eles não o decidem, e o motor não os consulta. O próprio
+contrato de saída desta spec sustenta isso: o campo produzido em RN-015 se chama
+`valor_convertido_brl`, com a moeda no nome. Um arquivo cujo `moeda_base` diga outra
+coisa é entrada malformada, não caso de negócio — e entrada malformada está fora de
+escopo (spec.md §3, "Fora de escopo").
 
 O arquivo de câmbio é a **fonte da verdade sobre quais moedas existem** para efeito
 desta spec (AMB-016). Uma moeda válida na norma ISO 4217 mas ausente do arquivo é
@@ -1339,13 +1348,6 @@ hospedagem R$400,00 e `representacao` R$300,00.
   indefinidamente — o motor não tem como saber que ela foi substituída. Se o arquivo
   ganhar um `fim_vigencia`, ou se o financeiro passar a manter mais de uma política
   vigente em paralelo, RN-017 precisa ser reaberta.
-- **Consistência entre `moeda_base` da política e do câmbio (RN-015):** os dois arquivos
-  declaram uma `moeda_base`, e RN-015 assume que são a mesma — os limites e as taxas
-  precisam falar a mesma moeda para que a comparação faça sentido. **O motor não
-  verifica isso.** Um arquivo de câmbio com `moeda_base` diferente da política
-  produziria conversões erradas em silêncio. É a mesma forma do problema que RN-017
-  resolveu para `vigencia`, e está registrado aqui em vez de virar regra porque nenhum
-  dos arquivos entregues exercita o caso; basta uma decisão para virar RN-018.
 - **Periodicidade da política (RN-003 / AMB-006):** o campo `periodicidade` é ecoado e
   não interpretado — `"dia"` e `"diaria"` são ambos aplicados como dia de calendário. Um
   valor novo nesse campo (ex.: `"mes"`) seria silenciosamente tratado como diário. Se a

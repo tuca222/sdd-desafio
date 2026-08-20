@@ -10,6 +10,54 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-012 — `moeda_base` deixa de ser parâmetro: o BRL é fixado pelo texto da política · `19/08/2026`
+
+**Gatilho:** a spec.md §10 ("O que fica em aberto") da versão 2.0 registrava, como
+decisão pendente, que o motor não verifica se a `moeda_base` da política e a do
+câmbio são a mesma — e sugeria que isso poderia virar uma RN-018. O usuário
+questionou: a política nunca fala em `moeda_base`, ela diz "Os limites da política
+são **sempre** em BRL" e "quando ausente, assume-se `BRL`"
+(`exemplos/rh_politica_v4.md`), então não há o que validar.
+
+**O que mudou na spec:**
+
+- **Cabeçalho** — versão 2.0 → 2.1, com o **Status** registrando a mudança.
+- **spec.md §4 ("Entrada e saída")** — as duas linhas de `moeda_base`, na tabela da
+  política e na do câmbio, deixaram de dizer "moeda em que os limites estão
+  expressos" / "moeda de destino de toda conversão" e passaram a dizer que o campo
+  declara o BRL e **não é lido pelo motor**. As duas passaram de obrigatórias a não
+  obrigatórias, porque o motor não precisa delas para funcionar. A linha de
+  `padrao.<categoria>.limite` passou de "na `moeda_base`" para "em BRL", e a de
+  `taxas.<data>.<MOEDA>` de "unidades de `moeda_base`" para "unidades de BRL".
+  Entrou um parágrafo curto — "O BRL não é configurável" — com as duas frases do RH
+  e a razão.
+- **spec.md §10 ("O que fica em aberto")** — o item da consistência entre as duas
+  `moeda_base` saiu. Ele descrevia um risco que não existe.
+
+**Por quê:** as duas frases do RH são categóricas. "Sempre em BRL" não é "na moeda
+declarada no arquivo", e "assume-se `BRL`" não é "assume-se a `moeda_base`". O
+contrato de saída desta própria spec já sustentava isso e eu não tinha reparado: o
+campo produzido por RN-015 se chama `valor_convertido_brl`, com a moeda no nome — se
+`moeda_base` fosse parâmetro, esse nome estaria errado para qualquer política que não
+fosse em real, e a spec teria uma contradição interna entre a §4 e o nome do campo.
+
+**O que isso invalidou:** nada de código — a Fase 5 não começou. Invalidou parte da
+própria spec 2.0: quatro células da §4 ("Entrada e saída") descreviam `moeda_base`
+como se ele mandasse no cálculo, e um item da §10 ("O que fica em aberto") apresentava
+como pendência uma decisão que não existe.
+
+**Tasks afetadas:** T-028 e T-031 (`tasks.md`), no detalhe — nem `Politica` nem
+`TabelaCambio` guardam `moeda_base`, pelo mesmo princípio que já mantinha `observacao`
+fora de `LimiteCategoria` no `plan.md` §3 ("Modelo de dados"): campo que existe no
+modelo acaba sendo lido por alguém. Nenhuma task muda de escopo ou de critério de
+aceite.
+
+**Custo:** `specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`.
+
+---
+
 ## D-011 — Despesas internacionais: conversão pela taxa da data, e negação quando não há taxa · `19/08/2026`
 
 **Gatilho:** item B do comunicado do RH da v4 (`exemplos/rh_politica_v4.md`):
