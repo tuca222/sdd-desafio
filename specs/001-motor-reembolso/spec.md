@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 2.1 · **Status:** especificada para a Política de Reembolso v4 — os itens A (limites por centro de custo, lidos de arquivo externo) e B (despesas internacionais em moeda estrangeira, convertidas pela taxa da data) estão ambos cobertos; o item C (fila de aprovação manual) está fora de escopo por decisão do usuário. O código e os testes ainda implementam a v3 e são reescritos pelas tasks T-028 em diante, por isso os critérios de aceite da spec.md §9 ("Critérios de aceite") estão desmarcados. O campo `moeda_base` dos dois arquivos de entrada deixou de ser descrito como parâmetro: o BRL é fixado pelo texto da política, não lido do arquivo · **Última alteração:** `19/08/2026`
+**Versão:** 2.2 · **Status:** especificada para a Política de Reembolso v4 — os itens A (limites por centro de custo, lidos de arquivo externo) e B (despesas internacionais em moeda estrangeira, convertidas pela taxa da data) estão ambos cobertos; o item C (fila de aprovação manual) está fora de escopo por decisão do usuário. O código e os testes ainda implementam a v3 e são reescritos pelas tasks T-028 em diante, por isso os critérios de aceite da spec.md §9 ("Critérios de aceite") estão desmarcados. Os cinco campos dos arquivos de entrada que o motor não lê — `versao`, `fonte`, `observacao`, `moeda_base` e `acrescimo_em_viagem_percentual` — estão todos marcados como não obrigatórios na spec.md §4 ("Entrada e saída") · **Última alteração:** `20/08/2026`
 
 ---
 
@@ -96,7 +96,7 @@ significado:
 | `centros_custo` | objeto | Mapa de centro de custo para a sua tabela de limites | Sim |
 | `centros_custo.<CC>` | objeto | Tabela do centro de custo, com a mesma estrutura de `padrao`. É a lista **completa** das categorias reembolsáveis daquele centro de custo — ver RN-014 e AMB-012 | Sim |
 | `nota_fiscal_obrigatoria_acima_de` | número | Valor acima do qual a nota fiscal passa a ser exigida — ver RN-005. É único para toda a empresa, não varia por centro de custo | Sim |
-| `acrescimo_em_viagem_percentual` | número | Percentual de ampliação de limite em viagem. **Lido e ignorado** — a entrada não tem campo que identifique viagem; ver RN-012 e AMB-005 | Sim |
+| `acrescimo_em_viagem_percentual` | número | Percentual de ampliação de limite em viagem. **Não é lido pelo motor** — a entrada não tem campo que identifique viagem, então não há o que ampliar; ver RN-012 e AMB-005. Se vier, é aceito e ignorado; se não vier, nada muda | Não |
 
 **Entrada 3 — câmbio:** conforme `exemplos/envelope/cambio.json`. Campos e significado:
 
@@ -566,7 +566,7 @@ versão**, em nenhuma circunstância. Toda despesa é avaliada pelo limite da su
 na tabela do centro de custo (RN-001, RN-002, RN-003, RN-014), independentemente do que
 o período ou outras despesas sugiram.
 **Origem:** política do RH, e o campo `acrescimo_em_viagem_percentual` da política
-(spec.md §4, "Entrada e saída"), que o motor lê e ignora; desambiguado por AMB-005. Ver
+(spec.md §4, "Entrada e saída"), que o motor não lê; desambiguado por AMB-005. Ver
 limitação em spec.md §10 ("O que fica em aberto").
 **Aceite:** nenhuma despesa do exemplo recebe reembolso acima do limite padrão de sua
 categoria por conta deste item da política.

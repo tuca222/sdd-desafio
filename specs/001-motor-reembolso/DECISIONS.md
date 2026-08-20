@@ -10,6 +10,54 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-013 — Campo que o motor não lê não é campo obrigatório · `20/08/2026`
+
+**Gatilho:** ao fechar a [[D-012]], `moeda_base` passou de obrigatório a não
+obrigatório e `acrescimo_em_viagem_percentual` ficou sendo o único campo da
+spec.md §4 ("Entrada e saída") marcado como obrigatório apesar de não ser usado
+por nenhuma regra. O agente sinalizou a inconsistência sem decidir; o usuário
+decidiu: "campo que não é usado pelo motor, portanto não deve ficar como
+obrigatório. Se vier, sem problemas, mas o motor não usa nesta versão."
+
+**O que mudou na spec:**
+
+- **Cabeçalho** — versão 2.1 → 2.2, e o **Status** passou a registrar o critério
+  em vez do último caso isolado: os cinco campos que o motor não lê (`versao`,
+  `fonte`, `observacao`, `moeda_base` e `acrescimo_em_viagem_percentual`) estão
+  todos marcados como não obrigatórios.
+- **spec.md §4 ("Entrada e saída")** — a linha de
+  `acrescimo_em_viagem_percentual` passou de obrigatória a não obrigatória, e a
+  descrição passou de "**Lido e ignorado**" para "**Não é lido pelo motor**",
+  dizendo explicitamente que ele é aceito se vier e que nada muda se não vier.
+- **RN-012** — a linha **Origem** dizia que o motor "lê e ignora" o campo;
+  passou a dizer que não o lê. As duas coisas não são a mesma, e a spec estava
+  afirmando a errada.
+
+**Por quê:** marcar um campo como obrigatório é dizer que o motor precisa dele
+para funcionar. Este ele não usa em regra nenhuma — RN-012 existe justamente para
+registrar que o adicional de viagem **não é aplicado**, porque a entrada não tem
+campo que identifique viagem (AMB-005). Exigir a presença de um número que nunca
+é consultado faria o motor recusar uma política bem formada por um dado
+irrelevante para a decisão, o que é o oposto do que a obrigatoriedade existe para
+proteger. O critério que passa a valer é o mesmo para os cinco campos: obrigatório
+é o que o motor lê.
+
+**O que isso invalidou:** a descrição de `Politica` no `plan.md` §3 ("Modelo de
+dados"), que carregava `acrescimo_em_viagem_percentual: int` como campo da
+dataclass. Com o campo opcional na entrada, modelá-lo exigiria um valor padrão
+inventado para quando ele não viesse — um número que nenhuma regra consulta. Ele
+saiu do modelo, pelo mesmo princípio já escrito na mesma seção para a
+`observacao`. Nada de código: a Fase 5 não começou.
+
+**Tasks afetadas:** T-028 (`tasks.md`), no detalhe do que `Politica` guarda.
+Nenhuma task muda de escopo ou de critério de aceite.
+
+**Custo:** `specs/001-motor-reembolso/spec.md`,
+`specs/001-motor-reembolso/DECISIONS.md`,
+`specs/001-motor-reembolso/plan.md`.
+
+---
+
 ## D-012 — `moeda_base` deixa de ser parâmetro: o BRL é fixado pelo texto da política · `19/08/2026`
 
 **Gatilho:** a spec.md §10 ("O que fica em aberto") da versão 2.0 registrava, como
