@@ -1,6 +1,6 @@
 # Plano Técnico — Motor de Cálculo de Reembolso
 
-**Versão:** 1.12 · **Baseado na spec:** 2.1
+**Versão:** 1.13 · **Baseado na spec:** 2.2
 
 ---
 
@@ -104,9 +104,15 @@ de criada):
   `centro_custo` porque as justificativas de RN-008 e do limite diário precisam
   citá-lo.
 - `Politica` — `tabela_por_centro_custo`, `tabela_padrao`,
-  `nota_fiscal_obrigatoria_acima_de: Decimal`,
-  `acrescimo_em_viagem_percentual: int`. Expõe
-  `tabela_para(centro_custo) -> TabelaLimites`, que é RN-014 em uma função.
+  `nota_fiscal_obrigatoria_acima_de: Decimal` e `vigencia: date`. Expõe
+  `tabela_para(centro_custo) -> TabelaLimites`, que é RN-014 em uma função, e
+  `vigencia_cobre(competencia) -> bool`, que é RN-017 em outra.
+  `acrescimo_em_viagem_percentual` **não** entra, pelo mesmo motivo que já
+  mantinha `observacao` fora de `LimiteCategoria`: campo que existe no modelo
+  acaba sendo lido por alguém, e este é mais perigoso que a `observacao`, porque
+  parece aplicável. Como a spec.md §4 ("Entrada e saída") o marca como não
+  obrigatório, modelá-lo também exigiria um valor padrão para o caso de ele não
+  vir — um padrão inventado para um número que nenhuma regra consulta.
 
 ## 4. Como a política é representada
 
