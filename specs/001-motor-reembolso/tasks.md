@@ -249,10 +249,108 @@
 
 ---
 
-## Fase 5 — Envelope (criar no Dia 2)
+## Fase 5 — Envelope (Política de Reembolso v4)
 
-<Novas tasks a partir da mudança de requisito. Numeração continua de onde parou —
-não reinicie e não renumere as antigas: a numeração é o eixo da rastreabilidade.>
+Origem: `exemplos/rh_politica_v4.md`, itens A e B. Decisões de spec em
+`DECISIONS.md` [[D-010]] e [[D-011]]. A numeração continua de T-027; nada das
+fases anteriores é renumerado.
+
+A ordem abaixo é a de execução, e é também a numérica. Ela não é arbitrária:
+T-028 a T-031 constroem os dados de que todas as regras dependem, T-032 e T-033
+fecham a entrada pela CLI (RN-017 precisa da política já carregada para poder
+recusar o lote), e T-043 é o ponto em que a suíte volta a ficar verde por
+inteiro. Até lá é esperado que os testes de RN-001, RN-002, RN-003, RN-005 e
+RN-008 estejam quebrados.
+
+- [ ] **T-028** — `politica.py`: substitui as constantes por um carregador que lê o JSON da política com `parse_float=Decimal` e devolve `Politica`, `TabelaLimites` e `LimiteCategoria`
+  - **Atende:** spec.md §4 ("Entrada e saída"), plan.md §4 ("Como a política é representada"), plan.md DT-006
+  - **Aceite:** `tests/test_politica.py::test_carrega_politica_com_valores_decimais`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-029** — `politica.py`: `Politica.tabela_para(centro_custo)` resolve a tabela aplicável — entrada própria integral, ou `padrao` integral, sem merge
+  - **Atende:** RN-014, AMB-012
+  - **Aceite:** `tests/test_politica.py::test_rn014_centro_custo_com_entrada_usa_a_propria_tabela`, `::test_rn014_centro_custo_sem_entrada_cai_no_padrao`, `::test_amb012_tabela_do_centro_custo_nao_e_complementada_pelo_padrao`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-030** — `politica.py`: `Politica.vigencia_cobre(competencia)`, comparando a competência da `vigencia` com a do lote pelo operador "igual ou anterior"
+  - **Atende:** RN-017, AMB-020, plan.md DT-008
+  - **Aceite:** `tests/test_politica.py::test_rn017_vigencia_da_competencia_do_lote_cobre`, `::test_rn017_vigencia_de_competencia_anterior_cobre`, `::test_rn017_vigencia_de_competencia_posterior_nao_cobre`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-031** — `cambio.py`: carrega `cambio.json` e expõe `TabelaCambio.taxa(moeda, data) -> Decimal | None`, devolvendo `None` tanto para data ausente quanto para moeda ausente na data
+  - **Atende:** spec.md §4 ("Entrada e saída"), RN-015, RN-016
+  - **Aceite:** `tests/test_cambio.py::test_taxa_existente_na_data`, `::test_rn016_data_sem_cotacao_devolve_none`, `::test_rn016_moeda_ausente_na_data_devolve_none`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-032** — `cli.py`: flags opcionais `--politica` e `--cambio`, com default; carrega os dois arquivos e os passa adiante. A invocação fixa do `DESAFIO.md` continua funcionando sem elas
+  - **Atende:** spec.md §4 ("Entrada e saída"), interface fixa do desafio (`DESAFIO.md`), plan.md DT-006
+  - **Aceite:** `tests/test_cli.py::test_cli_calcular_gera_arquivo_de_saida`, `::test_cli_aceita_politica_e_cambio_alternativos`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-033** — `cli.py`: quando `vigencia_cobre` reprova, imprime em `stderr` o motivo citando as duas competências, **não escreve arquivo de saída** e encerra com código diferente de zero
+  - **Atende:** RN-017, plan.md DT-008
+  - **Aceite:** `tests/test_cli.py::test_rn017_lote_de_competencia_anterior_nao_gera_saida`, `::test_rn017_lote_coberto_gera_saida_normalmente`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-034** — `modelos.py`/`parser.py`: `Despesa` ganha `moeda` e `moeda_original`; a moeda é normalizada para maiúsculas na borda e assume `BRL` quando o campo não vem
+  - **Atende:** RN-015, plan.md DT-005
+  - **Aceite:** `tests/test_parser.py::test_rn015_moeda_ausente_assume_brl`, `::test_rn015_moeda_normalizada_para_maiusculas`, `::test_rn015_moeda_original_preservada_como_none_quando_ausente`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-035** — `parser.py`: converte a despesa para BRL na borda, preenchendo `valor_brl` e `taxa_cambio` (ou os dois com `None` quando não há taxa); trunca o valor convertido em 2 casas
+  - **Atende:** RN-015, RN-010, AMB-018, plan.md DT-007
+  - **Aceite:** `tests/test_parser.py::test_rn015_converte_pela_taxa_da_data_da_despesa`, `::test_amb018_valor_convertido_e_truncado_nao_arredondado`, `::test_rn015_despesa_em_brl_nao_tem_taxa`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-036** — `regras.py` + `motor.py`: `filtro_cambio_indisponivel` entra na posição 5 da ordem, entre duplicata e nota fiscal
+  - **Atende:** RN-016, RN-013, AMB-015, AMB-016, spec.md §8 ("Ordem de aplicação das regras")
+  - **Aceite:** `tests/test_regras.py::test_rn016_cambio_indisponivel_nega_despesa`, `tests/test_motor.py::test_pipeline_aplica_filtros_na_ordem_definida`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-037** — `regras.py`: `filtro_categoria_invalida` passa a receber a `TabelaLimites` e a cobrir as duas cláusulas de RN-008 (categoria ausente, categoria com limite `0.00`), com justificativas distintas
+  - **Atende:** RN-008, AMB-013, RN-014
+  - **Aceite:** `tests/test_regras.py::test_rn008_categoria_ausente_da_tabela_do_centro_custo`, `::test_amb013_categoria_com_limite_zero_nega_citando_proibicao`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-038** — `regras.py`: `filtro_nota_fiscal` compara o valor em BRL contra o teto vindo da política, não a constante nem o valor lançado
+  - **Atende:** RN-005, AMB-017, AMB-003
+  - **Aceite:** `tests/test_regras.py::test_amb017_teto_de_nota_fiscal_compara_valor_convertido`, `::test_rn005_valor_exatamente_no_teto_nao_exige`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-039** — `regras.py`/`motor.py`: o limite diário vem da `TabelaLimites` do centro de custo e agrega o valor em BRL; a justificativa passa a citar o centro de custo
+  - **Atende:** RN-001, RN-002, RN-003, RN-004, RN-014, RN-015
+  - **Aceite:** `tests/test_regras.py::test_rn001_limite_diario_alimentacao`, `::test_rn002_limite_diario_transporte`, `::test_rn003_limite_diario_hospedagem`, `::test_rn014_limite_varia_por_centro_de_custo`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-040** — `regras.py`: `moeda` entra na identidade de duplicata, na forma normalizada e sobre o valor lançado
+  - **Atende:** RN-007, AMB-019
+  - **Aceite:** `tests/test_regras.py::test_amb019_moedas_diferentes_nao_sao_duplicatas`, `::test_amb019_moeda_ausente_e_brl_explicito_sao_duplicatas`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-041** — `motor.py`: `valor_total_despesas` exclui despesa sem valor em BRL, além da duplicata e do estorno que já excluía
+  - **Atende:** RN-016, RN-007, RN-009
+  - **Aceite:** `tests/test_motor.py::test_rn016_despesa_sem_cambio_fora_do_total_bruto`, `::test_calcula_totais_do_periodo`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-042** — `saida.py`: `motor_reembolso_output` ganha `taxa_cambio` e `valor_convertido_brl`; o dict de saída ecoa `moeda` só quando ela veio na entrada
+  - **Atende:** spec.md §4 ("Entrada e saída"), RN-015
+  - **Aceite:** `tests/test_saida.py::test_saida_publica_taxa_e_valor_convertido`, `::test_saida_omite_moeda_quando_a_entrada_nao_trouxe`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-043** — Regrava `exemplos/resultado-exemplo.json` sob a v4 e atualiza `tests/test_integracao.py` para o primeiro bloco da spec.md §9 ("Critérios de aceite")
+  - **Atende:** spec.md §9 ("Critérios de aceite"), primeiro bloco — `valor_total_despesas = 1806.94`, `valor_total_reembolsavel = 351.43`
+  - **Aceite:** `tests/test_integracao.py::test_exemplo_completo_bate_com_criterios_de_aceite`, `::test_saida_bate_com_o_exemplo_caractere_a_caractere`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-044** — Teste de integração de `exemplos/envelope/despesas-envelope-cc-desconhecido.json`
+  - **Atende:** spec.md §9 ("Critérios de aceite"), segundo bloco — `valor_total_despesas = 623.76`, `valor_total_reembolsavel = 373.76`
+  - **Aceite:** `tests/test_integracao.py::test_envelope_cc_desconhecido_bate_com_criterios_de_aceite`
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-045** — Teste de integração de `exemplos/envelope/despesas-envelope.json`
+  - **Atende:** spec.md §9 ("Critérios de aceite"), terceiro bloco — `valor_total_despesas = 2278.72`, `valor_total_reembolsavel = 1053.26`
+  - **Aceite:** `tests/test_integracao.py::test_envelope_comercial_bate_com_criterios_de_aceite`
+  - **Commit:** `<hash preenchido depois>`
 
 ---
 
@@ -263,27 +361,40 @@ exatamente a matriz que a correção vai montar.
 
 | Regra da spec | Task | Teste |
 |---|---|---|
-| RN-001 | T-013 | `test_rn001_limite_diario_alimentacao` |
-| RN-002 | T-013 | `test_rn002_limite_diario_transporte` |
-| RN-003 | T-014, T-018 | `test_rn003_limite_diario_hospedagem`, `test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia`, `test_hospedagem_multi_diaria_sem_campo_estruturado` |
-| RN-004 | T-013, T-014 | (definição validada pelos testes de RN-001/002/003) |
-| RN-005 | T-011, T-012, T-016, T-018 | `test_rn005_nota_fiscal_obrigatoria_acima_de_100`, `test_rn005_valor_exatamente_100_nao_exige`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
+| RN-001 | T-013, T-039 | `test_rn001_limite_diario_alimentacao`, `test_rn014_limite_varia_por_centro_de_custo` |
+| RN-002 | T-013, T-039 | `test_rn002_limite_diario_transporte` |
+| RN-003 | T-014, T-018, T-039 | `test_rn003_limite_diario_hospedagem`, `test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia`, `test_hospedagem_multi_diaria_sem_campo_estruturado` |
+| RN-004 | T-013, T-014, T-039 | (definição validada pelos testes de RN-001/002/003) |
+| RN-005 | T-011, T-012, T-016, T-018, T-038 | `test_rn005_nota_fiscal_obrigatoria_acima_de_100`, `test_rn005_valor_exatamente_no_teto_nao_exige`, `test_ordem_nota_fiscal_antes_de_limite_diario`, `test_amb017_teto_de_nota_fiscal_compara_valor_convertido` |
 | RN-006 | T-009 | `test_rn006_fora_do_periodo_negado`, `test_rn006_data_no_extremo_do_periodo_aceita` |
-| RN-007 | T-010, T-024, T-025 | `test_rn007_duplicata_negada_primeira_mantida`, `test_rn007_duplicata_ignora_capitalizacao_da_categoria`, `test_calcula_totais_do_periodo` |
-| RN-008 | T-008 | `test_rn008_categoria_fora_da_politica` |
-| RN-009 | T-007, T-025 | `test_rn009_valor_negativo_ignorado`, `test_calcula_totais_do_periodo` |
-| RN-010 | T-005, T-026, T-027 | `test_rn010_trunca_casas_decimais_excedentes`, `test_saida_ecoa_o_valor_como_veio_na_entrada`, `test_cli_escreve_valores_monetarios_com_duas_casas`, `test_saida_bate_com_o_exemplo_caractere_a_caractere` |
+| RN-007 | T-010, T-024, T-025, T-040, T-041 | `test_rn007_duplicata_negada_primeira_mantida`, `test_rn007_duplicata_ignora_capitalizacao_da_categoria`, `test_calcula_totais_do_periodo` |
+| RN-008 | T-008, T-037 | `test_rn008_categoria_ausente_da_tabela_do_centro_custo`, `test_amb013_categoria_com_limite_zero_nega_citando_proibicao` |
+| RN-009 | T-007, T-025, T-041 | `test_rn009_valor_negativo_ignorado`, `test_calcula_totais_do_periodo` |
+| RN-010 | T-005, T-026, T-027, T-035 | `test_rn010_trunca_casas_decimais_excedentes`, `test_saida_ecoa_o_valor_como_veio_na_entrada`, `test_cli_escreve_valores_monetarios_com_duas_casas`, `test_saida_bate_com_o_exemplo_caractere_a_caractere` |
 | RN-011 | T-006, T-008, T-019, T-024 | `test_rn011_normaliza_categoria_case_insensitive`, `test_categoria_maiuscula_concorre_ao_limite_diario` |
 | RN-012 | T-015 | `test_rn012_sem_adicional_de_viagem`, `test_rn012_hospedagem_no_periodo_nao_amplia_limites` |
-| RN-013 | T-012, T-016 | `test_pipeline_aplica_filtros_na_ordem_definida`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
+| RN-013 | T-012, T-016, T-036 | `test_pipeline_aplica_filtros_na_ordem_definida`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
+| RN-014 | T-028, T-029, T-037, T-039 | `test_rn014_centro_custo_com_entrada_usa_a_propria_tabela`, `test_rn014_centro_custo_sem_entrada_cai_no_padrao`, `test_rn014_limite_varia_por_centro_de_custo` |
+| RN-015 | T-031, T-034, T-035, T-039, T-042 | `test_rn015_moeda_ausente_assume_brl`, `test_rn015_moeda_normalizada_para_maiusculas`, `test_rn015_converte_pela_taxa_da_data_da_despesa`, `test_saida_publica_taxa_e_valor_convertido` |
+| RN-016 | T-031, T-036, T-041 | `test_rn016_data_sem_cotacao_devolve_none`, `test_rn016_moeda_ausente_na_data_devolve_none`, `test_rn016_cambio_indisponivel_nega_despesa`, `test_rn016_despesa_sem_cambio_fora_do_total_bruto` |
+| RN-017 | T-030, T-033 | `test_rn017_vigencia_da_competencia_do_lote_cobre`, `test_rn017_vigencia_de_competencia_anterior_cobre`, `test_rn017_vigencia_de_competencia_posterior_nao_cobre`, `test_rn017_lote_de_competencia_anterior_nao_gera_saida`, `test_rn017_lote_coberto_gera_saida_normalmente` |
 | AMB-001 | T-013 | `test_rn001_limite_diario_alimentacao` |
 | AMB-002 | T-013, T-014 | (mesmos testes de RN-004) |
 | AMB-003 | T-016 | `test_valor_exatamente_no_limite_nota_fiscal` |
 | AMB-004 | T-012, T-016 | `test_pipeline_aplica_filtros_na_ordem_definida`, `test_ordem_nota_fiscal_antes_de_limite_diario` |
-| AMB-005 | T-015 | `test_rn012_sem_adicional_de_viagem`, `test_rn012_hospedagem_no_periodo_nao_amplia_limites` |
+| AMB-005 | T-015, T-039 | `test_rn012_sem_adicional_de_viagem`, `test_rn012_hospedagem_no_periodo_nao_amplia_limites`, `test_amb014_despesa_internacional_nao_amplia_limite` |
 | AMB-006 | T-014, T-018 | `test_rn003_limite_diario_hospedagem`, `test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia`, `test_hospedagem_multi_diaria_sem_campo_estruturado` |
-| AMB-007 | T-010 | `test_rn007_duplicata_negada_primeira_mantida` |
+| AMB-007 | T-010, T-040 | `test_rn007_duplicata_negada_primeira_mantida` |
 | AMB-008 | T-007 | `test_rn009_valor_negativo_ignorado` |
 | AMB-009 | T-006, T-019 | `test_rn011_normaliza_categoria_case_insensitive`, `test_categoria_maiuscula_concorre_ao_limite_diario` |
-| AMB-010 | T-005 | `test_rn010_trunca_casas_decimais_excedentes` |
+| AMB-010 | T-005, T-035 | `test_rn010_trunca_casas_decimais_excedentes` |
 | AMB-011 | T-009 | `test_rn006_data_no_extremo_do_periodo_aceita` |
+| AMB-012 | T-029 | `test_amb012_tabela_do_centro_custo_nao_e_complementada_pelo_padrao`, `test_rn014_centro_custo_sem_entrada_cai_no_padrao` |
+| AMB-013 | T-037 | `test_amb013_categoria_com_limite_zero_nega_citando_proibicao` |
+| AMB-014 | T-039 | `test_rn012_sem_adicional_de_viagem`, `test_amb014_despesa_internacional_nao_amplia_limite` |
+| AMB-015 | T-031, T-036 | `test_rn016_data_sem_cotacao_devolve_none`, `test_rn016_cambio_indisponivel_nega_despesa` |
+| AMB-016 | T-031, T-036 | `test_rn016_moeda_ausente_na_data_devolve_none` |
+| AMB-017 | T-038 | `test_amb017_teto_de_nota_fiscal_compara_valor_convertido` |
+| AMB-018 | T-035 | `test_amb018_valor_convertido_e_truncado_nao_arredondado` |
+| AMB-019 | T-040 | `test_amb019_moedas_diferentes_nao_sao_duplicatas`, `test_amb019_moeda_ausente_e_brl_explicito_sao_duplicatas` |
+| AMB-020 | T-030, T-033 | `test_rn017_vigencia_de_competencia_posterior_nao_cobre`, `test_rn017_lote_de_competencia_anterior_nao_gera_saida` |
