@@ -337,7 +337,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_saida.py::test_saida_publica_taxa_e_valor_convertido`, `::test_saida_omite_moeda_quando_a_entrada_nao_trouxe`
   - **Commit:** `2d1db8b`
 
-- [ ] **T-043** — Regrava `exemplos/resultado-exemplo.json` sob a v4 e atualiza `tests/test_integracao.py` para o primeiro bloco da spec.md §9 ("Critérios de aceite")
+- [x] **T-043** — Regrava `exemplos/resultado-exemplo.json` sob a v4 e atualiza `tests/test_integracao.py` para o primeiro bloco da spec.md §9 ("Critérios de aceite")
   - **Atende:** spec.md §9 ("Critérios de aceite"), primeiro bloco — `valor_total_despesas = 1806.94`, `valor_total_reembolsavel = 351.43`
   - **Aceite:** `tests/test_integracao.py::test_exemplo_completo_bate_com_criterios_de_aceite`, `::test_saida_bate_com_o_exemplo_caractere_a_caractere`
   - **Commit:** `<hash preenchido depois>`

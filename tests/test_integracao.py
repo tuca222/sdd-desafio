@@ -5,58 +5,76 @@ from pathlib import Path
 import pytest
 
 from src.cli import main
-from src.politica import (
-    LIMITE_ALIMENTACAO,
-    LIMITE_HOSPEDAGEM,
-    LIMITE_TRANSPORTE_URBANO,
-)
 
 CAMINHO_ENTRADA = "exemplos/despesas-exemplo.json"
 CAMINHO_RESULTADO_ESPERADO = "exemplos/resultado-exemplo.json"
+CAMINHO_ENVELOPE_CC_DESCONHECIDO = "exemplos/envelope/despesas-envelope-cc-desconhecido.json"
+CAMINHO_ENVELOPE = "exemplos/envelope/despesas-envelope.json"
 
-# Um item por linha da spec.md §9 ("Critérios de aceite"):
+# Um item por linha da spec.md §9 ("Critérios de aceite"), primeiro bloco:
 # (id, tipo_reembolso, valor_reembolsavel, trecho obrigatório da justificativa)
 CRITERIOS_DE_ACEITE = [
-    ("d-001", "parcial", 60.00, "limite de reembolso de R$60,00 no dia"),
-    ("d-002", "nenhum", 0.00, "Almoco com cliente(d-001)"),
-    ("d-003", "parcial", 80.00, "limite de reembolso de R$80,00 no dia"),
+    ("d-001", "total", 72.50, "Reembolso total aprovado"),
+    ("d-002", "parcial", 2.50, "R$75,00 no dia para o centro de custo CC-ENG-PLATAFORMA"),
+    ("d-003", "parcial", 80.00, "R$80,00 no dia para o centro de custo CC-ENG-PLATAFORMA"),
     ("d-004", "nenhum", 0.00, "nota fiscal"),
-    ("d-005", "nenhum", 0.00, "fora da política de reembolso"),
+    ("d-005", "nenhum", 0.00, "'coworking' não é reembolsável para o centro de custo"),
     ("d-006", "total", 54.90, "Reembolso total aprovado"),
     ("d-007", "nenhum", 0.00, "duplicata da despesa 'Almoco(d-006)'"),
     ("d-008", "nenhum", 0.00, "fora do período de competência"),
     ("d-009", "nenhum", 0.00, "valor negativo"),
-    ("d-010", "parcial", 250.00, "limite de reembolso de R$250,00 no dia"),
+    ("d-010", "nenhum", 0.00, "'hospedagem' não é reembolsável para o centro de custo"),
     ("d-011", "total", 33.33, "Reembolso total aprovado"),
     ("d-012", "total", 47.20, "Reembolso total aprovado"),
-    ("d-013", "nenhum", 0.00, "nota fiscal"),
-    ("d-014", "parcial", 60.00, "categoria alimentacao"),
+    ("d-013", "nenhum", 0.00, "'hospedagem' não é reembolsável para o centro de custo"),
+    ("d-014", "total", 61.00, "Reembolso total aprovado"),
 ]
 
-LIMITE_POR_CATEGORIA = {
-    "alimentacao": float(LIMITE_ALIMENTACAO),
-    "transporte_urbano": float(LIMITE_TRANSPORTE_URBANO),
-    "hospedagem": float(LIMITE_HOSPEDAGEM),
-}
+# Segundo bloco: CC-SUPORTE-N2 não tem entrada em `centros_custo` e cai no `padrao`.
+CRITERIOS_CC_DESCONHECIDO = [
+    ("f-001", "total", 58.00, "Reembolso total aprovado"),
+    ("f-002", "parcial", 250.00, "R$250,00 no dia para o centro de custo CC-SUPORTE-N2"),
+    ("f-003", "nenhum", 0.00, "'representacao' não é reembolsável para o centro de custo"),
+    ("f-004", "total", 65.76, "Reembolso total aprovado"),
+]
+
+# Terceiro bloco: CC-COMERCIAL, com as quatro categorias próprias e os quatro
+# desfechos de câmbio (conversão, data sem cotação, moeda ausente, sem o campo).
+CRITERIOS_COMERCIAL = [
+    ("e-001", "parcial", 300.00, "R$300,00 no dia para o centro de custo CC-COMERCIAL"),
+    ("e-002", "parcial", 90.00, "R$90,00 no dia para o centro de custo CC-COMERCIAL"),
+    ("e-003", "total", 85.26, "Reembolso total aprovado"),
+    ("e-004", "nenhum", 0.00, "taxa de câmbio de EUR publicada para 2026-07-18"),
+    ("e-005", "nenhum", 0.00, "nota fiscal"),
+    ("e-006", "nenhum", 0.00, "taxa de câmbio de GBP publicada para 2026-07-21"),
+    ("e-007", "parcial", 400.00, "R$400,00 no dia para o centro de custo CC-COMERCIAL"),
+    ("e-008", "parcial", 90.00, "R$90,00 no dia para o centro de custo CC-COMERCIAL"),
+    ("e-009", "nenhum", 0.00, "'coworking' não é reembolsável para o centro de custo"),
+    ("e-010", "total", 88.00, "Reembolso total aprovado"),
+]
+
+
+def rodar(entrada: str, tmp_path: Path) -> dict:
+    destino = tmp_path / "resultado.json"
+    assert main(["calcular", "--input", entrada, "--output", str(destino)]) == 0
+    return json.loads(destino.read_text(encoding="utf-8"))
 
 
 @pytest.fixture
 def resultado(tmp_path: Path) -> dict:
-    destino = tmp_path / "resultado.json"
-    main(["calcular", "--input", CAMINHO_ENTRADA, "--output", str(destino)])
-    return json.loads(destino.read_text(encoding="utf-8"))
+    return rodar(CAMINHO_ENTRADA, tmp_path)
 
 
 def despesas_por_id(resultado: dict) -> dict[str, dict]:
     return {item["id"]: item for item in resultado["detalhamento_despesas"]}
 
 
-def test_exemplo_completo_bate_com_criterios_de_aceite(resultado: dict):
+def conferir_criterios(resultado: dict, criterios: list[tuple]) -> None:
     por_id = despesas_por_id(resultado)
 
-    assert list(por_id) == [id_esperado for id_esperado, _, _, _ in CRITERIOS_DE_ACEITE]
+    assert list(por_id) == [id_esperado for id_esperado, _, _, _ in criterios]
 
-    for id_despesa, tipo, valor, trecho in CRITERIOS_DE_ACEITE:
+    for id_despesa, tipo, valor, trecho in criterios:
         saida_do_motor = por_id[id_despesa]["motor_reembolso_output"]
 
         assert saida_do_motor["tipo_reembolso"] == tipo, id_despesa
@@ -64,8 +82,12 @@ def test_exemplo_completo_bate_com_criterios_de_aceite(resultado: dict):
         assert saida_do_motor["despesa_reembolsavel"] is (valor > 0), id_despesa
         assert trecho in saida_do_motor["justificativa"], id_despesa
 
+
+def test_exemplo_completo_bate_com_criterios_de_aceite(resultado: dict):
+    conferir_criterios(resultado, CRITERIOS_DE_ACEITE)
+
     assert resultado["valor_total_despesas"] == 1806.94
-    assert resultado["valor_total_reembolsavel"] == 585.43
+    assert resultado["valor_total_reembolsavel"] == 351.43
 
 
 def test_saida_e_identica_ao_resultado_esperado(resultado: dict):
@@ -117,13 +139,11 @@ def test_rn011_categoria_sai_com_a_grafia_da_entrada(resultado: dict):
     d014 = despesas_por_id(resultado)["d-014"]
 
     assert d014["categoria"] == "ALIMENTACAO"
-    assert "categoria alimentacao" in d014["motor_reembolso_output"]["justificativa"]
+    assert d014["motor_reembolso_output"]["valor_reembolsavel"] == 61.00
 
 
-def test_rn012_nenhuma_despesa_passa_do_limite_padrao_da_categoria(resultado: dict):
+def test_rn015_exemplo_nao_tem_despesa_internacional(resultado: dict):
     for item in resultado["detalhamento_despesas"]:
-        limite = LIMITE_POR_CATEGORIA.get(item["categoria"].lower())
-        if limite is None:
-            continue
-
-        assert item["motor_reembolso_output"]["valor_reembolsavel"] <= limite, item["id"]
+        assert "moeda" not in item, item["id"]
+        assert item["motor_reembolso_output"]["taxa_cambio"] is None, item["id"]
+        assert item["motor_reembolso_output"]["valor_convertido_brl"] is None, item["id"]

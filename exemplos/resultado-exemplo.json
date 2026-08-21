@@ -10,7 +10,7 @@
         "fim": "2026-07-31"
     },
     "valor_total_despesas": 1806.94,
-    "valor_total_reembolsavel": 585.43,
+    "valor_total_reembolsavel": 351.43,
     "detalhamento_despesas": [
         {
             "id": "d-001",
@@ -22,9 +22,11 @@
             "tem_nota_fiscal": true,
             "motor_reembolso_output": {
                 "despesa_reembolsavel": true,
-                "tipo_reembolso": "parcial",
-                "valor_reembolsavel": 60.00,
-                "justificativa": "A categoria alimentacao possui limite de reembolso de R$60,00 no dia. Reembolso parcial aprovado."
+                "tipo_reembolso": "total",
+                "valor_reembolsavel": 72.50,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
+                "justificativa": "Reembolso total aprovado de acordo com a política vigente."
             }
         },
         {
@@ -36,10 +38,12 @@
             "valor": 38.00,
             "tem_nota_fiscal": true,
             "motor_reembolso_output": {
-                "despesa_reembolsavel": false,
-                "tipo_reembolso": "nenhum",
-                "valor_reembolsavel": 0.00,
-                "justificativa": "A categoria alimentacao possui limite de reembolso de R$60,00 no dia. Este valor já foi atingido na despesa 'Almoco com cliente(d-001)'. Reembolso negado."
+                "despesa_reembolsavel": true,
+                "tipo_reembolso": "parcial",
+                "valor_reembolsavel": 2.50,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
+                "justificativa": "A categoria alimentacao possui limite de reembolso de R$75,00 no dia para o centro de custo CC-ENG-PLATAFORMA. Reembolso parcial aprovado."
             }
         },
         {
@@ -54,7 +58,9 @@
                 "despesa_reembolsavel": true,
                 "tipo_reembolso": "parcial",
                 "valor_reembolsavel": 80.00,
-                "justificativa": "A categoria transporte_urbano possui limite de reembolso de R$80,00 no dia. Reembolso parcial aprovado."
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
+                "justificativa": "A categoria transporte_urbano possui limite de reembolso de R$80,00 no dia para o centro de custo CC-ENG-PLATAFORMA. Reembolso parcial aprovado."
             }
         },
         {
@@ -69,6 +75,8 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
                 "justificativa": "Despesas acima de R$100,00 necessitam de nota fiscal para reembolso. Esta despesa não possui nota fiscal. Reembolso negado."
             }
         },
@@ -84,7 +92,9 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
-                "justificativa": "A categoria 'coworking' está fora da política de reembolso. Reembolso negado."
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
+                "justificativa": "A categoria 'coworking' não é reembolsável para o centro de custo CC-ENG-PLATAFORMA: ela não consta na política vigente. Reembolso negado."
             }
         },
         {
@@ -99,6 +109,8 @@
                 "despesa_reembolsavel": true,
                 "tipo_reembolso": "total",
                 "valor_reembolsavel": 54.90,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
                 "justificativa": "Reembolso total aprovado de acordo com a política vigente."
             }
         },
@@ -114,6 +126,8 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
                 "justificativa": "Despesa identificada como duplicata da despesa 'Almoco(d-006)'. Reembolso negado."
             }
         },
@@ -129,6 +143,8 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
                 "justificativa": "Despesa lançada fora do período de competência (2026-07-01 a 2026-07-31). Reembolso negado."
             }
         },
@@ -144,6 +160,8 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
                 "justificativa": "Despesa com valor negativo, identificada como estorno. Reembolso negado."
             }
         },
@@ -156,10 +174,12 @@
             "valor": 480.00,
             "tem_nota_fiscal": true,
             "motor_reembolso_output": {
-                "despesa_reembolsavel": true,
-                "tipo_reembolso": "parcial",
-                "valor_reembolsavel": 250.00,
-                "justificativa": "A categoria hospedagem possui limite de reembolso de R$250,00 no dia. Reembolso parcial aprovado."
+                "despesa_reembolsavel": false,
+                "tipo_reembolso": "nenhum",
+                "valor_reembolsavel": 0.00,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
+                "justificativa": "A categoria 'hospedagem' não é reembolsável para o centro de custo CC-ENG-PLATAFORMA: a política vigente a proíbe explicitamente, com limite de R$0,00. Reembolso negado."
             }
         },
         {
@@ -174,6 +194,8 @@
                 "despesa_reembolsavel": true,
                 "tipo_reembolso": "total",
                 "valor_reembolsavel": 33.33,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
                 "justificativa": "Reembolso total aprovado de acordo com a política vigente."
             }
         },
@@ -189,6 +211,8 @@
                 "despesa_reembolsavel": true,
                 "tipo_reembolso": "total",
                 "valor_reembolsavel": 47.20,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
                 "justificativa": "Reembolso total aprovado de acordo com a política vigente."
             }
         },
@@ -204,7 +228,9 @@
                 "despesa_reembolsavel": false,
                 "tipo_reembolso": "nenhum",
                 "valor_reembolsavel": 0.00,
-                "justificativa": "Despesas acima de R$100,00 necessitam de nota fiscal para reembolso. Esta despesa não possui nota fiscal. Reembolso negado."
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
+                "justificativa": "A categoria 'hospedagem' não é reembolsável para o centro de custo CC-ENG-PLATAFORMA: a política vigente a proíbe explicitamente, com limite de R$0,00. Reembolso negado."
             }
         },
         {
@@ -217,9 +243,11 @@
             "tem_nota_fiscal": true,
             "motor_reembolso_output": {
                 "despesa_reembolsavel": true,
-                "tipo_reembolso": "parcial",
-                "valor_reembolsavel": 60.00,
-                "justificativa": "A categoria alimentacao possui limite de reembolso de R$60,00 no dia. Reembolso parcial aprovado."
+                "tipo_reembolso": "total",
+                "valor_reembolsavel": 61.00,
+                "taxa_cambio": null,
+                "valor_convertido_brl": null,
+                "justificativa": "Reembolso total aprovado de acordo com a política vigente."
             }
         }
     ]
