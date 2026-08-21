@@ -20,10 +20,11 @@
 | Fatiar `tasks.md` em tasks executáveis | Claude propôs, usuário validou 2 decisões de granularidade | Pedi explicitamente que "qualquer decisão seja avaliada comigo antes de ser tomada". Claude leu `spec.md` v1.2 e `plan.md` v1.0 em modo de planejamento e, antes de escrever qualquer task, parou em duas decisões de granularidade — task por RN isolado vs. por mecanismo de código (RN-004/RN-013 não têm função própria); task de scaffolding com ou sem RN associado — e perguntou via pergunta estruturada com prévia de cada opção, em vez de decidir sozinho. As 23 tasks (T-001 a T-023) só foram escritas depois da minha resposta. |
 | Ajustar `CLAUDE.md` (disciplina de `tasks.md` + fluxo de git) | 100% eu decidi o conteúdo da regra, Claude redigiu e commitou | Pedi duas mudanças de processo depois de usar o projeto na prática: exigir marcação `[x]` progressiva e task do tamanho de um commit, com sinalização obrigatória de qualquer agente que perceber violação (commit `00ca134`); e documentar que todo commit vai direto em `main`, sem branch/PR — motivado por ser um projeto "desafio" e não um projeto real. |
 | Implementar (T-001 a T-026) | Claude escreveu 100% do código, eu aprovei task a task | Pedi explicitamente "implemente task por task, e a cada task finalizada aguarde minha aprovação". Nenhuma linha de `src/` foi escrita por mim. O controle não veio de escrever junto, veio de revisar **antes** de virar commit — 19 commits `feat(...)` e 7 `test(...)`, cada um com aprovação minha registrada na sessão. |
-| Escrever testes | Claude, 57 testes | Todos gerados pelo Claude a partir do critério de aceite escrito na task. Isso tem um limite sério que descobri na prática — ver Diligência: um teste escrito pelo mesmo agente que interpretou a regra errada afirma a regra errada com total confiança, e passa. |
+| Escrever testes | Claude, 125 testes (57 ao fim do Dia 1) | Todos gerados pelo Claude a partir do critério de aceite escrito na task. Isso tem um limite sério que descobri na prática — ver Diligência: um teste escrito pelo mesmo agente que interpretou a regra errada afirma a regra errada com total confiança, e passa. |
 | Mudar o fluxo de aprovação no meio do caminho | 100% eu | O `CLAUDE.md` original dizia "commit não espera aprovação prévia — eu reviso depois". Depois de usar isso por 6 tasks, não gostei: cada ajuste virava um commit de correção em cima de um commit que já nascia errado. Pedi a inversão (implementa → eu reviso sem nada commitado → aprovo → commita), commit `7367769`. O resto da sessão rodou assim. |
 | Escolher o modelo por tipo de trabalho | 100% eu | Percebi no meio da sessão que estava rodando em Sonnet e pedi Opus para código. O Claude não conseguia trocar sozinho — deixei registrado no `CLAUDE.md` que código usa Opus e que a troca é ação minha (`db0e4a6`). Da T-010 em diante a implementação foi em Opus 5. |
 | Absorver o envelope (spec) | Eu absorvi sozinho, antes da sessão; Claude leu depois e levantou o que passou | **Li a v4 e os quatro arquivos do envelope por conta própria e abri a sessão com decisões já tomadas**, não com perguntas (`docs/sessions/07_spec_2.0.txt`, linhas 6–80). **Só depois disso o Claude leu o envelope**, validou uma a uma essas decisões e levantou seis ambiguidades que eu não tinha enxergado. **As seis decisões foram minhas**, escolhidas entre alternativas apresentadas com o efeito de cada uma. Porem, nesta mesma fase o Claude escreveu na spec uma decisão sobre o campo `vigencia` que ninguém tomou, e a validação que hoje é RN-017 existe porque eu peguei isso na revisão (ver Caso 7 de Discernimento). Saldo: 8 commits, `a5d6889`..`709031b`, +1840/−179 linhas, **zero** em `src/` e `tests/`. |
+| Implementar o envelope (T-028 a T-050) | Claude escreveu 100% do código, eu revisei antes de cada commit | Pedi a Fase 5 inteira **num lote só** (`docs/sessions/08_tasks_implement_2.0.txt`, linha 6), e não task a task como no Dia 1: 18 tasks revisadas juntas antes do primeiro commit. Os três ajustes que emiti depois vieram de leitura minha do resultado, não de teste vermelho — duplicata comparando valor truncado (linha 1584), diagrama do `plan.md` fora da realidade do código (linha 1820) e as flags de política/câmbio opcionais (linha 2436, Caso 9). Saldo: 56 commits, `3524a9c`..`12676ba`, `41 arquivos, +3687/−642`. |
 
 **Onde deleguei e me arrependi:** Na fase de spec, nenhum arrependimento — tudo
 que delegou (levantamento das ambiguidades, primeira versão do `spec.md`)
@@ -441,6 +442,40 @@ campo moeda base da politica, só fala que Os limites da política são sempre e
 Diferente do Caso 7, este **chegou ao `git`**: entrou em `511f47b` e só saiu em
 `6b5d425`.
 
+### Caso 9 — a CLI escolhia a política sozinha, e o relatório saía sem dizer qual
+
+**O que ele propôs:** a T-032 fez `--politica` e `--cambio` **opcionais, com
+default**, para que a invocação fixa do `DESAFIO.md` continuasse funcionando sem
+elas. A T-049 documentou isso no `README.md` como recurso: "os outros dois têm
+caminho padrão e só precisam ser informados quando você quiser usar outros".
+
+**Por que estava errado:** `calcular --input despesas.json --output resultado.json`
+rodava, escrevia `resultado.json` e saía com código zero — julgando o lote com
+`exemplos/envelope/politica-v4.json`, escolhida por omissão e por caminho absoluto
+resolvido a partir da pasta do pacote. A spec.md §4 ("Entrada e saída") já dizia o
+contrário em duas frases: "O motor recebe **três entradas**" e "As **três** entradas
+são obrigatórias". Não era detalhe de ergonomia: o mesmo almoço de R$130,00 é
+reembolso total num centro de custo e parcial em outro, então um `resultado.json`
+cuja política não é rastreável a partir do comando que o gerou não é conferível por
+quem recebe.
+
+**Como eu detectei:** li a seção "Como rodar" do `README.md`, rodei o comando, e
+perguntei qual política ele tinha usado e como tinha lidado com câmbio.
+
+**O que eu fiz:** determinei que os três arquivos são obrigatórios. Virou a T-050 —
+`required=True` nas duas flags, constantes de caminho padrão removidas, e dois testes
+novos: um exige as duas flags, outro retira cada uma das três entradas, uma por vez, e
+confirma código 2 sem arquivo escrito. Nem `spec.md` nem `plan.md` mudaram, porque foi
+o código que se alinhou ao que a spec já dizia. Aprovei a divergência da linha fixa do
+`DESAFIO.md` porque ela foi escrita quando o motor tinha uma entrada só, e o envelope
+do Dia 2 acrescentou duas.
+
+**Onde está a evidência:** `docs/sessions/08_tasks_implement_2.0.txt`, linha 2436,
+minha mensagem: "o problema do comando no readme em 'Como roda' é a falta do input do
+arquivo da politica e de cambio. (...) Esses arquivos deveriam ser obrigatórios no
+input."; a aprovação da divergência na linha 2566. Correção nos commits `5dabd11`
+(T-050) e `12676ba` (`CLAUDE.md`).
+
 **Padrão que eu notei:** o Claude segue regras de conteúdo (o que a spec deve
 dizer) com mais disciplina do que regras de processo sobre o próprio ato de
 commitar (versionar, registrar). Mudanças que "parecem pequenas" no conteúdo
@@ -518,11 +553,11 @@ rastreabilidade task → commit — que é 25 dos 100 pontos — teria ficado fu
 logo na primeira task. A correção virou regra no `CLAUDE.md` (`587d864`): como
 o hash não existe no momento em que a task é marcada, fechar uma task passou a
 exigir **dois** commits em sequência, e uma task não está encerrada enquanto o
-campo mostrar o placeholder. As 26 tasks terminaram com hash real — foi conferido com
+campo mostrar o placeholder. As 50 tasks terminaram com hash real — foi conferido com
 `grep -c '^  - \*\*Commit:\*\*$'`, que dá zero.
 
 **Testes: quem escreveu, e como você sabe que eles testam a coisa certa?**
-Os 57 foram escritos pelo Claude. E a resposta honesta para a segunda parte é:
+Os 125 foram escritos pelo Claude. E a resposta honesta para a segunda parte é:
 **Revisei todos os testes e asserts feitos pelo claude — e tenho prova disso nesta sessão.** O teste de hospedagem do Caso 3 estava verde, tinha nome descritivo, e afirmava o
 comportamento errado com confiança. Um teste escrito pelo mesmo agente que interpretou a regra é uma repetição da interpretação dele, não uma verificação dela.
 
@@ -542,10 +577,24 @@ O que reduziu o risco, na prática, foram três coisas:
    apareceu quando rodei `parser → motor → saida` com o arquivo real, na T-025.
    Bug de borda mora na costura, e a costura não tinha teste até a T-022.
 
-O que hoje me dá mais confiança não é a contagem de 57, é o teste de integração
+O que hoje me dá mais confiança não é a contagem de 125, é o teste de integração
 que roda a **CLI de verdade** (arquivo de entrada → arquivo de saída) e compara
 o resultado inteiro com `exemplos/resultado-exemplo.json`, que eu preenchi à
 mão a partir das minhas decisões.
+
+**Pedi massa de dados própria, e ela achou o que os exemplos não achavam.** Ao fim
+da Fase 5 mandei revisar o código e criar dados sintéticos
+(`docs/sessions/08_tasks_implement_2.0.txt`, linha 1439). Saíram 12 arquivos JSON em
+`tests/dados/`, sem nenhum número em comum com `exemplos/`: outros centros de custo,
+teto de nota fiscal de R$150,00, moedas `JPY` e `GBP`, competência `2026-09`. Onze
+testes passaram de primeira. O décimo segundo não: `"valor": 100` — número JSON
+válido, e a spec.md §4 ("Entrada e saída") tipa o campo como "número" sem exigir
+casas decimais — abortava o motor com `AttributeError`, porque `parse_float=Decimal`
+não é consultado para inteiros e todo arquivo de `exemplos/` traz os valores com duas
+casas. Virou a T-047 (`d2e588d`), e a correção fechou as três bordas de leitura, não
+só a que quebrava. A mesma revisão apontou que a identidade de duplicata comparava o
+valor já truncado, então `33.333` e `33.334` viravam o mesmo lançamento — eu decidi
+que a comparação é sobre o valor lançado (linha 1584) e virou a T-048 (`2e7af32`).
 
 **Pedi auditoria ao próprio agente, e isso rendeu.** Junto com a correção do Caso 7,
 mandei procurar mais decisões tomadas sem minha aprovação
@@ -565,10 +614,6 @@ fora de `exemplos/rh_politica_v4.md` quando o Claude extraiu o comunicado do RH 
 
 *A mudança de requisito do Dia 2.*
 
-> Esta seção cobre a **fase de spec** da absorção. Nenhuma linha de `src/` ou
-> `tests/` foi escrita ainda — `git diff 10170c9 HEAD --stat -- src tests` sai
-> vazio. Os números de código entram depois da Fase 5 (`tasks.md`, T-028 a T-045).
-
 **Quantos arquivos toquei na mão:** 
 
 `1` — `specs/001-motor-reembolso/DECISIONS.md`,
@@ -577,15 +622,35 @@ onde removi um parágrafo do **Por quê** de D-012. Escrito pelo Claude e achei 
 `2` — `docs/RELATORIO.md`,
 Exclui alguns trechos de texto pois estava muito longo, e escrevi algumas coisas que percebi que faltaram.
 
+`3` — `specs/001-motor-reembolso/tasks.md`,
+onde removi o campo **Custo declarado** que o Claude tinha escrito na T-050
+(`docs/sessions/08_tasks_implement_2.0.txt`, linha 2623).
 
-**Quanto tempo levou:** 1 dia. Os commits vão de `19/08 21:10` a `20/08 19:54`
-(`git log --format='%h %ad %s' --date=format:'%d/%m %H:%M' 10170c9..HEAD`), em duas
-janelas de trabalho.
 
-**Diff de absorção:** `10 arquivos, +1840/-179 linhas`
-(`git diff 10170c9 HEAD --stat`), em 8 commits, `a5d6889`..`709031b`. A `spec.md`
-respondeu por `+863/-127` desse total (`git diff 10170c9 HEAD --numstat`), saindo de
-649 para 1385 linhas.
+**Quanto tempo levou:** 2 dias. Os commits vão de `19/08 21:10` (`a5d6889`) a
+`21/08 15:08` (`12676ba`), em quatro janelas de trabalho — duas de spec e duas de
+implementação.
+
+**Diff de absorção:** `49 arquivos, +7724/−742 linhas`
+(`git diff 10170c9 12676ba --stat`), em 67 commits. Os 49 são arquivos **distintos** —
+não a soma das fases. Por fase:
+
+| Fase | Commits | Diff | `src/` e `tests/` |
+|---|---|---|---|
+| Spec (`a5d6889`..`709031b`) | 8 | `10 arquivos, +1840/−179` | **zero** |
+| Exports e relatório (`709031b`..`3524a9c`) | 3 | `2 arquivos, +2293/−17` | **zero** |
+| Implementação (`3524a9c`..`12676ba`) | 56 | `41 arquivos, +3687/−642` | `34 arquivos, +3171/−508` |
+
+As três linhas somam 53 arquivos e o total é 49 porque `spec.md`, `plan.md`, `tasks.md` e
+`DECISIONS.md` aparecem em mais de uma fase e contam uma vez só
+(`git diff 10170c9 12676ba --name-only | wc -l`).
+
+A `spec.md` respondeu por `+863/−127` da fase de spec
+(`git diff 10170c9 709031b --numstat`), saindo de 649 para 1385 linhas. Na fase de
+implementação ela mudou uma vez só, para 2.4, e por um motivo que não era de regra
+(RN-017 dizia "antes de qualquer despesa ser **lida**", uma ordem impossível porque a
+competência do lote vem de dentro do arquivo de despesas — `DECISIONS.md` D-015,
+commit `3b7055b`).
 
 **Absorveu de graça:** três apostas do `plan.md`, registradas com o que cada uma
 rendeu na tabela de `plan.md` §7 ("Riscos"), reescrita para deixar de ser previsão.
@@ -648,8 +713,42 @@ da implementação, sem ninguém saber se o número novo era o certo.
 
 **Para qual tamanho de projeto isto valeu a pena?**
 
+Para este, e o ganho foi **velocidade** — não só em escrever código. Foi rápido cruzar
+os 9 itens da política do RH com os 14 registros de `exemplos/despesas-exemplo.json` e
+levantar as 20 ambiguidades (AMB-001 a AMB-020), rápido escrever as 1396 linhas de
+`spec.md`, as 518 de `tasks.md` e os 125 testes. A absorção do envelope inteira — spec
+nova, 23 tasks e a implementação — levou 2 dias, de `19/08 21:10` (`a5d6889`) a
+`21/08 15:08` (`12676ba`), em 67 commits.
+
+O que sobrou para mim foi revisar e decidir, e foi aí que meu tempo foi. As 20 decisões
+de ambiguidade foram todas minhas, e os 9 casos de Discernimento saíram de leitura
+minha — spec, task, `DECISIONS.md`, saída do programa —, nenhum de teste vermelho.
+
 **Para qual não valeria?**
+
+**Não tenho evidência para responder isso pelo tipo de projeto.**
+
 
 **O que eu faria diferente:**
 
+- **Escrever eu mesmo o teste da regra que eu desambiguei.** O critério de aceite é o
+  contrato da minha decisão; deixar o mesmo agente que interpretou a regra escrever o
+  teste dela transforma o teste em repetição da interpretação (Caso 3).
+
+- **Tentaria usar subagentes, skills, hooks**  Acredito que não utilizar essas ferramentas adicionais acabei perdendo grandes beneficios que eles podem trazer aplicados junto com SDD.
+
+
 **A coisa mais desconfortável que aprendi sobre como eu trabalho com IA:**
+
+Que o método depende inteiramente de uma coisa que cansa: **ler texto**. A `spec.md`
+tem 1396 linhas, o `DECISIONS.md` 1060, a `tasks.md` 518. Revisar isso sessão após
+sessão é maçante — não é difícil, é demorado, e em alguns momentos foi a parte mais chata
+do desafio.
+
+O desconfortável é que esse cansaço tem consequência. A T-032 dizia "flags
+**opcionais** `--politica` e `--cambio`, com default", contradizendo uma frase da
+spec.md §4 ("Entrada e saída") que eu mesmo tinha aprovado: "As **três** entradas são
+obrigatórias". Eu li a Fase 5 antes de mandar implementar
+(`docs/sessions/08_tasks_implement_2.0.txt`, linha 6) e passou. O defeito entrou pela
+parte que eu revisei com menos energia, e só apareceu duas fases depois, quando li o
+`README.md` (Caso 9).
