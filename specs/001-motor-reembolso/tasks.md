@@ -340,7 +340,7 @@ RN-008 estejam quebrados.
 - [x] **T-043** — Regrava `exemplos/resultado-exemplo.json` sob a v4 e atualiza `tests/test_integracao.py` para o primeiro bloco da spec.md §9 ("Critérios de aceite")
   - **Atende:** spec.md §9 ("Critérios de aceite"), primeiro bloco — `valor_total_despesas = 1806.94`, `valor_total_reembolsavel = 351.43`
   - **Aceite:** `tests/test_integracao.py::test_exemplo_completo_bate_com_criterios_de_aceite`, `::test_saida_bate_com_o_exemplo_caractere_a_caractere`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `4eacf1f`
 
 - [ ] **T-044** — Teste de integração de `exemplos/envelope/despesas-envelope-cc-desconhecido.json`
   - **Atende:** spec.md §9 ("Critérios de aceite"), segundo bloco — `valor_total_despesas = 623.76`, `valor_total_reembolsavel = 373.76`
