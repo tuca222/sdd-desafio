@@ -1,0 +1,32 @@
+{
+  "colaborador": {
+    "id": "c-2007",
+    "nome": "Selma Adeyemi",
+    "centro_custo": "CC-MARKETING"
+  },
+  "periodo": {
+    "competencia": "2026-09",
+    "inicio": "2026-09-01",
+    "fim": "2026-09-30"
+  },
+  "despesas": [
+    {
+      "id": "s7-001",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Almoco lancado sem centavos",
+      "fornecedor": "Bistro Aurora",
+      "valor": 100,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s7-002",
+      "data": "2026-09-14",
+      "categoria": "transporte_urbano",
+      "descricao": "Corrida lancada sem centavos",
+      "fornecedor": "MoveApp",
+      "valor": 40,
+      "tem_nota_fiscal": true
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "colaborador": {
+    "id": "c-2001",
+    "nome": "Helena622",
+    "centro_custo": "CC-VENDAS-LATAM"
+  },
+  "periodo": {
+    "competencia": "2026-09",
+    "inicio": "2026-09-01",
+    "fim": "2026-09-30"
+  },
+  "despesas": [
+    {
+      "id": "s1-001",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Almoco de fechamento",
+      "fornecedor": "Restaurante Andorinha",
+      "valor": 130.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s1-002",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Cafe da tarde",
+      "fornecedor": "Padaria Sete",
+      "valor": 30.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s1-003",
+      "data": "2026-09-15",
+      "categoria": "representacao",
+      "descricao": "Jantar com distribuidor",
+      "fornecedor": "Casa Trindade",
+      "valor": 250.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s1-004",
+      "data": "2026-09-15",
+      "categoria": "representacao",
+      "descricao": "Cafe apos o jantar",
+      "fornecedor": "Casa Trindade",
+      "valor": 10.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s1-005",
+      "data": "2026-09-16",
+      "categoria": "transporte_urbano",
+      "descricao": "Corridas do dia",
+      "fornecedor": "MoveApp",
+      "valor": 149.99,
+      "tem_nota_fiscal": false
+    },
+    {
+      "id": "s1-006",
+      "data": "2026-09-16",
+      "categoria": "transporte_urbano",
+      "descricao": "Corrida noturna",
+      "fornecedor": "MoveApp",
+      "valor": 150.01,
+      "tem_nota_fiscal": false
+    },
+    {
+      "id": "s1-007",
+      "data": "2026-09-17",
+      "categoria": "hospedagem",
+      "descricao": "Hotel - 2 diarias",
+      "fornecedor": "Hotel Meridiano",
+      "valor": 480.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s1-008",
+      "data": "2026-09-17",
+      "categoria": "coworking",
+      "descricao": "Sala de reuniao",
+      "fornecedor": "HubOffice",
+      "valor": 90.00,
+      "tem_nota_fiscal": true
+    }
+  ]
+}

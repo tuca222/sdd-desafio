@@ -1,0 +1,86 @@
+{
+  "colaborador": {
+    "id": "c-2005",
+    "nome": "Priya Vasconcelos",
+    "centro_custo": "CC-JURIDICO"
+  },
+  "periodo": {
+    "competencia": "2026-09",
+    "inicio": "2026-09-01",
+    "fim": "2026-09-30"
+  },
+  "despesas": [
+    {
+      "id": "s5-001",
+      "data": "2026-09-01",
+      "categoria": "alimentacao",
+      "descricao": "Almoco no primeiro dia do periodo",
+      "fornecedor": "Bistro Aurora",
+      "valor": 40.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s5-002",
+      "data": "2026-09-30",
+      "categoria": "alimentacao",
+      "descricao": "Almoco no ultimo dia do periodo",
+      "fornecedor": "Bistro Aurora",
+      "valor": 39.999,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s5-003",
+      "data": "2026-08-31",
+      "categoria": "alimentacao",
+      "descricao": "Almoco de agosto lancado com atraso",
+      "fornecedor": "Cantina Sul",
+      "valor": 25.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s5-004",
+      "data": "2026-10-01",
+      "categoria": "alimentacao",
+      "descricao": "Almoco de outubro lancado adiantado",
+      "fornecedor": "Cantina Sul",
+      "valor": 25.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s5-005",
+      "data": "2026-09-14",
+      "categoria": "transporte_urbano",
+      "descricao": "Corrida ao forum",
+      "fornecedor": "MoveApp",
+      "valor": 60.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s5-006",
+      "data": "2026-09-14",
+      "categoria": "hospedagem",
+      "descricao": "Pousada perto do forum",
+      "fornecedor": "Pousada do Vale",
+      "valor": 180.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s5-007",
+      "data": "2026-09-15",
+      "categoria": "alimentacao",
+      "descricao": "Estorno de almoco cancelado",
+      "fornecedor": "Bistro Aurora",
+      "valor": -30.00,
+      "tem_nota_fiscal": false
+    },
+    {
+      "id": "s5-008",
+      "data": "2026-09-15",
+      "categoria": "transporte_urbano",
+      "descricao": "Corrida intermunicipal",
+      "fornecedor": "MoveApp",
+      "valor": 200.00,
+      "tem_nota_fiscal": false
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "moeda_base": "BRL",
+  "fonte": "sintetico - numeros redondos escolhidos para a conta ser conferivel a mao",
+  "observacao": "Cobre 2026-09-14 a 2026-09-18 (segunda a sexta). JPY nao e publicado todo dia, e GBP nunca.",
+  "taxas": {
+    "2026-09-14": { "USD": 5.00, "EUR": 6.00, "JPY": 0.035 },
+    "2026-09-15": { "USD": 5.10, "EUR": 6.20 },
+    "2026-09-16": { "USD": 5.25, "EUR": 6.30, "JPY": 0.036 },
+    "2026-09-17": { "USD": 5.35, "EUR": 6.40 },
+    "2026-09-18": { "USD": 5.45, "EUR": 6.50 }
+  }
+}

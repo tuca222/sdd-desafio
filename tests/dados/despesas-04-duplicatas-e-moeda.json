@@ -1,0 +1,81 @@
+{
+  "colaborador": {
+    "id": "c-2004",
+    "nome": "Otavio Krasniqi",
+    "centro_custo": "CC-MARKETING"
+  },
+  "periodo": {
+    "competencia": "2026-09",
+    "inicio": "2026-09-01",
+    "fim": "2026-09-30"
+  },
+  "despesas": [
+    {
+      "id": "s4-001",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Almoco no bistro",
+      "fornecedor": "Bistro Aurora",
+      "valor": 22.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s4-002",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Almoco no bistro",
+      "fornecedor": "Bistro Aurora",
+      "valor": 22.00,
+      "moeda": "BRL",
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s4-003",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Almoco no bistro",
+      "fornecedor": "Bistro Aurora",
+      "valor": 22.00,
+      "moeda": "EUR",
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s4-004",
+      "data": "2026-09-15",
+      "categoria": "transporte_urbano",
+      "descricao": "Corrida ao aeroporto",
+      "fornecedor": "MoveApp",
+      "valor": 15.00,
+      "moeda": "usd",
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s4-005",
+      "data": "2026-09-15",
+      "categoria": "transporte_urbano",
+      "descricao": "Corrida ao aeroporto",
+      "fornecedor": "MoveApp",
+      "valor": 15.00,
+      "moeda": "USD",
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s4-006",
+      "data": "2026-09-16",
+      "categoria": "ALIMENTACAO",
+      "descricao": "Jantar de equipe",
+      "fornecedor": "Cantina Sul",
+      "valor": 30.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s4-007",
+      "data": "2026-09-16",
+      "categoria": "alimentacao",
+      "descricao": "Jantar de equipe",
+      "fornecedor": "Cantina Sul",
+      "valor": 30.00,
+      "tem_nota_fiscal": true
+    }
+  ]
+}

@@ -360,7 +360,7 @@ Origem: pedido do usuário em `21/08/2026` ("revise o código implementado; crie
 dados sintéticos para validar a implementação"). Não veio de mudança de spec —
 nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
 
-- [ ] **T-046** — Massa sintética em `tests/dados/` (política, câmbio e sete lotes
+- [x] **T-046** — Massa sintética em `tests/dados/` (política, câmbio e sete lotes
   de despesas) mais os testes que rodam a CLI contra ela
   - **Atende:** spec.md §9 ("Critérios de aceite") — por outro caminho: os
     critérios da spec fixam o resultado para **um** conjunto de dados, e esta task

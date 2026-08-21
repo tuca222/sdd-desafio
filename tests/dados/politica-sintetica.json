@@ -1,0 +1,27 @@
+{
+  "versao": "sintetica-1",
+  "vigencia": "2026-09-01",
+  "moeda_base": "BRL",
+  "padrao": {
+    "alimentacao": { "limite": 50.00, "periodicidade": "dia" },
+    "transporte_urbano": { "limite": 70.00, "periodicidade": "dia" },
+    "hospedagem": { "limite": 200.00, "periodicidade": "diaria" }
+  },
+  "centros_custo": {
+    "CC-VENDAS-LATAM": {
+      "alimentacao": { "limite": 120.00, "periodicidade": "dia" },
+      "transporte_urbano": { "limite": 90.00, "periodicidade": "dia" },
+      "hospedagem": { "limite": 500.00, "periodicidade": "diaria" },
+      "representacao": { "limite": 250.00, "periodicidade": "dia" }
+    },
+    "CC-JURIDICO": {
+      "alimentacao": { "limite": 40.00, "periodicidade": "dia" },
+      "transporte_urbano": { "limite": 0.00, "periodicidade": "dia", "observacao": "usar frota propria" }
+    },
+    "CC-ESTAGIO": {
+      "alimentacao": { "limite": 25.00, "periodicidade": "dia" }
+    }
+  },
+  "nota_fiscal_obrigatoria_acima_de": 150.00,
+  "acrescimo_em_viagem_percentual": 50
+}

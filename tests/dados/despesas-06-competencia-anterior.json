@@ -1,0 +1,41 @@
+{
+  "colaborador": {
+    "id": "c-2006",
+    "nome": "Ruan Mbeki",
+    "centro_custo": "CC-ESTAGIO"
+  },
+  "periodo": {
+    "competencia": "2026-08",
+    "inicio": "2026-08-01",
+    "fim": "2026-08-31"
+  },
+  "despesas": [
+    {
+      "id": "s6-001",
+      "data": "2026-08-14",
+      "categoria": "alimentacao",
+      "descricao": "Almoco",
+      "fornecedor": "Padaria Sete",
+      "valor": 20.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s6-002",
+      "data": "2026-08-15",
+      "categoria": "alimentacao",
+      "descricao": "Almoco de sexta",
+      "fornecedor": "Bistro Aurora",
+      "valor": 30.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s6-003",
+      "data": "2026-08-16",
+      "categoria": "transporte_urbano",
+      "descricao": "Corrida ao escritorio",
+      "fornecedor": "MoveApp",
+      "valor": 18.00,
+      "tem_nota_fiscal": true
+    }
+  ]
+}

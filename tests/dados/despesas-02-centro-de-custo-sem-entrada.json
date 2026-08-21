@@ -1,0 +1,68 @@
+{
+  "colaborador": {
+    "id": "c-2002",
+    "nome": "Ivo Berenguer",
+    "centro_custo": "CC-MARKETING"
+  },
+  "periodo": {
+    "competencia": "2026-09",
+    "inicio": "2026-09-01",
+    "fim": "2026-09-30"
+  },
+  "despesas": [
+    {
+      "id": "s2-001",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Cafe da manha",
+      "fornecedor": "Padaria Sete",
+      "valor": 45.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s2-002",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Almoco",
+      "fornecedor": "Bistro Aurora",
+      "valor": 20.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s2-003",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Lanche da tarde",
+      "fornecedor": "Padaria Sete",
+      "valor": 12.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s2-004",
+      "data": "2026-09-15",
+      "categoria": "hospedagem",
+      "descricao": "Pousada - 1 diaria",
+      "fornecedor": "Pousada do Vale",
+      "valor": 350.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s2-005",
+      "data": "2026-09-15",
+      "categoria": "representacao",
+      "descricao": "Jantar com agencia",
+      "fornecedor": "Casa Trindade",
+      "valor": 100.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s2-006",
+      "data": "2026-09-16",
+      "categoria": "transporte_urbano",
+      "descricao": "Corrida ao evento",
+      "fornecedor": "MoveApp",
+      "valor": 70.00,
+      "tem_nota_fiscal": false
+    }
+  ]
+}

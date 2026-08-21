@@ -1,0 +1,103 @@
+{
+  "colaborador": {
+    "id": "c-2003",
+    "nome": "Nadia Sorrentino",
+    "centro_custo": "CC-VENDAS-LATAM"
+  },
+  "periodo": {
+    "competencia": "2026-09",
+    "inicio": "2026-09-01",
+    "fim": "2026-09-30"
+  },
+  "despesas": [
+    {
+      "id": "s3-001",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Almoco - Porto",
+      "fornecedor": "Taberna do Douro",
+      "valor": 20.00,
+      "moeda": "EUR",
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s3-002",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Cafe no aeroporto",
+      "fornecedor": "Sky Coffee",
+      "valor": 5.00,
+      "moeda": "USD",
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s3-003",
+      "data": "2026-09-14",
+      "categoria": "transporte_urbano",
+      "descricao": "Metro em Toquio",
+      "fornecedor": "Tokyo Metro",
+      "valor": 1000.00,
+      "moeda": "JPY",
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s3-004",
+      "data": "2026-09-15",
+      "categoria": "transporte_urbano",
+      "descricao": "Metro em Toquio - segundo dia",
+      "fornecedor": "Tokyo Metro",
+      "valor": 1000.00,
+      "moeda": "JPY",
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s3-005",
+      "data": "2026-09-16",
+      "categoria": "representacao",
+      "descricao": "Jantar com cliente - Miami",
+      "fornecedor": "Ocean Grill",
+      "valor": 30.00,
+      "moeda": "USD",
+      "tem_nota_fiscal": false
+    },
+    {
+      "id": "s3-006",
+      "data": "2026-09-17",
+      "categoria": "alimentacao",
+      "descricao": "Sanduiche e agua",
+      "fornecedor": "Padaria Lisboa",
+      "valor": 7.77,
+      "moeda": "EUR",
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s3-007",
+      "data": "2026-09-18",
+      "categoria": "alimentacao",
+      "descricao": "Almoco no escritorio",
+      "fornecedor": "Bistro Aurora",
+      "valor": 88.00,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s3-008",
+      "data": "2026-09-18",
+      "categoria": "representacao",
+      "descricao": "Almoco com parceiro - Londres",
+      "fornecedor": "The Ivy",
+      "valor": 55.00,
+      "moeda": "GBP",
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s3-009",
+      "data": "2026-09-19",
+      "categoria": "alimentacao",
+      "descricao": "Jantar de sabado",
+      "fornecedor": "Cervejaria Ramiro",
+      "valor": 10.00,
+      "moeda": "EUR",
+      "tem_nota_fiscal": true
+    }
+  ]
+}
