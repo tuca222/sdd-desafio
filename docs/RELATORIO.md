@@ -23,7 +23,7 @@
 | Escrever testes | Claude, 57 testes | Todos gerados pelo Claude a partir do critério de aceite escrito na task. Isso tem um limite sério que descobri na prática — ver Diligência: um teste escrito pelo mesmo agente que interpretou a regra errada afirma a regra errada com total confiança, e passa. |
 | Mudar o fluxo de aprovação no meio do caminho | 100% eu | O `CLAUDE.md` original dizia "commit não espera aprovação prévia — eu reviso depois". Depois de usar isso por 6 tasks, não gostei: cada ajuste virava um commit de correção em cima de um commit que já nascia errado. Pedi a inversão (implementa → eu reviso sem nada commitado → aprovo → commita), commit `7367769`. O resto da sessão rodou assim. |
 | Escolher o modelo por tipo de trabalho | 100% eu | Percebi no meio da sessão que estava rodando em Sonnet e pedi Opus para código. O Claude não conseguia trocar sozinho — deixei registrado no `CLAUDE.md` que código usa Opus e que a troca é ação minha (`db0e4a6`). Da T-010 em diante a implementação foi em Opus 5. |
-| Absorver o envelope | — | Ainda não realizado — só ocorre no Dia 2. |
+| Absorver o envelope (spec) | Eu absorvi sozinho, antes da sessão; Claude leu depois e levantou o que passou | **Li a v4 e os quatro arquivos do envelope por conta própria e abri a sessão com decisões já tomadas**, não com perguntas (`docs/sessions/07_spec_2.0.txt`, linhas 6–80). **Só depois disso o Claude leu o envelope**, validou uma a uma essas decisões e levantou seis ambiguidades que eu não tinha enxergado. **As seis decisões foram minhas**, escolhidas entre alternativas apresentadas com o efeito de cada uma. Porem, nesta mesma fase o Claude escreveu na spec uma decisão sobre o campo `vigencia` que ninguém tomou, e a validação que hoje é RN-017 existe porque eu peguei isso na revisão (ver Caso 7 de Discernimento). Saldo: 8 commits, `a5d6889`..`709031b`, +1840/−179 linhas, **zero** em `src/` e `tests/`. |
 
 **Onde deleguei e me arrependi:** Na fase de spec, nenhum arrependimento — tudo
 que delegou (levantamento das ambiguidades, primeira versão do `spec.md`)
@@ -364,6 +364,83 @@ arquivo, tela — pelo menos uma vez, por alguém, antes de o projeto se declara
 pronto. Passei a tratar "rodei e li a saída" como etapa obrigatória, não como
 redundância do `pytest`.
 
+### Caso 7 — escreveu na spec uma decisão que ninguém tomou
+
+**O que ele propôs:** na primeira escrita da spec da v4, três afirmações sobre o
+campo `vigencia` do arquivo de política. Em spec.md §3 ("Fora de escopo"): "Não
+valida o campo `vigencia` da política contra o `periodo` da entrada". Na tabela de
+spec.md §4 ("Entrada e saída"): o campo marcado como não validado. Em spec.md §10
+("O que fica em aberto"): a mesma coisa registrada como limitação conhecida, com a
+observação de que um lote de julho processado com uma política de agosto "seria
+calculado sem nenhum aviso".
+
+**Por que estava errado:** nenhuma linha do comunicado da v4 sustenta isso. Não foi
+decisão minha nem leitura de um texto do RH — havia um campo no arquivo sem uso
+óbvio, e ele foi declarado ignorado. O `CLAUDE.md` exige o caminho inverso: regra
+que não está na spec deve ser trazida a mim antes de virar código. Aqui uma
+não-regra entrou na spec sem passar por mim, e vinha com a limitação já escrita na
+§10, o que a fazia parecer decisão ponderada.
+
+**Como eu detectei:** li a spec antes de aprovar e perguntei quando a decisão tinha
+sido tomada.
+
+**O que eu fiz:** determinei que a validação é obrigatória, em duas verificações —
+uma no lote e uma por despesa. Na conversa seguinte a segunda caiu: a verificação
+por despesa que eu queria já era RN-006, que confere a `data` contra
+`periodo.inicio` e `periodo.fim`; e o comunicado abre com "Vigência imediata,
+retroativa à competência atual", ou seja, a retroatividade vai até o começo da
+competência corrente e para ali — dentro da competência que o lote cobre não há
+despesa a negar por vigência.
+
+Ficou uma verificação só, **RN-017**, no lote inteiro. Ela recusa o lote quando
+`periodo.competencia` é **anterior** à competência da `vigencia`: despesa antiga
+tem que ser processada com a política que valia na época, e aplicar a política nova
+a despesa velha é exatamente o que a regra existe para impedir. Quando
+`periodo.competencia` é igual ou posterior, o lote é processado — um mês seguinte
+pode não ter política nova, e a corrente continua valendo. Recusando, nada é
+processado e nenhum arquivo de saída é escrito. As leituras descartadas ficaram em
+AMB-020, e a origem do erro na **Nota de processo** de `DECISIONS.md` D-010.
+
+**Onde está a evidência:** `docs/sessions/07_spec_2.0.txt`, linhas 969–970, minha
+mensagem: "Quando essa decisão foi tomada? Você só assumiu isso. Inclusive essa
+validação deve ser obrigatória."; RN-017 e AMB-020 em `spec.md`, entregues no commit
+`511f47b`. O texto errado **nunca existiu em `main`**: o fluxo de aprovar antes de
+commitar (`7367769`) pegou antes do primeiro commit da sessão.
+
+### Caso 8 — parametrizou uma constante e me trouxe o problema inventado como decisão pendente
+
+**O que ele propôs:** `moeda_base` descrito como parâmetro em quatro células de
+spec.md §4 ("Entrada e saída") — o limite de cada categoria "na `moeda_base`", as
+taxas em "unidades de `moeda_base`", os dois campos obrigatórios. E, em spec.md §10
+("O que fica em aberto"), um item afirmando que o motor não verifica se as duas
+`moeda_base` são a mesma, que isso "produziria conversões erradas em silêncio", e
+que "basta uma decisão para virar RN-018".
+
+**Por que estava errado:** o comunicado diz "Os limites da política são **sempre** em
+BRL" e "quando ausente, assume-se `BRL`". As duas frases são categóricas — o BRL é
+constante da política, não configuração do arquivo. A spec já se contradizia sozinha
+nisso: o campo que ela mesma define como saída de RN-015 se chama
+`valor_convertido_brl`, com a moeda no nome. Tendo parametrizado o que era
+constante, ele criou um ponto de decisão que não existe e me apresentou esse ponto
+como pendência minha.
+
+**Como eu detectei:** li o item da §10 e não reconheci o problema que ele descrevia.
+A política não fala em `moeda_base` em lugar nenhum, só em BRL.
+
+**O que eu fiz:** disse que não havia problema a resolver, porque a política não
+fala em `moeda_base` em lugar nenhum — só em BRL. A correção seguiu daí: as quatro
+células passaram a dizer "em BRL" e a marcar o campo como não lido pelo motor, e o
+item da §10 saiu. Um arquivo com
+`moeda_base` divergente passou a ser tratado como entrada malformada, que já estava
+fora de escopo desde o `plan.md` §1 ("Stack"). Spec 2.1, registrada em
+`DECISIONS.md` D-012.
+
+**Onde está a evidência:** `docs/sessions/07_spec_2.0.txt`, linha 1387, minha
+mensagem: "o motor nao deve verificar isso pois a politica não é explicita sobre o
+campo moeda base da politica, só fala que Os limites da política são sempre em BRL".
+Diferente do Caso 7, este **chegou ao `git`**: entrou em `511f47b` e só saiu em
+`6b5d425`.
+
 **Padrão que eu notei:** o Claude segue regras de conteúdo (o que a spec deve
 dizer) com mais disciplina do que regras de processo sobre o próprio ato de
 commitar (versionar, registrar). Mudanças que "parecem pequenas" no conteúdo
@@ -372,6 +449,8 @@ que deveria acontecer, já que é justamente aí que ninguém mais vai notar sem
 uma auditoria explícita do `DECISIONS.md`. Passei a conferir esse arquivo
 sempre que uma sessão mexe em `spec.md`, mesmo quando a mudança parece
 cosmética.
+
+É perceptivel que o Claude comete erros, as vezes repetidos, e que sempre que você aponta um erro, ele revisa, e muitas vezes, encontra mais problemas/inconsistencias.
 
 **O padrão que a fase de implementação acrescentou:** ele é muito melhor em
 seguir a spec do que em desconfiar dela. Nos Casos 3 e 4, e também nas
@@ -468,28 +547,102 @@ que roda a **CLI de verdade** (arquivo de entrada → arquivo de saída) e compa
 o resultado inteiro com `exemplos/resultado-exemplo.json`, que eu preenchi à
 mão a partir das minhas decisões.
 
+**Pedi auditoria ao próprio agente, e isso rendeu.** Junto com a correção do Caso 7,
+mandei procurar mais decisões tomadas sem minha aprovação
+(`docs/sessions/07_spec_2.0.txt`, linha 976). Vieram **15** além daquela (linha 991),
+agrupadas pelo próprio Claude em quatro tipos: campos declarados ignorados por conta
+própria, contrato de saída alterado sozinho, ambiguidades listadas como "encontradas"
+e decididas sem perguntar, e falhas de processo. O resultado honesto é que **13
+continuaram exatamente como estavam** — a auditoria não reverteu decisões, tornou-as
+visíveis para eu decidir sobre elas. Duas mudaram: `moeda_base`, que virou o Caso 8;
+e a linha "Vigência imediata, retroativa à competência atual", que tinha ficado de
+fora de `exemplos/rh_politica_v4.md` quando o Claude extraiu o comunicado do RH — ela
+é a evidência que sustenta AMB-020, e entrou no commit `a5d6889`.
+
 ---
 
 ## O envelope
 
 *A mudança de requisito do Dia 2.*
 
-**Quantos arquivos toquei na mão:** `<n>`
-**Quanto tempo levou:** `<...>`
-**Diff de absorção:** `<n> arquivos, +<n>/-<n> linhas` (`git diff <hash-antes> HEAD --stat`)
+> Esta seção cobre a **fase de spec** da absorção. Nenhuma linha de `src/` ou
+> `tests/` foi escrita ainda — `git diff 10170c9 HEAD --stat -- src tests` sai
+> vazio. Os números de código entram depois da Fase 5 (`tasks.md`, T-028 a T-045).
 
-**Absorveu de graça:** <o que a arquitetura já suportava e por quê>
+**Quantos arquivos toquei na mão:** 
 
-**Resistiu:** <o que teve que ser quebrado e por quê>
+`1` — `specs/001-motor-reembolso/DECISIONS.md`,
+onde removi um parágrafo do **Por quê** de D-012. Escrito pelo Claude e achei confuso e sem necessidade.
 
-**Ordem em que fiz:** <spec → tasks → código? ou código → spec? seja honesto:
-a correção vê os timestamps dos commits de qualquer forma>
+`2` — `docs/RELATORIO.md`,
+Exclui alguns trechos de texto pois estava muito longo, e escrevi algumas coisas que percebi que faltaram.
 
-**Se eu tivesse escrito a spec original sabendo desta mudança:**
 
-**O que a spec me poupou, em concreto:**
+**Quanto tempo levou:** 1 dia. Os commits vão de `19/08 21:10` a `20/08 19:54`
+(`git log --format='%h %ad %s' --date=format:'%d/%m %H:%M' 10170c9..HEAD`), em duas
+janelas de trabalho.
 
----
+**Diff de absorção:** `10 arquivos, +1840/-179 linhas`
+(`git diff 10170c9 HEAD --stat`), em 8 commits, `a5d6889`..`709031b`. A `spec.md`
+respondeu por `+863/-127` desse total (`git diff 10170c9 HEAD --numstat`), saindo de
+649 para 1385 linhas.
+
+**Absorveu de graça:** três apostas do `plan.md`, registradas com o que cada uma
+rendeu na tabela de `plan.md` §7 ("Riscos"), reescrita para deixar de ser previsão.
+DT-001 (a ordem das regras como lista explícita de filtros em `motor.py`): o passo
+novo de câmbio entra na posição 5 editando uma sequência num lugar só, e a spec.md
+§8 ("Ordem de aplicação das regras") foi de 6 para 7 passos sem que `parser.py`,
+`saida.py` ou `cli.py` soubessem. DT-002 e DT-005 (tratamento de dado na borda de
+entrada): o campo `moeda` e a conversão para BRL entraram pelo caminho já aberto
+pelo truncamento e pela normalização de categoria, sem tocar em `regras.py` —
+virou DT-007. O `Decimal` do parse à escrita: limite vindo de arquivo e
+multiplicação por taxa entraram pelo mesmo `parse_float`, sem nenhum ponto novo de
+conversão.
+
+**Resistiu:** duas coisas, e a primeira era uma decisão explícita.
+`plan.md` §4 ("Como a política é representada"), na versão 1.9, decidia *"constantes
+em código, não config externo (JSON/YAML carregado em runtime). Nada na spec pede
+reconfiguração sem redeploy"*. O item A do comunicado revogou isso em uma frase — "o
+motor precisa ler a política de fora, não de dentro do código". A justificativa
+original não estava mal raciocinada; a premissa é que era falsa, e só o envelope
+mostrou isso. A seção foi reescrita mantendo o texto antigo **citado, não apagado**
+(commit `059a078`), e a mudança atravessa `politica.py` inteiro, mais parâmetro novo
+em `regras.py` e `motor.py` e entrada nova em `cli.py` — dimensionada em T-028 a
+T-032. A segunda: `exemplos/resultado-exemplo.json` precisa ser regravado por
+inteiro (T-043), porque o colaborador do exemplo é de um centro de custo cujos
+limites mudaram. Nenhuma decisão de arquitetura teria evitado essa, porque é dado,
+não estrutura.
+
+**Ordem em que fiz:** `spec` → `DECISIONS.md` → `plan.md` → `tasks.md` → código. Os timestamps
+provam sem depender da minha palavra: os 8 commits da absorção são todos `docs(...)`
+e nenhum toca `src/` ou `tests/`. A `spec.md` foi de 1.10 a 2.2 em três movimentos
+(`511f47b`, `6b5d425`, `6f9ee47`), cada um com bump de versão e entrada em
+`DECISIONS.md` (D-010 a D-013), e o `plan.md` acompanhou em commits próprios
+(`059a078`, `711b7e9`, `709031b`). As 18 tasks novas (T-028 a T-045) foram escritas
+antes de qualquer implementação, com numeração continuando de T-027.
+
+**Se eu tivesse escrito a spec original sabendo desta mudança:** duas coisas
+mudariam, e as duas estão localizadas. A política seria entrada desde a v3 — o
+`plan.md` §4 não teria decidido por constantes, e RN-001, RN-002 e RN-003 teriam
+nascido apontando para uma tabela em vez de trazer R$60,00, R$80,00 e R$250,00
+escritos no texto da regra. E `exemplos/despesas-exemplo.json` não seria de um único
+centro de custo: um exemplo com dois colaboradores teria feito a variação de limite
+aparecer como pergunta no Dia 1, em vez de aparecer como reescrita do golden file no
+Dia 2. O que **não** mudaria é a estrutura de decisão — AMB-005 (não inferir viagem)
+foi decidida na v3 e sustentou sozinha a AMB-014 da v4, sem precisar ser revista.
+
+**O que a spec me poupou, em concreto:** o caso mais claro é o
+`exemplos/despesas-exemplo.json`. Ele é de `CC-ENG-PLATAFORMA`, que na v4 passa a ter
+alimentação de R$75,00 (era R$60,00) e `hospedagem` com limite `0.00`. Reler os
+critérios de aceite da spec.md §9 ("Critérios de aceite") contra a tabela nova
+mostrou, **antes de rodar uma linha de código**, que `d-001` vai de R$60,00 (parcial)
+para R$72,50 (total), `d-002` de R$0,00 para R$2,50, `d-010` de R$250,00 para R$0,00,
+`d-013` troca de motivo de negação — de nota fiscal ausente para categoria não
+reembolsável, porque RN-008 é o passo 2 da ordem e RN-005 é o passo 6 — e
+`valor_total_reembolsavel` cai de R$585,43 para R$351,43, enquanto
+`valor_total_despesas` sobrevive em R$1.806,94 por não depender de limite. Sem a §9
+escrita como lista de valores esperados, isso apareceria como suíte vermelha no meio
+da implementação, sem ninguém saber se o número novo era o certo.
 
 ## Fechamento
 
