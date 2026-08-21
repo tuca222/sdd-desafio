@@ -335,7 +335,7 @@ RN-008 estejam quebrados.
 - [x] **T-042** — `saida.py`: `motor_reembolso_output` ganha `taxa_cambio` e `valor_convertido_brl`; o dict de saída ecoa `moeda` só quando ela veio na entrada
   - **Atende:** spec.md §4 ("Entrada e saída"), RN-015
   - **Aceite:** `tests/test_saida.py::test_saida_publica_taxa_e_valor_convertido`, `::test_saida_omite_moeda_quando_a_entrada_nao_trouxe`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `2d1db8b`
 
 - [ ] **T-043** — Regrava `exemplos/resultado-exemplo.json` sob a v4 e atualiza `tests/test_integracao.py` para o primeiro bloco da spec.md §9 ("Critérios de aceite")
   - **Atende:** spec.md §9 ("Critérios de aceite"), primeiro bloco — `valor_total_despesas = 1806.94`, `valor_total_reembolsavel = 351.43`
