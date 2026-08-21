@@ -307,7 +307,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_regras.py::test_rn016_cambio_indisponivel_nega_despesa`, `tests/test_motor.py::test_pipeline_aplica_filtros_na_ordem_definida`
   - **Commit:** `be1f28a`
 
-- [ ] **T-037** — `regras.py`: `filtro_categoria_invalida` passa a receber a `TabelaLimites` e a cobrir as duas cláusulas de RN-008 (categoria ausente, categoria com limite `0.00`), com justificativas distintas
+- [x] **T-037** — `regras.py`: `filtro_categoria_invalida` passa a receber a `TabelaLimites` e a cobrir as duas cláusulas de RN-008 (categoria ausente, categoria com limite `0.00`), com justificativas distintas
   - **Atende:** RN-008, AMB-013, RN-014
   - **Aceite:** `tests/test_regras.py::test_rn008_categoria_ausente_da_tabela_do_centro_custo`, `::test_amb013_categoria_com_limite_zero_nega_citando_proibicao`
   - **Commit:** `<hash preenchido depois>`

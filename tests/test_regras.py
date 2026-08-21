@@ -75,6 +75,71 @@ def test_rn009_valor_negativo_ignorado():
     assert "negado" in resultado.justificativa
 
 
+def test_rn008_categoria_ausente_da_tabela_do_centro_custo():
+    d005 = construir_despesa(
+        "d-005",
+        date(2026, 7, 7),
+        "coworking",
+        "Diaria em espaco compartilhado",
+        "HubOffice",
+        Decimal("89.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado = filtro_categoria_invalida(d005, CC_ENG)
+
+    assert resultado is not None
+    assert resultado.despesa_reembolsavel is False
+    assert resultado.tipo_reembolso == "nenhum"
+    assert resultado.valor_reembolsavel == Decimal("0.00")
+    assert "negado" in resultado.justificativa
+    assert "coworking" in resultado.justificativa
+    assert "CC-ENG-PLATAFORMA" in resultado.justificativa
+
+
+def test_rn008_mesma_categoria_reembolsavel_em_outro_centro_de_custo():
+    f003 = construir_despesa(
+        "f-003",
+        date(2026, 7, 17),
+        "representacao",
+        "Jantar com fornecedor",
+        "Casa Trindade",
+        Decimal("190.00"),
+        tem_nota_fiscal=True,
+        moeda_original="BRL",
+    )
+    cc_comercial = tabela("CC-COMERCIAL", representacao="300.00")
+
+    # A mesma despesa é negada num centro de custo e aceita em outro (RN-014).
+    assert filtro_categoria_invalida(f003, CC_PADRAO) is not None
+    assert filtro_categoria_invalida(f003, cc_comercial) is None
+
+
+def test_amb013_categoria_com_limite_zero_nega_citando_proibicao():
+    d010 = construir_despesa(
+        "d-010",
+        date(2026, 7, 14),
+        "hospedagem",
+        "Hotel Rio - 2 diarias",
+        "Hotel Copa Sul",
+        Decimal("480.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado = filtro_categoria_invalida(d010, CC_ENG)
+
+    assert resultado is not None
+    assert resultado.despesa_reembolsavel is False
+    assert resultado.tipo_reembolso == "nenhum"
+    assert resultado.valor_reembolsavel == Decimal("0.00")
+    assert "negado" in resultado.justificativa
+    assert "proíbe" in resultado.justificativa
+
+    # A justificativa nunca é a de limite diário atingido: nada foi consumido por
+    # despesa nenhuma, e não haveria despesa a citar.
+    assert "já foi atingido" not in resultado.justificativa
+
+
 def test_rn006_fora_do_periodo_negado():
     d008 = construir_despesa(
         "d-008",

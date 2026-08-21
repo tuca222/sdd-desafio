@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from src.modelos import Despesa, Periodo, ResultadoDespesa
-from src.politica import CATEGORIAS_VALIDAS, LIMITE_NOTA_FISCAL
+from src.politica import LIMITE_NOTA_FISCAL, TabelaLimites
 
 
 def normalizar_categoria(categoria: str) -> str:
@@ -26,17 +26,39 @@ def filtro_valor_negativo(despesa: Despesa) -> ResultadoDespesa | None:
     return None
 
 
-def filtro_categoria_invalida(despesa: Despesa) -> ResultadoDespesa | None:
-    if despesa.categoria not in CATEGORIAS_VALIDAS:
+def filtro_categoria_invalida(despesa: Despesa, tabela: TabelaLimites) -> ResultadoDespesa | None:
+    limite_categoria = tabela.limites.get(despesa.categoria)
+
+    # RN-008, cláusula 1: a política não cobre esse tipo de gasto para o centro
+    # de custo. A tabela dele é fechada — o `padrao` não a complementa (AMB-012).
+    if limite_categoria is None:
         return ResultadoDespesa(
             despesa_reembolsavel=False,
             tipo_reembolso="nenhum",
             valor_reembolsavel=Decimal("0.00"),
             justificativa=(
-                f"A categoria '{despesa.categoria}' está fora da política de "
-                "reembolso. Reembolso negado."
+                f"A categoria '{despesa.categoria}' não é reembolsável para o centro "
+                f"de custo {tabela.centro_custo}: ela não consta na política vigente. "
+                "Reembolso negado."
             ),
         )
+
+    # RN-008, cláusula 2: a categoria existe na tabela com limite R$0,00. Isso é
+    # proibição explícita, nunca "limite diário atingido" — nada foi consumido por
+    # despesa nenhuma, e não haveria despesa a citar (AMB-013).
+    if limite_categoria.limite == 0:
+        return ResultadoDespesa(
+            despesa_reembolsavel=False,
+            tipo_reembolso="nenhum",
+            valor_reembolsavel=Decimal("0.00"),
+            justificativa=(
+                f"A categoria '{despesa.categoria}' não é reembolsável para o centro "
+                f"de custo {tabela.centro_custo}: a política vigente a proíbe "
+                f"explicitamente, com limite de {formatar_reais(limite_categoria.limite)}. "
+                "Reembolso negado."
+            ),
+        )
+
     return None
 
 
