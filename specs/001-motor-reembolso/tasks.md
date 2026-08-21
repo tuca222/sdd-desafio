@@ -428,7 +428,7 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
     e `tests/test_dados_sinteticos.py::test_duplicata_compara_o_valor_lancado`
   - **Commit:** `2e7af32`
 
-- [ ] **T-049** — `README.md` atualizado para a v4
+- [x] **T-049** — `README.md` atualizado para a v4
   - **Atende:** estrutura de entrega exigida pelo desafio (`DESAFIO.md`), spec.md
     §4 ("Entrada e saída")
   - **Por que existe:** o `README.md` foi escrito na T-023, sob a v3, e descreve um
