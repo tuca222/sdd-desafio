@@ -275,7 +275,7 @@ RN-008 estejam quebrados.
 - [x] **T-030** — `politica.py`: `Politica.vigencia_cobre(competencia)`, comparando a competência da `vigencia` com a do lote pelo operador "igual ou anterior"
   - **Atende:** RN-017, AMB-020, plan.md DT-008
   - **Aceite:** `tests/test_politica.py::test_rn017_vigencia_da_competencia_do_lote_cobre`, `::test_rn017_vigencia_de_competencia_anterior_cobre`, `::test_rn017_vigencia_de_competencia_posterior_nao_cobre`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `88d6681`
 
 - [ ] **T-031** — `cambio.py`: carrega `cambio.json` e expõe `TabelaCambio.taxa(moeda, data) -> Decimal | None`, devolvendo `None` tanto para data ausente quanto para moeda ausente na data
   - **Atende:** spec.md §4 ("Entrada e saída"), RN-015, RN-016
