@@ -428,6 +428,25 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
     e `tests/test_dados_sinteticos.py::test_duplicata_compara_o_valor_lancado`
   - **Commit:** `2e7af32`
 
+- [ ] **T-049** — `README.md` atualizado para a v4
+  - **Atende:** estrutura de entrega exigida pelo desafio (`DESAFIO.md`), spec.md
+    §4 ("Entrada e saída")
+  - **Por que existe:** o `README.md` foi escrito na T-023, sob a v3, e descreve um
+    motor que não existe mais: uma entrada em vez de três, limites fixos de R$60,00
+    / R$80,00 / R$250,00 iguais para toda a empresa, teto de nota fiscal como
+    constante, `politica.py` descrito como "os limites e as categorias válidas, em
+    um lugar só", e nenhuma menção a centro de custo, moeda, câmbio ou vigência. É
+    o primeiro arquivo que alguém abre, e hoje ele contradiz a spec.
+  - **Escopo:** as três entradas e as flags `--politica`/`--cambio` na seção "Como
+    rodar"; a tabela de "O que o motor decide" reescrita sob a v4; os campos novos
+    de saída (`moeda`, `taxa_cambio`, `valor_convertido_brl`); `cambio.py` e
+    `tests/dados/` na árvore; e as limitações da v4 em "Limitações conhecidas".
+    Nenhuma regra de negócio muda — é documentação alinhando-se ao que já existe.
+  - **Aceite:** seguir os passos do README do zero produz `resultado.json` sem
+    intervenção manual, e nenhuma afirmação da tabela de regras contradiz a
+    spec.md §5 ("Regras de negócio")
+  - **Commit:** `<hash preenchido depois>`
+
 ---
 
 ## Cobertura
