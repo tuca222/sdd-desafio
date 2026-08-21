@@ -1432,7 +1432,7 @@
   testes passando, ruff limpo, os 3 blocos de critérios de aceite da spec §9
   batendo; tudo sem commit, aguardando aprovação.
 
-✻ Brewed for 27m 35s
+✻ Worked for 27m 35s
 
 ※ recap: Fase 5 (T-028→T-045) está implementada: motor migrado para a Política v4, 108 testes passando e ruff limpo, tudo sem commit na árvore de trabalho. Próximo passo: você revisar e aprovar para eu criar os 18 commits em ordem. (disable recaps in /config)
 
@@ -1577,7 +1577,7 @@
   JSON, 7 lotes de despesas e 11 testes que passaram de primeira contra valores
   calculados à mão; nada commitado.
 
-✻ Worked for 9m 56s
+✻ Cogitated for 9m 56s
 
 ※ recap: Fase 5 (motor sob a Política v4) está implementada com 119 testes passando, mais uma massa sintética nova em tests/dados/ que revelou um defeito de parse. Nada foi commitado: falta sua aprovação para eu criar os commits. (disable recaps in /config)
 
@@ -1815,7 +1815,7 @@
   hash que eu havia gravado no campo da task errada; 122 passed + 1 xfailed,
   plan.md intocado aguardando a conversa sobre o item 2.
 
-✻ Churned for 2m 11s
+✻ Worked for 2m 11s
 
 ❯ Realmnente, para o motor verificar a viagencia o motor é obrigado ler o       
   arquivo para ter esse dado. Ajuste a spec e o plan, para que as documentações 
@@ -1906,7 +1906,7 @@
   a entrada D-015 em DECISIONS.md — 122 passed + 1 xfailed, sem commit,
   aguardando sua revisão.
 
-✻ Baked for 3m 7s
+✻ Crunched for 3m 7s
 
 ❯ Aprovado, pode commitar                                                       
 
@@ -1951,7 +1951,7 @@
   registrada; 122 passed + 1 xfailed, árvore limpa, T-047 é a única task em
   aberto.
 
-✻ Worked for 52s
+✻ Brewed for 52s
 
 ❯ ótimo, implemente t-047 e atualize o @README.md de acordo as mudanças         
   realizadas                                                                    
@@ -2300,7 +2300,7 @@
   124 passed, ruff limpo, os dois comandos do README verificados em checkout
   limpo; sem commit, aguardando revisão.
 
-✻ Crunched for 4m 12s
+✻ Sautéed for 4m 12s
 
 ※ recap: Goal: bring the reimbursement engine and its docs up to Policy v4. T-047 (integer JSON values) and T-049 (README rewritten for v4) are implemented and verified, 124 tests passing. Next: your approval to commit them.
 
@@ -2363,7 +2363,7 @@
   — 124 passed, ruff limpo, as 49 tasks fechadas com hash conferido uma a uma e
   nenhum placeholder restante.
 
-✻ Cooked for 2m 13s
+✻ Crunched for 2m 13s
 
 ❯ erro encontado no readme. Em 'Como rodar' ficou como: python3 -m src.cli      
   calcular --input exemplos/despesas-exemplo.json --output resultado.json.      
@@ -2431,7 +2431,7 @@
   calcular --input exemplos/despesas-exemplo.json --output resultado.json, e de
   onde você rodou (WSL, PowerShell/CMD do Windows, outro)?
 
-✻ Baked for 3m 53s
+✻ Worked for 3m 53s
 
 ❯ o problema do comando no readme em 'Como roda' é a falta do input do arquivo  
   da politica e de cambio. Executei o comando aqui no terminal, nao deu erro, e 
@@ -2559,7 +2559,7 @@
   entradas; README corrigido, 125 passed, sem commit e com duas decisões
   pendentes (DESAFIO.md e CLAUDE.md linha 206).
 
-✻ Worked for 5m 45s
+✻ Churned for 5m 45s
 
 ※ recap: Objetivo: alinhar o motor de reembolso à spec v4. Corrigi o bug que você achou — `--politica` e `--cambio` agora são obrigatórias (T-050), com README e testes ajustados; 125 testes passando, nada commitado. Próximo passo: sua aprovação para commitar.
 
@@ -2618,7 +2618,7 @@
 
   needs input: aprova o commit? (feat(T-050) + hash, e docs(claude): separado)
 
-✻ Churned for 1m 8s
+✻ Crunched for 1m 8s
 
 ❯ tirei o custo declarado da t-050 pois achei desnecessário deixar. Pode        
   commitar agora                                                                
@@ -2663,6 +2663,357 @@
   CLI, alinhando o código à spec.md §4; README e CLAUDE.md atualizados, 125
   passed, árvore limpa e as 50 tasks fechadas com hash verificado.
 
-✻ Worked for 1m 8s
+✻ Sautéed for 1m 8s
 
 ※ recap: Goal was migrating the reimbursement engine to Policy v4 and hardening it; all of that is done and committed, with 125 tests passing and tasks T-001 through T-050 closed. Nothing is pending, so the next action is yours to choose.
+
+❯ /export docs/sessions/08_tasks_implement_2.0.txt                              
+  ⎿  Conversation exported to: /mnt/c/Projetos/NTT/SDD - Desafio
+     prático/sdd-desafio/docs/sessions/08_tasks_implement_2.0.txt
+
+❯ exportei esta sessao para @docs/sessions/08_tasks_implement_2.0.txt. Revise   
+  se tem algo que faça sentido colocar no @docs/RELATORIO.md. Me ajude a        
+  responder as perguntas no Fechamento.                                         
+  ⎿  Read docs/RELATORIO.md (656 lines)
+
+● Antes de propor qualquer coisa, deixa eu levantar os números e as linhas do
+  export — o CLAUDE.md exige que toda afirmação do relatório carregue arquivo,
+  hash ou linha de sessão.
+
+  Ran 6 shell commands (ctrl+o to expand)
+● Evidência levantada. Agora as edições no relatório — começando pela seção "O
+  envelope", que hoje afirma algo que deixou de ser verdade.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Agora o Caso 9 em Discernimento e a linha da Delegação.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agora a Diligência — a massa sintética foi a verificação que mais rendeu nesta
+  fase.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agora o Fechamento. São respostas suas, então escrevi ancoradas em evidência —
+  mas a voz e a conclusão você vai querer ajustar.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Conferindo se cada linha de sessão que citei contém mesmo a frase atribuída.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Duas contagens ficaram desatualizadas em Diligência. Corrigindo.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Revisado e redigido, sem commit. O export da sessão também está sem commit
+  (docs/sessions/08_...), então vão os dois juntos quando você aprovar.
+
+  Verifiquei cada linha de sessão que citei — as sete conferem com a frase
+  atribuída; Caso 9 fechou em 35 linhas (o CLAUDE.md pede ~40); e RN=17 / AMB=20
+  batem com a spec.
+
+  O que entrou
+
+  1. "O envelope" continha uma afirmação falsa. O aviso dizia "Nenhuma linha de 
+  src/ ou tests/ foi escrita ainda". Removi e completei com os números que a
+  seção prometia, separados por fase:
+
+  ┌───────────────┬─────────┬───────────────────────┬───────────────────────┐
+  │     Fase      │ Commits │         Diff          │     src/ e tests/     │
+  ├───────────────┼─────────┼───────────────────────┼───────────────────────┤
+  │ Spec          │ 8       │ 10 arquivos,          │ zero                  │
+  │               │         │ +1840/−179            │                       │
+  ├───────────────┼─────────┼───────────────────────┼───────────────────────┤
+  │ Implementação │ 56      │ 41 arquivos,          │ 34 arquivos,          │
+  │               │         │ +3687/−642            │ +3171/−508            │
+  └───────────────┴─────────┴───────────────────────┴───────────────────────┘
+
+  Também pinei o comando do diff da fase de spec em 10170c9..709031b — com HEAD
+  ele já não reproduzia mais o número citado.
+
+  2. Discernimento — Caso 9: a CLI escolhia a política sozinha. É o caso mais
+  forte da sessão e o único que você detectou. Os cinco campos, com a sua frase
+  da linha 2436 como evidência e os commits 5dabd11/12676ba.
+
+  3. Diligência — a massa sintética. Você pediu revisão com a fase já fechada, e
+  ela achou a T-047, que os 119 testes anteriores não tinham como achar porque
+  todo arquivo de exemplos/ traz valor com duas casas.
+
+  4. Delegação — linha nova para T-028→T-050 (você pediu a fase num lote só, e
+  os três ajustes vieram de leitura sua, não de teste vermelho) e a contagem de
+  testes de 57 para 125.
+
+  5. Contagens desatualizadas em Diligência: "as 26 tasks terminaram com hash
+  real" → 50; "os 57 foram escritos pelo Claude" → 125. Deixei intactas as
+  menções a 26/57 que descrevem o estado do Dia 1 (linhas 22, 290, 528) — ali o
+  número histórico é o correto.
+
+  Sobre o Fechamento
+
+  Escrevi as quatro respostas ancoradas em evidência, mas elas são suas — leia
+  como rascunho, principalmente a última:
+
+  - Valeu para qual tamanho: 750 linhas de src/ contra 1396 de spec.md; 20
+    ambiguidades para 17 regras. O critério que propus não é linha de código, é
+    a proporção decisões/mecanismos.
+  - Não valeria: onde a regra vem pronta. Usei como caso medido a D-014 — marcar
+    35 checkboxes exigiu bump de versão e entrada inteira em DECISIONS.md, e
+    foi a única vez em que o processo pareceu cerimônia.
+  - O que faria diferente: quatro itens, todos com evidência.
+  - A coisa mais desconfortável: propus "reviso código com mais rigor do que 
+    reviso texto" — a T-032 dizia "flags opcionais, com default" em português
+    claro, contradizia a frase "As três entradas são obrigatórias" da sua
+    própria spec, e levou duas fases e um README.md para aparecer. Essa é a que 
+    mais depende de você concordar — se não for verdade sobre como você
+    trabalha, me diga e eu reescrevo com outro ângulo (tenho dois alternativos
+    ancorados em evidência: o padrão de "aprovar por lote reduz o que você lê",
+    e o de "eu confiei mais no código do que na interpretação dele", que a
+    própria Diligência já afirma).
+
+  needs input: aprova o texto para commit? E a resposta da última pergunta do
+  Fechamento reflete mesmo a sua leitura, ou prefere outro ângulo?
+
+✻ Crunched for 6m 48s
+
+※ recap: Fase 5 do motor de reembolso está implementada e commitada; agora atualizei o RELATORIO.md com o Caso 9, a seção do envelope e as respostas do Fechamento, tudo sem commit. Preciso que você aprove o texto e confirme a última resposta do Fechamento.
+
+❯ vamos por partes, sobre o envelope... Quando você coloca: Diff de absorção:   
+  49 arquivos, são arquivos diferentes ?                                        
+
+● Boa pergunta — e ela expõe um problema na tabela que eu escrevi. Deixa eu
+  medir.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Não somam, e a tabela como escrevi convida à conta errada. Medindo os commits
+  de cada faixa para corrigir com precisão.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Achei o problema. Respondendo direto: sim, os 49 são arquivos distintos — mas
+  a tabela que escrevi induz ao erro, porque as fases somam 53, não 49.
+
+  A conta certa é 10 + 2 + 41 = 53, e quatro arquivos (spec.md, plan.md,
+  tasks.md, DECISIONS.md) foram tocados em mais de uma fase, contando uma vez só
+  no total: 53 − 4 = 49. Além disso eu tinha omitido a faixa do meio (3
+  commits, os exports da sessão 07). Corrigindo:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Verificando que cada comando citado reproduz exatamente o número escrito:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Respondendo à sua pergunta: sim, os 49 são arquivos distintos — é a contagem
+  da união, não a soma das fases.
+
+  Mas você achou um defeito real no que eu tinha escrito, e eram dois:
+
+  1. A tabela convidava a uma conta que não fecha. 10 + 41 = 51, não 49. Um
+     leitor tentaria somar e desconfiaria do número.
+  2. Eu tinha omitido uma faixa inteira — os 3 commits entre 709031b e 3524a9c
+     (os exports da sessão 07 e a edição anterior do relatório), que tocam 2
+     arquivos.
+
+  A aritmética correta é 10 + 2 + 41 = 53, e o total é 49 porque quatro arquivos
+  — spec.md, plan.md, tasks.md e DECISIONS.md — aparecem em mais de uma fase e
+  contam uma vez só. 53 − 4 = 49.
+
+  O que corrigi:
+  - A tabela ganhou a terceira linha (a faixa que faltava) e a frase que
+    reconcilia 53 → 49, com o comando que prova.
+  - Troquei todos os HEAD por hashes fixos (12676ba). Isso não é detalhe: o
+    relatório é parte do próprio diff, então git diff 10170c9 HEAD mudaria de
+    resposta assim que eu commitasse o relatório — o número citado deixaria de
+    reproduzir. Com o hash pinado, o comando dá o mesmo resultado para sempre.
+
+  Conferi rodando os nove comandos citados, um a um: total 49/+7724/−742; fases
+  10, 2 e 41; src+tests 34/+3171/−508; spec.md +863/−127; commits 8+3+56 = 67,
+  igual ao total; e os 4 arquivos repetidos.
+
+  Isso era exatamente a classe de erro que o CLAUDE.md manda evitar no campo
+  Custo do DECISIONS.md — escrever uma contagem ao lado de uma lista, e as duas
+  desencontrarem. Eu repeti no relatório.
+
+  O resto do relatório segue sem commit, aguardando você. Pode seguir para a
+  próxima parte quando quiser.
+
+✻ Crunched for 2m 0s
+※ recap: Estamos revisando o RELATORIO.md do desafio SDD. Corrigi a tabela de diff da seção "O envelope" (49 arquivos distintos, não a soma das fases) e conferi os números. Nada commitado ainda; próximo passo é você revisar as demais partes que escrevi, incluindo o Fechamento.
+
+❯ Não gostei muito do fechamento. Sobre tamanho de projeto: Realmente para este 
+  projeto entendo que valeu super apena devido a velocidade que foi para        
+  procurar mais ambiguidades na politica, escrever código, documentar. Foi      
+  muito mais rápido realizar tudo isso com a ajuda da IA. Você passa a maior    
+  parte do tempo fazendo revisões e tomando decisões. Agora para qual não       
+  valeria eu fico em dúvida ainda, por que você afirma que CRUD, ETL são        
+  projetos que não valeria a pena? Você tem evidencias claras disso? Entendo    
+  que a IA consegue ganhar velocidade em muitas frentes, principalmente quando  
+  há possibilidade clara de mudança de requisitos. Agora se o CRUD e o ETL em   
+  questão apresentarem essa possibilidade, entendo que poderia ser aplicado     
+  sim.                                                                          
+  Sobre o que faria diferente... Acredito que a ideia aqui no relatório seria   
+  referente ao oq eu faria diferente na aplicação de SDD, que é o foco do       
+  desafio... E sobre desconforto, é chato precisar revisar muito texto, como a  
+  spec, plan, tasks. É um pouco massante as vezes.                              
+
+● Você tem razão, e o ponto sobre CRUD/ETL é o mais sério: eu afirmei sem
+  evidência, que é exatamente o que o CLAUDE.md proíbe no relatório.
+  Reescrevendo o Fechamento com o seu raciocínio.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Fechamento reescrito com o seu raciocínio. Conferi os números que citei
+  (spec.md 1396, tasks.md 518, DECISIONS.md 1060, 23 tasks de T-028 a T-050, 9
+  casos) e li os nove campos "Como eu detectei" um a um para confirmar a frase
+  de que nenhum caso saiu de teste vermelho — todos saíram de leitura sua:
+  recálculo à mão, diff, resumo de task, DECISIONS.md, campo Custo, saída do
+  programa, spec, §10 e README.md.
+
+  O que mudou em cada resposta:
+
+  Tamanho de projeto — trocou de eixo. Saiu a minha proporção "decisões por
+  linha de código" e entrou o seu argumento: o ganho foi velocidade, e não só em
+  código — em levantar as 20 ambiguidades, escrever a spec, as tasks e os
+  testes. Fechei com a medida que sustenta o ritmo (o envelope inteiro em 2
+  dias, 67 commits) e com a sua observação de que o que sobra para você é
+  revisar e decidir.
+
+  Para qual não valeria — retirei a afirmação sobre CRUD e ETL e escrevi isso 
+  explicitamente no relatório: não tenho evidência, não rodei SDD em nenhum dos
+  dois. No lugar entrou o eixo que você propôs — vale quando o requisito pode
+  mudar — ancorado no caso real do plan.md §4, que decidiu "constantes em
+  código, nada na spec pede reconfiguração sem redeploy" e foi revogado por uma
+  frase do comunicado. E fechei com a sua ressalva: um CRUD ou ETL com essa
+  possibilidade cai no mesmo critério. A pergunta não é o que o sistema faz, é
+  se o que ele faz está decidido.
+
+  O que faria diferente — refoquei em aplicação de SDD, como você apontou. Os
+  quatro itens agora são práticas de spec, não de verificação genérica:
+  critérios de aceite com valores esperados para mais de um cenário desde o Dia
+  1; caçar frases da spec que respondem duas perguntas ao mesmo tempo (a causa
+  do Caso 3); escrever eu mesmo o teste da regra que eu desambiguei; e revisar
+  tasks.md contra a spec, não contra o bom senso.
+
+  Desconforto — passou a ser o seu: o método depende de ler texto, e isso cansa.
+  Mantive a conexão com a evidência porque é o que torna o incômodo relevante
+  em vez de só uma reclamação — a T-032 entrou justamente pela parte que se
+  revisa com menos energia. Terminei em "escrever virou o barato do projeto; ler
+  é que ficou caro, e é a única parte que não dá para delegar para quem
+  escreveu".
+
+  Se algum desses ainda soar como minha voz e não a sua, me diz qual e eu
+  reescrevo — principalmente o último parágrafo, que é o mais interpretativo dos
+  quatro.
+
+  O relatório e o export da sessão seguem sem commit.
+
+✻ Baked for 1m 56s
+
+※ recap: Você está fechando o relatório do desafio SDD. Reescrevi o Fechamento com o seu raciocínio e corrigi a tabela de diff do envelope. Falta você aprovar o texto para eu commitar o relatório junto com o export da sessão.
+
+❯ Mudei algumas coisas manualmente, pode commitar agora                         
+
+● Deixa eu ver o que você mudou, para a mensagem do commit não descrever algo
+  que você retirou.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Vi suas edições — cortou o desenvolvimento de "para qual não valeria", enxugou
+  "o que faria diferente" para dois itens (incluindo o novo sobre
+  subagentes/skills/hooks) e ajustou a redação do desconforto. Commitando
+  exatamente como está.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Commitado.
+
+  Checagem final: árvore limpa; pytest -q → 125 passed; e conferi antes de
+  commitar que as sete linhas do export citadas no relatório contêm mesmo a
+  frase atribuída, e que os nove comandos git da seção "O envelope" reproduzem
+  os números escritos.
+
+  Dois commits:
+  - 979f932 docs(export): — o export da sessão 08
+  - 714f347 docs(relatorio): — Caso 9, a massa sintética em Diligência, os
+    números das duas fases em "O envelope", a linha de T-028→T-050 em Delegação,
+    a contagem de testes 57 → 125, e o Fechamento
+
+  Commitei o export primeiro de propósito: o relatório cita linhas daquele
+  arquivo, então a ordem faz as referências resolverem já no commit em que
+  aparecem.
+
+  Duas observações, para você decidir se vale mexer — não alterei nada porque
+  você editou e mandou commitar:
+
+  1. "Para qual não valeria?" ficou em uma frase só: "Não tenho evidência para 
+     responder isso pelo tipo de projeto." É uma resposta honesta e defensável —
+     e foi você que corrigiu a minha afirmação sem lastro. Mas ela não diz o
+     que o projeto de fato mostrou, que é o eixo que você mesmo levantou: vale
+     quando o requisito pode mudar, com o plan.md §4 revogado por uma frase do
+     comunicado como prova. Se quiser, acrescento só isso, em duas linhas.
+  2. A RUBRICA.md §4 valoriza "commits citados, trechos de sessão referenciados"
+     (18–20) contra "relatório narrativo sem evidência" (6–12). Os outros três
+     blocos do Fechamento carregam evidência; esse é o único que ficou sem.
+
+  Também notei um espaçamento duplo no bullet dos subagentes (hooks**  Acredito)
+  — cosmético, deixei como você escreveu.
+
+  result: Relatório e export da sessão 08 commitados (714f347 e 979f932) — Caso
+  9, massa sintética em Diligência, números das duas fases do envelope com
+  faixas de commit pinadas, e o Fechamento respondido; árvore limpa e 125 testes
+  passando.
+
+✻ Baked for 1m 14s
+
+※ recap: Goal was implementing Policy v4 in the reimbursement engine and finishing the report. Everything is committed and the tree is clean: 125 tests passing, 50 tasks closed, report and session export in. Next action is yours — optionally add the "requisito pode mudar" evidence to the Fechamento's second question.
+
+❯ Pode commitar o que alterei manualmente e subir                               
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Há uma alteração manual nova no relatório. Deixa eu ver o que mudou antes de
+  commitar.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Sua adição: uma frase em "Para qual não valeria?" e o espaçamento do bullet.
+  Conferindo o estado do remoto antes de commitar e subir.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Remoto em 12676ba, local 2 commits à frente, sem divergência — push será
+  fast-forward. Commitando sua edição e subindo.
+
+  Pushed to main, ran 1 shell command (ctrl+o to expand)
+
+● Commitado e no ar.
+
+  Checagem final: git fetch confirma local e remoto no mesmo commit 4dd50bb,
+  zero divergência; árvore limpa; pytest -q → 125 passed; ruff check . limpo; 50
+  tasks fechadas, nenhuma em aberto, nenhum placeholder de hash.
+
+  Push: 12676ba..4dd50bb → main, fast-forward, sem force. Foram três commits:
+  - 979f932 docs(export): — export da sessão 08
+  - 714f347 docs(relatorio): — Caso 9, massa sintética, números do envelope,
+    Fechamento
+  - 4dd50bb docs(relatorio): — sua complementação sobre onde o SDD não valeria
+
+  Nesse último deixei explícito na mensagem que o texto é seu — assinei o commit
+  porque a regra do CLAUDE.md manda todo commit feito por agente levar a
+  assinatura, mas a autoria do conteúdo está dita na primeira linha do corpo,
+  para o git log não sugerir que fui eu que escrevi.
+
+  O repositório está publicado em https://github.com/tuca222/sdd-desafio com o
+  estado completo: spec 2.4, plano 1.15, T-001 a T-050 fechadas com hash
+  conferido, 125 testes e os oito exports de sessão.
+
+  result: Edição manual do relatório commitada (4dd50bb) e main publicada em
+  github.com/tuca222/sdd-desafio — push fast-forward 12676ba..4dd50bb, local e
+  remoto sincronizados, 125 testes passando e as 50 tasks fechadas sem
+  placeholder.
+
+✻ Cooked for 1m 17s
