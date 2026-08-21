@@ -297,7 +297,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_parser.py::test_rn015_moeda_ausente_assume_brl`, `::test_rn015_moeda_normalizada_para_maiusculas`, `::test_rn015_moeda_original_preservada_como_none_quando_ausente`
   - **Commit:** `81c6e6b`
 
-- [ ] **T-035** — `parser.py`: converte a despesa para BRL na borda, preenchendo `valor_brl` e `taxa_cambio` (ou os dois com `None` quando não há taxa); trunca o valor convertido em 2 casas
+- [x] **T-035** — `parser.py`: converte a despesa para BRL na borda, preenchendo `valor_brl` e `taxa_cambio` (ou os dois com `None` quando não há taxa); trunca o valor convertido em 2 casas
   - **Atende:** RN-015, RN-010, AMB-018, plan.md DT-007
   - **Aceite:** `tests/test_parser.py::test_rn015_converte_pela_taxa_da_data_da_despesa`, `::test_amb018_valor_convertido_e_truncado_nao_arredondado`, `::test_rn015_despesa_em_brl_nao_tem_taxa`
   - **Commit:** `<hash preenchido depois>`

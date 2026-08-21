@@ -121,3 +121,53 @@ def test_rn015_moeda_original_preservada_como_none_quando_ausente(
     assert e010.moeda == e001.moeda == "BRL"
     assert e010.moeda_original is None
     assert e001.moeda_original == "BRL"
+
+
+def test_rn015_converte_pela_taxa_da_data_da_despesa(cambio: TabelaCambio):
+    _, _, despesas = carregar_despesas(CAMINHO_ENVELOPE, cambio)
+
+    e002 = buscar_despesa(despesas, "e-002")
+
+    # EUR 22,00 em 2026-07-14, taxa 5,93 = R$130,46.
+    assert e002.data == date(2026, 7, 14)
+    assert e002.valor == Decimal("22.00")
+    assert e002.taxa_cambio == Decimal("5.93")
+    assert e002.valor_brl == Decimal("130.46")
+
+    # A taxa é a da data da despesa, não a de outra data do arquivo.
+    assert cambio.taxa("EUR", date(2026, 7, 13)) == Decimal("5.91")
+    assert e002.taxa_cambio != cambio.taxa("EUR", date(2026, 7, 13))
+
+
+def test_amb018_valor_convertido_e_truncado_nao_arredondado(tmp_path: Path, cambio: TabelaCambio):
+    caminho = escrever_entrada(
+        tmp_path / "despesas.json",
+        {"data": "2026-07-14", "valor": 22.50, "moeda": "EUR"},
+    )
+
+    _, _, despesas = carregar_despesas(caminho, cambio)
+
+    # EUR 22,50 pela taxa 5,93 dá R$133,425 — truncado (ROUND_DOWN) vira R$133,42.
+    # Arredondado viraria R$133,43, que é um centavo a mais do que o valor real.
+    assert despesas[0].valor_brl == Decimal("133.42")
+
+
+def test_rn015_despesa_em_brl_nao_tem_taxa(cambio: TabelaCambio):
+    _, _, despesas = carregar_despesas(CAMINHO_ENVELOPE, cambio)
+
+    e001 = buscar_despesa(despesas, "e-001")
+
+    assert e001.moeda == "BRL"
+    assert e001.taxa_cambio is None
+    assert e001.valor_brl == e001.valor == Decimal("340.00")
+
+
+def test_rn016_despesa_sem_taxa_nasce_sem_valor_em_brl(cambio: TabelaCambio):
+    _, _, despesas = carregar_despesas(CAMINHO_ENVELOPE, cambio)
+
+    # e-004: EUR num sábado sem cotação. e-006: GBP numa data que só publica USD e EUR.
+    e004 = buscar_despesa(despesas, "e-004")
+    e006 = buscar_despesa(despesas, "e-006")
+
+    assert e004.valor_brl is None and e004.taxa_cambio is None
+    assert e006.valor_brl is None and e006.taxa_cambio is None
