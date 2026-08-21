@@ -354,6 +354,48 @@ RN-008 estejam quebrados.
 
 ---
 
+## Fase 6 — Validação com massa de dados própria
+
+Origem: pedido do usuário em `21/08/2026` ("revise o código implementado; crie
+dados sintéticos para validar a implementação"). Não veio de mudança de spec —
+nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
+
+- [ ] **T-046** — Massa sintética em `tests/dados/` (política, câmbio e sete lotes
+  de despesas) mais os testes que rodam a CLI contra ela
+  - **Atende:** spec.md §9 ("Critérios de aceite") — por outro caminho: os
+    critérios da spec fixam o resultado para **um** conjunto de dados, e esta task
+    fixa o resultado para dados que o motor nunca viu.
+  - **Por que existe:** todo teste de integração até aqui roda contra
+    `exemplos/`, cujos limites e teto de nota fiscal são os do enunciado. Um motor
+    que tivesse esses números embutidos no código passaria em todos eles. A massa
+    de `tests/dados/` usa outros centros de custo, outros limites, outro teto
+    (R$150,00), outras moedas (`JPY`, `GBP`) e outra competência (`2026-09`), e é
+    o que separa "o motor lê a política" de "o motor conhece o enunciado".
+  - **Aceite:** `tests/test_dados_sinteticos.py` — 11 testes, todos com o valor
+    esperado calculado à mão e escrito por extenso no próprio teste
+  - **Commit:** `<hash preenchido depois>`
+
+- [ ] **T-047** — `parser.py`: `despesas[].valor` lançado como inteiro do JSON
+  (`100`, sem casas decimais) deixa de abortar o motor
+  - **Atende:** spec.md §4 ("Entrada e saída") — o campo é tipado como "número",
+    e a spec não exige casas decimais em nenhum ponto
+  - **Por que existe:** detectado na revisão de `21/08/2026`, a partir da massa de
+    [[T-046]]. `json.load(..., parse_float=Decimal)` não é consultado para números
+    inteiros do JSON, então `"valor": 100` chega como `int` e `_truncar_valor`
+    chama `.quantize` nele — `AttributeError` não tratado, código de saída 1,
+    nenhum arquivo escrito. Todos os arquivos de `exemplos/` trazem os valores com
+    duas casas, e por isso o defeito nunca apareceu. Nada de regra de negócio muda:
+    é a borda de leitura que perde o tipo.
+  - **Escopo:** acrescentar `parse_int=Decimal` ao `json.load` de `parser.py`, e
+    remover o `xfail` de `tests/test_dados_sinteticos.py::test_valor_inteiro_no_json_e_aceito`.
+    Verificado antes de abrir a task: com essa única mudança o teste passa e os
+    outros 119 continuam passando.
+  - **Aceite:** `tests/test_dados_sinteticos.py::test_valor_inteiro_no_json_e_aceito`
+    passa sem `xfail`, sobre `tests/dados/despesas-07-valor-inteiro.json`
+  - **Commit:** `<hash preenchido depois>`
+
+---
+
 ## Cobertura
 
 Preencha ao fechar cada fase. É a sua própria checagem de rastreabilidade — e é
