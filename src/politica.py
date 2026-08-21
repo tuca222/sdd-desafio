@@ -34,6 +34,18 @@ class Politica:
         limites = self.tabela_por_centro_custo.get(centro_custo, self.tabela_padrao)
         return TabelaLimites(centro_custo=centro_custo, limites=limites)
 
+    @property
+    def competencia_de_vigencia(self) -> str:
+        """O ano e o mês de `vigencia` (`2026-07-01` → `2026-07`), como RN-017 compara."""
+        return self.vigencia.strftime("%Y-%m")
+
+    def vigencia_cobre(self, competencia: str) -> bool:
+        """RN-017: a política vale para o lote se a competência dela é igual ou anterior.
+
+        A comparação é entre competências, não entre datas. Em `AAAA-MM` a ordem
+        lexicográfica é a cronológica, então comparar as duas strings basta.
+        """
+        return self.competencia_de_vigencia <= competencia
 
 
 def _tabela(bruto: dict[str, Any]) -> dict[str, LimiteCategoria]:

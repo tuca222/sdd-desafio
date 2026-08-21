@@ -71,3 +71,36 @@ def test_amb012_tabela_do_centro_custo_nao_e_complementada_pelo_padrao():
     assert "hospedagem" in politica.tabela_padrao
     assert "hospedagem" not in tabela.limites
     assert set(tabela.limites) == {"alimentacao", "transporte_urbano"}
+
+
+def test_rn017_vigencia_da_competencia_do_lote_cobre():
+    politica = carregar_politica(CAMINHO_POLITICA)
+
+    assert politica.competencia_de_vigencia == "2026-07"
+    assert politica.vigencia_cobre("2026-07") is True
+
+
+def test_rn017_vigencia_de_competencia_anterior_cobre():
+    politica = carregar_politica(CAMINHO_POLITICA)
+
+    # A política de julho continua valendo em agosto se não houver política nova.
+    assert politica.vigencia_cobre("2026-08") is True
+    assert politica.vigencia_cobre("2027-01") is True
+
+
+def test_rn017_vigencia_de_competencia_posterior_nao_cobre():
+    politica = carregar_politica(CAMINHO_POLITICA)
+
+    # Junho tem de ser processado com a política que valia em junho.
+    assert politica.vigencia_cobre("2026-06") is False
+    assert politica.vigencia_cobre("2025-12") is False
+
+
+def test_rn017_vigencia_no_meio_do_mes_cobre_a_competencia_inteira():
+    politica = carregar_politica(CAMINHO_POLITICA)
+    quinze_de_julho = replace(politica, vigencia=date(2026, 7, 15))
+
+    # AMB-020: a comparação é entre competências, não entre datas — uma vigência
+    # de 15/07 cobre o lote de 2026-07 inteiro, inclusive as despesas anteriores.
+    assert quinze_de_julho.competencia_de_vigencia == "2026-07"
+    assert quinze_de_julho.vigencia_cobre("2026-07") is True
