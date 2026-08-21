@@ -270,7 +270,7 @@ RN-008 estejam quebrados.
 - [x] **T-029** — `politica.py`: `Politica.tabela_para(centro_custo)` resolve a tabela aplicável — entrada própria integral, ou `padrao` integral, sem merge
   - **Atende:** RN-014, AMB-012
   - **Aceite:** `tests/test_politica.py::test_rn014_centro_custo_com_entrada_usa_a_propria_tabela`, `::test_rn014_centro_custo_sem_entrada_cai_no_padrao`, `::test_amb012_tabela_do_centro_custo_nao_e_complementada_pelo_padrao`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `e844b8a`
 
 - [ ] **T-030** — `politica.py`: `Politica.vigencia_cobre(competencia)`, comparando a competência da `vigencia` com a do lote pelo operador "igual ou anterior"
   - **Atende:** RN-017, AMB-020, plan.md DT-008
