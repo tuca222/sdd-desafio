@@ -153,10 +153,17 @@ def _despesa_que_atingiu_limite(
 
 def aplicar_limite_diario(
     despesa: Despesa,
-    limite: Decimal,
+    tabela: TabelaLimites,
     reembolsos_anteriores: list[tuple[Despesa, Decimal]],
 ) -> ResultadoDespesa:
     categoria = despesa.categoria
+    # A categoria está na tabela e tem limite maior que zero: `filtro_categoria_invalida`
+    # é o passo 2 da ordem e já reprovou os dois casos contrários.
+    limite = tabela.limites[categoria].limite
+    # E `valor_brl` não é None: `filtro_cambio_indisponivel` é o passo 5 e já
+    # reprovou toda despesa sem taxa. Só o valor em BRL disputa limite (RN-015).
+    valor_em_brl = despesa.valor_brl
+
     consumido = sum((valor for _, valor in reembolsos_anteriores), Decimal("0.00"))
     disponivel = limite - consumido
 
@@ -168,16 +175,17 @@ def aplicar_limite_diario(
             valor_reembolsavel=Decimal("0.00"),
             justificativa=(
                 f"A categoria {categoria} possui limite de reembolso de "
-                f"{formatar_reais(limite)} no dia. Este valor já foi atingido na "
+                f"{formatar_reais(limite)} no dia para o centro de custo "
+                f"{tabela.centro_custo}. Este valor já foi atingido na "
                 f"despesa '{original.descricao}({original.id})'. Reembolso negado."
             ),
         )
 
-    if despesa.valor <= disponivel:
+    if valor_em_brl <= disponivel:
         return ResultadoDespesa(
             despesa_reembolsavel=True,
             tipo_reembolso="total",
-            valor_reembolsavel=despesa.valor,
+            valor_reembolsavel=valor_em_brl,
             justificativa="Reembolso total aprovado de acordo com a política vigente.",
         )
 
@@ -187,6 +195,7 @@ def aplicar_limite_diario(
         valor_reembolsavel=disponivel,
         justificativa=(
             f"A categoria {categoria} possui limite de reembolso de "
-            f"{formatar_reais(limite)} no dia. Reembolso parcial aprovado."
+            f"{formatar_reais(limite)} no dia para o centro de custo "
+            f"{tabela.centro_custo}. Reembolso parcial aprovado."
         ),
     )

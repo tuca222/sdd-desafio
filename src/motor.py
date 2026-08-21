@@ -3,7 +3,7 @@ from datetime import date
 from decimal import Decimal
 
 from src.modelos import Colaborador, Despesa, Periodo, ResultadoDespesa, ResultadoFinal
-from src.politica import LIMITES_DIARIOS_POR_CATEGORIA
+from src.politica import TabelaLimites
 from src.regras import (
     aplicar_limite_diario,
     filtro_cambio_indisponivel,
@@ -21,7 +21,12 @@ class ResultadoFiltros:
     ids_duplicatas: set[str]
 
 
-def aplicar_filtros(despesas: list[Despesa], periodo: Periodo) -> ResultadoFiltros:
+def aplicar_filtros(
+    despesas: list[Despesa],
+    periodo: Periodo,
+    tabela: TabelaLimites,
+    teto_nota_fiscal: Decimal,
+) -> ResultadoFiltros:
     resultados: list[ResultadoDespesa | None] = []
     ids_duplicatas: set[str] = set()
     despesas_ja_aceitas: list[Despesa] = []
@@ -29,7 +34,7 @@ def aplicar_filtros(despesas: list[Despesa], periodo: Periodo) -> ResultadoFiltr
     for despesa in despesas:
         reprovacao = (
             filtro_valor_negativo(despesa)
-            or filtro_categoria_invalida(despesa)
+            or filtro_categoria_invalida(despesa, tabela)
             or filtro_fora_periodo(despesa, periodo)
         )
 
@@ -46,13 +51,17 @@ def aplicar_filtros(despesas: list[Despesa], periodo: Periodo) -> ResultadoFiltr
         # verificação 3, e continua nele mesmo que seja negada pelos passos 5 e 6
         # — ver spec.md §8 ("Ordem de aplicação das regras").
         despesas_ja_aceitas.append(despesa)
-        resultados.append(filtro_cambio_indisponivel(despesa) or filtro_nota_fiscal(despesa))
+        resultados.append(
+            filtro_cambio_indisponivel(despesa) or filtro_nota_fiscal(despesa, teto_nota_fiscal)
+        )
 
     return ResultadoFiltros(resultados=resultados, ids_duplicatas=ids_duplicatas)
 
 
 def aplicar_limites(
-    despesas: list[Despesa], resultados: list[ResultadoDespesa | None]
+    despesas: list[Despesa],
+    resultados: list[ResultadoDespesa | None],
+    tabela: TabelaLimites,
 ) -> list[ResultadoDespesa]:
     finais: list[ResultadoDespesa] = []
     reembolsos_por_categoria_dia: dict[tuple[str, date], list[tuple[Despesa, Decimal]]] = {}
@@ -62,19 +71,24 @@ def aplicar_limites(
             finais.append(resultado)
             continue
 
-        categoria = despesa.categoria
-        limite = LIMITES_DIARIOS_POR_CATEGORIA[categoria]
-        reembolsos_do_dia = reembolsos_por_categoria_dia.setdefault((categoria, despesa.data), [])
-        resultado_limite = aplicar_limite_diario(despesa, limite, reembolsos_do_dia)
+        chave = (despesa.categoria, despesa.data)
+        reembolsos_do_dia = reembolsos_por_categoria_dia.setdefault(chave, [])
+        resultado_limite = aplicar_limite_diario(despesa, tabela, reembolsos_do_dia)
         reembolsos_do_dia.append((despesa, resultado_limite.valor_reembolsavel))
         finais.append(resultado_limite)
 
     return finais
 
 
-def calcular(colaborador: Colaborador, periodo: Periodo, despesas: list[Despesa]) -> ResultadoFinal:
-    filtros = aplicar_filtros(despesas, periodo)
-    resultados = aplicar_limites(despesas, filtros.resultados)
+def calcular(
+    colaborador: Colaborador,
+    periodo: Periodo,
+    despesas: list[Despesa],
+    tabela: TabelaLimites,
+    teto_nota_fiscal: Decimal,
+) -> ResultadoFinal:
+    filtros = aplicar_filtros(despesas, periodo, tabela, teto_nota_fiscal)
+    resultados = aplicar_limites(despesas, filtros.resultados, tabela)
 
     valor_total_despesas = sum(
         (

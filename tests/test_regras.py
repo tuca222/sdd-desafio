@@ -390,3 +390,239 @@ def test_amb017_teto_de_nota_fiscal_compara_valor_convertido():
 
     # E R$85,26 não cruza o teto, embora a despesa seja internacional.
     assert filtro_nota_fiscal(e003, TETO_NOTA_FISCAL) is None
+
+
+def test_rn001_limite_diario_alimentacao():
+    d001 = construir_despesa(
+        "d-001",
+        date(2026, 7, 3),
+        "alimentacao",
+        "Almoco com cliente",
+        "Restaurante Tavola",
+        Decimal("72.50"),
+        tem_nota_fiscal=True,
+    )
+    d002 = construir_despesa(
+        "d-002",
+        date(2026, 7, 3),
+        "alimentacao",
+        "Jantar apos reuniao",
+        "Cantina do Porto",
+        Decimal("38.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado_d001 = aplicar_limite_diario(d001, CC_ENG, [])
+
+    assert resultado_d001.despesa_reembolsavel is True
+    assert resultado_d001.tipo_reembolso == "total"
+    assert resultado_d001.valor_reembolsavel == Decimal("72.50")
+    assert "total" in resultado_d001.justificativa
+
+    resultado_d002 = aplicar_limite_diario(
+        d002, CC_ENG, [(d001, resultado_d001.valor_reembolsavel)]
+    )
+
+    # Sobram R$2,50 do limite de R$75,00 de CC-ENG-PLATAFORMA.
+    assert resultado_d002.despesa_reembolsavel is True
+    assert resultado_d002.tipo_reembolso == "parcial"
+    assert resultado_d002.valor_reembolsavel == Decimal("2.50")
+    assert "parcial" in resultado_d002.justificativa
+    assert "CC-ENG-PLATAFORMA" in resultado_d002.justificativa
+
+
+def test_rn014_limite_varia_por_centro_de_custo():
+    almoco = construir_despesa(
+        "d-800",
+        date(2026, 7, 3),
+        "alimentacao",
+        "Almoco com cliente",
+        "Restaurante Tavola",
+        Decimal("72.50"),
+        tem_nota_fiscal=True,
+    )
+    cc_adm = tabela("CC-ADM", alimentacao="45.00", transporte_urbano="60.00")
+
+    # A mesma despesa, na mesma data: só o centro de custo muda.
+    em_eng = aplicar_limite_diario(almoco, CC_ENG, [])
+    no_padrao = aplicar_limite_diario(almoco, CC_PADRAO, [])
+    em_adm = aplicar_limite_diario(almoco, cc_adm, [])
+
+    assert em_eng.tipo_reembolso == "total"
+    assert em_eng.valor_reembolsavel == Decimal("72.50")
+
+    assert no_padrao.tipo_reembolso == "parcial"
+    assert no_padrao.valor_reembolsavel == Decimal("60.00")
+    assert "CC-SUPORTE-N2" in no_padrao.justificativa
+
+    assert em_adm.tipo_reembolso == "parcial"
+    assert em_adm.valor_reembolsavel == Decimal("45.00")
+    assert "CC-ADM" in em_adm.justificativa
+
+
+def test_rn002_limite_diario_transporte():
+    d003 = construir_despesa(
+        "d-003",
+        date(2026, 7, 6),
+        "transporte_urbano",
+        "Corrida aeroporto",
+        "TaxiApp",
+        Decimal("100.00"),
+        tem_nota_fiscal=False,
+    )
+
+    resultado = aplicar_limite_diario(d003, CC_ENG, [])
+
+    assert resultado.despesa_reembolsavel is True
+    assert resultado.tipo_reembolso == "parcial"
+    assert resultado.valor_reembolsavel == Decimal("80.00")
+    assert "parcial" in resultado.justificativa
+
+
+def test_rn004_valor_dentro_do_limite_reembolsa_total():
+    d006 = construir_despesa(
+        "d-006",
+        date(2026, 7, 9),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("54.90"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado = aplicar_limite_diario(d006, CC_PADRAO, [])
+
+    assert resultado.despesa_reembolsavel is True
+    assert resultado.tipo_reembolso == "total"
+    assert resultado.valor_reembolsavel == Decimal("54.90")
+    assert "total" in resultado.justificativa
+
+
+def test_rn003_limite_diario_hospedagem():
+    f002 = construir_despesa(
+        "f-002",
+        date(2026, 7, 17),
+        "hospedagem",
+        "Pousada - 1 diaria",
+        "Pousada do Vale",
+        Decimal("310.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado = aplicar_limite_diario(f002, CC_PADRAO, [])
+
+    assert resultado.despesa_reembolsavel is True
+    assert resultado.tipo_reembolso == "parcial"
+    assert resultado.valor_reembolsavel == Decimal("250.00")
+    assert "parcial" in resultado.justificativa
+
+
+def test_rn003_hospedagem_dentro_do_limite_reembolsa_total():
+    hospedagem_barata = construir_despesa(
+        "d-200",
+        date(2026, 7, 14),
+        "hospedagem",
+        "Pousada 1 noite",
+        "Pousada Central",
+        Decimal("180.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado = aplicar_limite_diario(hospedagem_barata, CC_PADRAO, [])
+
+    assert resultado.despesa_reembolsavel is True
+    assert resultado.tipo_reembolso == "total"
+    assert resultado.valor_reembolsavel == Decimal("180.00")
+    assert "total" in resultado.justificativa
+
+
+def test_rn015_limite_diario_agrega_o_valor_em_brl():
+    # EUR 22,00 pela taxa 5,93 = R$130,46, contra o limite de R$90,00 de CC-COMERCIAL.
+    e002 = construir_despesa(
+        "e-002",
+        date(2026, 7, 14),
+        "alimentacao",
+        "Almoco - Lisboa",
+        "Taberna do Chiado",
+        Decimal("22.00"),
+        tem_nota_fiscal=True,
+        moeda="EUR",
+        moeda_original="EUR",
+        valor_brl=Decimal("130.46"),
+        taxa_cambio=Decimal("5.93"),
+    )
+    cc_comercial = tabela("CC-COMERCIAL", alimentacao="90.00")
+
+    resultado = aplicar_limite_diario(e002, cc_comercial, [])
+
+    # Se o limite fosse comparado com o valor lançado, 22,00 caberia em R$90,00
+    # e a despesa reembolsaria "total" — o que sairia em euros.
+    assert resultado.tipo_reembolso == "parcial"
+    assert resultado.valor_reembolsavel == Decimal("90.00")
+
+
+def test_rn012_sem_adicional_de_viagem():
+    almoco_acima_do_limite = construir_despesa(
+        "d-400",
+        date(2026, 7, 14),
+        "alimentacao",
+        "Almoco em viagem",
+        "Restaurante do Hotel",
+        Decimal("90.00"),
+        tem_nota_fiscal=True,
+    )
+    corrida_acima_do_limite = construir_despesa(
+        "d-401",
+        date(2026, 7, 14),
+        "transporte_urbano",
+        "Corrida em viagem",
+        "TaxiApp",
+        Decimal("120.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado_alimentacao = aplicar_limite_diario(almoco_acima_do_limite, CC_PADRAO, [])
+    resultado_transporte = aplicar_limite_diario(corrida_acima_do_limite, CC_PADRAO, [])
+
+    # Os valores sao os limites do padrao ampliados em 50% (60 -> 90, 80 -> 120):
+    # se o adicional fosse aplicado, ambos virariam reembolso total.
+    assert resultado_alimentacao.tipo_reembolso == "parcial"
+    assert resultado_alimentacao.valor_reembolsavel == Decimal("60.00")
+    assert resultado_transporte.tipo_reembolso == "parcial"
+    assert resultado_transporte.valor_reembolsavel == Decimal("80.00")
+
+
+def test_amb014_despesa_internacional_nao_amplia_limite():
+    # USD 12,00 em 2026-07-21 pela taxa 5,48 = R$65,76, e um almoço em BRL de
+    # mesmo valor no mesmo dia e categoria.
+    internacional = construir_despesa(
+        "d-900",
+        date(2026, 7, 21),
+        "alimentacao",
+        "Almoco no exterior",
+        "Fornecedor Teste",
+        Decimal("12.00"),
+        tem_nota_fiscal=True,
+        moeda="USD",
+        moeda_original="USD",
+        valor_brl=Decimal("65.76"),
+        taxa_cambio=Decimal("5.48"),
+    )
+    nacional = construir_despesa(
+        "d-901",
+        date(2026, 7, 21),
+        "alimentacao",
+        "Almoco no pais",
+        "Fornecedor Teste",
+        Decimal("65.76"),
+        tem_nota_fiscal=True,
+    )
+
+    resultado_internacional = aplicar_limite_diario(internacional, CC_PADRAO, [])
+    resultado_nacional = aplicar_limite_diario(nacional, CC_PADRAO, [])
+
+    # Moeda estrangeira não caracteriza viagem: o limite é o mesmo R$60,00 nos
+    # dois casos, e nenhum dos dois recebe os R$90,00 do adicional.
+    assert resultado_internacional.valor_reembolsavel == Decimal("60.00")
+    assert resultado_nacional.valor_reembolsavel == Decimal("60.00")
+    assert resultado_internacional.tipo_reembolso == resultado_nacional.tipo_reembolso == "parcial"

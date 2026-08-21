@@ -317,7 +317,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_regras.py::test_amb017_teto_de_nota_fiscal_compara_valor_convertido`, `::test_rn005_valor_exatamente_no_teto_nao_exige`
   - **Commit:** `608b8a6`
 
-- [ ] **T-039** — `regras.py`/`motor.py`: o limite diário vem da `TabelaLimites` do centro de custo e agrega o valor em BRL; a justificativa passa a citar o centro de custo
+- [x] **T-039** — `regras.py`/`motor.py`: o limite diário vem da `TabelaLimites` do centro de custo e agrega o valor em BRL; a justificativa passa a citar o centro de custo
   - **Atende:** RN-001, RN-002, RN-003, RN-004, RN-014, RN-015
   - **Aceite:** `tests/test_regras.py::test_rn001_limite_diario_alimentacao`, `::test_rn002_limite_diario_transporte`, `::test_rn003_limite_diario_hospedagem`, `::test_rn014_limite_varia_por_centro_de_custo`
   - **Commit:** `<hash preenchido depois>`

@@ -90,6 +90,120 @@ def test_pipeline_deixa_sobreviventes_para_a_agregacao_de_limite(exemplo: Exempl
     ]
 
 
+def test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_dia():
+    primeira = construir_despesa(
+        "d-300",
+        date(2026, 7, 14),
+        "hospedagem",
+        "Hotel noite 1",
+        "Hotel Copa Sul",
+        Decimal("480.00"),
+        tem_nota_fiscal=True,
+    )
+    segunda = construir_despesa(
+        "d-301",
+        date(2026, 7, 14),
+        "hospedagem",
+        "Hotel noite 2",
+        "Outro Hotel",
+        Decimal("300.00"),
+        tem_nota_fiscal=True,
+    )
+
+    resultados = processar([primeira, segunda])
+
+    assert resultados[0].tipo_reembolso == "parcial"
+    assert resultados[0].valor_reembolsavel == Decimal("250.00")
+    assert resultados[1].tipo_reembolso == "nenhum"
+    assert resultados[1].valor_reembolsavel == Decimal("0.00")
+    assert "Hotel noite 1(d-300)" in resultados[1].justificativa
+
+
+def test_rn003_hospedagem_em_dias_diferentes_tem_limite_proprio():
+    despesas = [
+        construir_despesa(
+            "d-310",
+            date(2026, 7, 14),
+            "hospedagem",
+            "Hotel dia 14",
+            "Hotel Copa Sul",
+            Decimal("480.00"),
+            tem_nota_fiscal=True,
+        ),
+        construir_despesa(
+            "d-311",
+            date(2026, 7, 15),
+            "hospedagem",
+            "Hotel dia 15",
+            "Hotel Copa Sul",
+            Decimal("480.00"),
+            tem_nota_fiscal=True,
+        ),
+    ]
+
+    resultados = processar(despesas)
+
+    assert resultados[0].valor_reembolsavel == Decimal("250.00")
+    assert resultados[1].valor_reembolsavel == Decimal("250.00")
+
+
+def test_rn014_o_mesmo_lote_muda_de_resultado_com_a_tabela_do_centro_de_custo():
+    despesas = [
+        construir_despesa(
+            "d-320",
+            date(2026, 7, 14),
+            "alimentacao",
+            "Almoco",
+            "Bistro Central",
+            Decimal("72.50"),
+            tem_nota_fiscal=True,
+        )
+    ]
+
+    no_padrao = processar(despesas, CC_PADRAO)
+    em_comercial = processar(despesas, tabela("CC-COMERCIAL", alimentacao="90.00"))
+
+    assert no_padrao[0].valor_reembolsavel == Decimal("60.00")
+    assert em_comercial[0].valor_reembolsavel == Decimal("72.50")
+
+
+def test_rn012_hospedagem_no_periodo_nao_amplia_limites():
+    despesas = [
+        construir_despesa(
+            "d-500",
+            date(2026, 7, 14),
+            "hospedagem",
+            "Hotel - viagem a trabalho",
+            "Hotel Copa Sul",
+            Decimal("200.00"),
+            tem_nota_fiscal=True,
+        ),
+        construir_despesa(
+            "d-501",
+            date(2026, 7, 14),
+            "alimentacao",
+            "Jantar durante a viagem",
+            "Restaurante do Hotel",
+            Decimal("90.00"),
+            tem_nota_fiscal=True,
+        ),
+        construir_despesa(
+            "d-502",
+            date(2026, 7, 14),
+            "transporte_urbano",
+            "Corrida durante a viagem",
+            "TaxiApp",
+            Decimal("120.00"),
+            tem_nota_fiscal=True,
+        ),
+    ]
+
+    resultados = processar(despesas)
+
+    assert resultados[1].valor_reembolsavel == Decimal("60.00")
+    assert resultados[2].valor_reembolsavel == Decimal("80.00")
+
+
 def test_pipeline_da_uma_unica_justificativa_por_despesa(exemplo: ExemploProcessado):
     assert len(exemplo.resultados_filtros) == len(exemplo.despesas)
     for resultado in exemplo.resultados_filtros.values():
