@@ -1,6 +1,7 @@
 import argparse
 import json
 import re
+import sys
 from collections.abc import Iterator, Sequence
 from decimal import Decimal
 from pathlib import Path
@@ -91,6 +92,17 @@ def executar_calculo(
     politica = carregar_politica(caminho_politica)
     cambio = carregar_cambio(caminho_cambio)
     colaborador, periodo, despesas = carregar_despesas(caminho_entrada, cambio)
+
+    # RN-017 é precondição do lote inteiro, não decisão sobre despesa: se ela
+    # reprova, nada é calculado e nenhum arquivo é escrito (plan.md DT-008).
+    if not politica.vigencia_cobre(periodo.competencia):
+        print(
+            f"A política informada vigora a partir da competência "
+            f"{politica.competencia_de_vigencia} e não cobre o lote de competência "
+            f"{periodo.competencia}. Nenhum arquivo de saída foi gerado.",
+            file=sys.stderr,
+        )
+        return 1
 
     resultado_final = calcular(
         colaborador,

@@ -287,7 +287,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_cli.py::test_cli_calcular_gera_arquivo_de_saida`, `::test_cli_aceita_politica_e_cambio_alternativos`
   - **Commit:** `90d428b`
 
-- [ ] **T-033** — `cli.py`: quando `vigencia_cobre` reprova, imprime em `stderr` o motivo citando as duas competências, **não escreve arquivo de saída** e encerra com código diferente de zero
+- [x] **T-033** — `cli.py`: quando `vigencia_cobre` reprova, imprime em `stderr` o motivo citando as duas competências, **não escreve arquivo de saída** e encerra com código diferente de zero
   - **Atende:** RN-017, plan.md DT-008
   - **Aceite:** `tests/test_cli.py::test_rn017_lote_de_competencia_anterior_nao_gera_saida`, `::test_rn017_lote_coberto_gera_saida_normalmente`
   - **Commit:** `<hash preenchido depois>`

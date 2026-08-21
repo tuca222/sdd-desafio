@@ -193,3 +193,56 @@ def test_cli_usa_a_politica_e_o_cambio_padrao_quando_as_flags_nao_vem(tmp_path: 
     assert Path(CAMINHO_PADRAO_POLITICA).exists()
     assert Path(CAMINHO_PADRAO_CAMBIO).exists()
     assert sem_flags.read_text(encoding="utf-8") == com_flags.read_text(encoding="utf-8")
+
+
+def test_rn017_lote_de_competencia_anterior_nao_gera_saida(tmp_path: Path, capsys):
+    entrada = escrever_lote(tmp_path / "junho.json", "2026-06", "2026-06-01", "2026-06-30")
+    destino = tmp_path / "resultado.json"
+
+    codigo = main(["calcular", "--input", entrada, "--output", str(destino)])
+
+    # O que se afirma é a ausência do arquivo mais o código de saída — um
+    # resultado.json com tudo zerado tem a forma de um relatório válido.
+    assert codigo != 0
+    assert not destino.exists()
+
+    erro = capsys.readouterr().err
+
+    assert "2026-07" in erro
+    assert "2026-06" in erro
+
+
+def test_rn017_lote_coberto_gera_saida_normalmente(tmp_path: Path):
+    # A política de julho continua valendo em agosto se não houver política nova.
+    entrada = escrever_lote(tmp_path / "agosto.json", "2026-08", "2026-07-01", "2026-08-31")
+    destino = tmp_path / "resultado.json"
+
+    codigo = main(["calcular", "--input", entrada, "--output", str(destino)])
+
+    assert codigo == 0
+    assert destino.exists()
+    assert json.loads(destino.read_text(encoding="utf-8"))["periodo"]["competencia"] == "2026-08"
+
+
+def test_rn017_vigencia_no_meio_do_mes_nao_nega_despesa_anterior(tmp_path: Path):
+    # AMB-020: não existe verificação de vigência por despesa. Uma política que
+    # vigora de 15/07 processa o lote de 2026-07 inteiro, igual à de 01/07.
+    caminho_politica = escrever_politica(tmp_path / "politica.json", vigencia="2026-07-15")
+    de_quinze = tmp_path / "de-quinze.json"
+    de_primeiro = tmp_path / "de-primeiro.json"
+
+    codigo = main(
+        [
+            "calcular",
+            "--input",
+            CAMINHO_EXEMPLO,
+            "--output",
+            str(de_quinze),
+            "--politica",
+            caminho_politica,
+        ]
+    )
+    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(de_primeiro)])
+
+    assert codigo == 0
+    assert de_quinze.read_text(encoding="utf-8") == de_primeiro.read_text(encoding="utf-8")
