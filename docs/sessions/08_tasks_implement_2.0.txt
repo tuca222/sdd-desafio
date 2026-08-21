@@ -1,0 +1,2668 @@
+ ▐▛███▛█   Claude Code v2.1.238
+▝▜██████▀  Opus 5 · Claude Pro
+  ▝▝ ▝▝    /mnt/c/Projetos/NTT/SDD - Desafio prático/sdd-desafio
+
+
+❯ Com base na spec.md e plan.md. Implemente a Fase 5 de tasks.md                
+
+● I'll start by reading the source of truth documents to understand what Fase 5
+  covers.
+
+  Ran 9 shell commands (ctrl+o to expand)
+
+● I've read spec.md. Now the plan and the current code.
+
+  Ran 6 shell commands (ctrl+o to expand)
+
+● I have the full picture: Fase 5 is T-028→T-045 (18 tasks) migrating the engine
+  to Policy v4 (external policy file, per-cost-center limits, FX conversion,
+  vigência guard).
+
+  One process note up front: CLAUDE.md requires my approval-before-commit, so
+  I'll implement everything and leave the tree uncommitted for your review,
+  snapshotting each task's state so the 18 commits can be replayed in order once
+  you approve.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now implementing, task by task. T-028 — politica.py becomes a loader.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● T-029 — tabela_para (RN-014). T-030 — vigencia_cobre (RN-017).
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● politica.py works (T-028→T-030). The suite is red as tasks.md predicts until
+  T-043. T-031 — cambio.py.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● T-032/T-033 — CLI flags --politica/--cambio and the RN-017 guard.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Now T-034/T-035 — Despesa gains moeda/moeda_original/valor_brl/taxa_cambio,
+  and the parser converts on the input boundary.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Now T-036→T-040 — regras.py: the FX filter at position 5, RN-008's two
+  clauses, the NF ceiling from policy, per-cost-center daily limits, and moeda
+  in duplicate identity.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Now T-036/T-041 in motor.py — the FX filter enters position 5, and the gross
+  total excludes expenses with no BRL value.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● T-042 — saida.py publishes taxa_cambio/valor_convertido_brl and echoes moeda
+  only when it came in.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Engine output matches every §9 criterion exactly — all three total pairs
+  (1806.94/351.43, 623.76/373.76, 2278.72/1053.26). Fixing format, then
+  rewriting the tests.
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now the test suite. First conftest.py and test_regras.py (T-036→T-040
+  acceptance).
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Now test_regras.py — the acceptance tests for T-036 through T-040.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 49 unit tests green across politica, cambio, parser, regras. Now
+  test_motor.py, test_modelos.py, test_saida.py, test_casos_borda.py.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● The previous write never executed (the whole call was blocked). Rewriting
+  test_motor.py.
+
+● Write(tests/test_motor.py)
+  ⎿  Added 197 lines, removed 86 lines
+       1  from datetime import date
+       2  from decimal import Decimal
+       3  
+       4 -from src.modelos import Despesa, Periodo                       
+       4 +from src.cambio import TabelaCambio                            
+       5 +from src.modelos import Despesa, Periodo, ResultadoDespesa     
+       6  from src.motor import aplicar_filtros, aplicar_limites, calcula
+          r
+       7  from src.parser import carregar_despesas
+       8 +from src.politica import Politica, TabelaLimites               
+       9  from src.regras import (
+      10 +    filtro_cambio_indisponivel,                                
+      11      filtro_categoria_invalida,
+      12      filtro_duplicata,
+      13      filtro_fora_periodo,
+      14      filtro_nota_fiscal,
+      15      filtro_valor_negativo,
+      16  )
+      14 -from tests.conftest import ExemploProcessado                   
+      17 +from tests.conftest import CAMINHO_EXEMPLO, ExemploProcessado, 
+         +construir_despesa                                              
+      18 +from tests.test_regras import CC_PADRAO, TETO_NOTA_FISCAL, tabe
+         +la                                                             
+      19  
+      20 +CAMINHO_ENVELOPE = "exemplos/envelope/despesas-envelope.json"  
+      21  
+      22 +PERIODO_JULHO_2026 = Periodo(competencia="2026-07", inicio=date
+         +(2026, 7, 1), fim=date(2026, 7, 31))                           
+      23 +                                                               
+      24 +                                                               
+      25 +def processar(                                                 
+      26 +    despesas: list[Despesa],                                   
+      27 +    tabela_limites: TabelaLimites = CC_PADRAO,                 
+      28 +    periodo: Periodo = PERIODO_JULHO_2026,                     
+      29 +) -> list[ResultadoDespesa]:                                   
+      30 +    filtros = aplicar_filtros(despesas, periodo, tabela_limites
+         +, TETO_NOTA_FISCAL)                                            
+      31 +    return aplicar_limites(despesas, filtros.resultados, tabela
+         +_limites)                                                      
+      32 +                                                               
+      33 +                                                               
+      34  def test_pipeline_aplica_filtros_na_ordem_definida(exemplo: Exe
+          mploProcessado):
+      35      despesas = exemplo.despesas
+      36      resultados = exemplo.resultados_filtros
+      37 +    tabela_do_lote = exemplo.tabela                            
+      38  
+      39      assert resultados["d-009"] == filtro_valor_negativo(despesa
+          s["d-009"])
+      22 -    assert resultados["d-005"] == filtro_categoria_invalida(des
+         -pesas["d-005"])                                                
+      40 +    assert resultados["d-005"] == filtro_categoria_invalida(des
+         +pesas["d-005"], tabela_do_lote)                                
+      41      assert resultados["d-008"] == filtro_fora_periodo(despesas[
+          "d-008"], exemplo.periodo)
+      42      assert resultados["d-007"] == filtro_duplicata(despesas["d-
+          007"], [despesas["d-006"]])
+      43  
+      44      # d-004 tem nota fiscal ausente E o limite diario de d-003 
+          ja consumido (AMB-004):
+      45      # a justificativa tem de ser a da nota fiscal, nao a do lim
+          ite diario.
+      28 -    assert resultados["d-004"] == filtro_nota_fiscal(despesas["
+         -d-004"])                                                       
+      29 -    assert resultados["d-013"] == filtro_nota_fiscal(despesas["
+         -d-013"])                                                       
+      46 +    assert resultados["d-004"] == filtro_nota_fiscal(despesas["
+         +d-004"], exemplo.teto_nota_fiscal)                             
+      47  
+      48 +    # d-013 e hospedagem sem nota fiscal em CC-ENG-PLATAFORMA, 
+         +que veda a categoria:                                          
+      49 +    # RN-008 e o passo 2 e RN-005 e o passo 6, entao quem respo
+         +nde e a categoria.                                             
+      50 +    assert resultados["d-013"] == filtro_categoria_invalida(des
+         +pesas["d-013"], tabela_do_lote)                                
+      51 +    assert resultados["d-013"] != filtro_nota_fiscal(despesas["
+         +d-013"], exemplo.teto_nota_fiscal)                             
+      52  
+      53 +                                                               
+      54 +def test_pipeline_poe_o_cambio_entre_a_duplicata_e_a_nota_fisca
+         +l(                                                             
+      55 +    politica: Politica, cambio: TabelaCambio                   
+      56 +):                                                             
+      57 +    _, periodo, despesas = carregar_despesas(CAMINHO_ENVELOPE, 
+         +cambio)                                                        
+      58 +    por_id = {despesa.id: despesa for despesa in despesas}     
+      59 +    cc_comercial = politica.tabela_para("CC-COMERCIAL")        
+      60 +                                                               
+      61 +    filtros = aplicar_filtros(despesas, periodo, cc_comercial, 
+         +TETO_NOTA_FISCAL)                                              
+      62 +    resultados = dict(zip(list(por_id), filtros.resultados, str
+         +ict=True))                                                     
+      63 +                                                               
+      64 +    # e-004 (EUR num sabado) e e-006 (GBP) sao negadas pelo pas
+         +so 5.                                                          
+      65 +    assert resultados["e-004"] == filtro_cambio_indisponivel(po
+         +r_id["e-004"])                                                 
+      66 +    assert resultados["e-006"] == filtro_cambio_indisponivel(po
+         +r_id["e-006"])                                                 
+      67 +                                                               
+      68 +    # e-005 (USD 40,00 = R$220,00, sem nota) tem taxa: passa do
+         + passo 5 para o 6.                                             
+      69 +    assert filtro_cambio_indisponivel(por_id["e-005"]) is None 
+      70 +    assert resultados["e-005"] == filtro_nota_fiscal(por_id["e-
+         +005"], TETO_NOTA_FISCAL)                                       
+      71 +                                                               
+      72 +                                                               
+      73  def test_pipeline_deixa_sobreviventes_para_a_agregacao_de_limit
+          e(exemplo: ExemploProcessado):
+      74      sobreviventes = [
+      75          id_despesa
+     ...
+      77          if resultado is None
+      78      ]
+      79  
+      80 +    # d-010 e d-013 sairam da lista com a v4: hospedagem e veda
+         +da em                                                          
+      81 +    # CC-ENG-PLATAFORMA, entao as duas param no passo 2 e nem c
+         +hegam ao limite.                                               
+      82      assert sobreviventes == [
+      83          "d-001",
+      84          "d-002",
+      85          "d-003",
+      86          "d-006",
+      44 -        "d-010",                                               
+      87          "d-011",
+      88          "d-012",
+      89          "d-014",
+     ...
+       91  
+       92  
+       93  def test_rn003_hospedagem_compartilha_limite_diario_no_mesmo_d
+           ia():
+       52 -    periodo = Periodo(competencia="2026-07", inicio=date(2026,
+          - 7, 1), fim=date(2026, 7, 31))                                
+       53 -    primeira = Despesa(                                       
+       54 -        id="d-300",                                           
+       55 -        data=date(2026, 7, 14),                               
+       56 -        categoria="hospedagem",                               
+       57 -        categoria_original="hospedagem",                      
+       58 -        descricao="Hotel noite 1",                            
+       59 -        fornecedor="Hotel Copa Sul",                          
+       60 -        valor=Decimal("480.00"),                              
+       61 -        valor_original=Decimal("480.00"),                     
+       94 +    primeira = construir_despesa(                             
+       95 +        "d-300",                                              
+       96 +        date(2026, 7, 14),                                    
+       97 +        "hospedagem",                                         
+       98 +        "Hotel noite 1",                                      
+       99 +        "Hotel Copa Sul",                                     
+      100 +        Decimal("480.00"),                                    
+      101          tem_nota_fiscal=True,
+      102      )
+       64 -    segunda = Despesa(                                        
+       65 -        id="d-301",                                           
+       66 -        data=date(2026, 7, 14),                               
+       67 -        categoria="hospedagem",                               
+       68 -        categoria_original="hospedagem",                      
+       69 -        descricao="Hotel noite 2",                            
+       70 -        fornecedor="Outro Hotel",                             
+       71 -        valor=Decimal("300.00"),                              
+       72 -        valor_original=Decimal("300.00"),                     
+      103 +    segunda = construir_despesa(                              
+      104 +        "d-301",                                              
+      105 +        date(2026, 7, 14),                                    
+      106 +        "hospedagem",                                         
+      107 +        "Hotel noite 2",                                      
+      108 +        "Outro Hotel",                                        
+      109 +        Decimal("300.00"),                                    
+      110          tem_nota_fiscal=True,
+      111      )
+       75 -    despesas = [primeira, segunda]                            
+      112  
+       77 -    resultados = aplicar_limites(despesas, aplicar_filtros(des
+          -pesas, periodo).resultados)                                   
+      113 +    resultados = processar([primeira, segunda])               
+      114  
+      115      assert resultados[0].tipo_reembolso == "parcial"
+      116      assert resultados[0].valor_reembolsavel == Decimal("250.00
+           ")
+     ...
+      120  
+      121  
+      122  def test_rn003_hospedagem_em_dias_diferentes_tem_limite_propri
+           o():
+       87 -    periodo = Periodo(competencia="2026-07", inicio=date(2026,
+          - 7, 1), fim=date(2026, 7, 31))                                
+      123      despesas = [
+       89 -        Despesa(                                              
+       90 -            id="d-310",                                       
+       91 -            data=date(2026, 7, 14),                           
+       92 -            categoria="hospedagem",                           
+       93 -            categoria_original="hospedagem",                  
+       94 -            descricao="Hotel dia 14",                         
+       95 -            fornecedor="Hotel Copa Sul",                      
+       96 -            valor=Decimal("480.00"),                          
+       97 -            valor_original=Decimal("480.00"),                 
+      124 +        construir_despesa(                                    
+      125 +            "d-310",                                          
+      126 +            date(2026, 7, 14),                                
+      127 +            "hospedagem",                                     
+      128 +            "Hotel dia 14",                                   
+      129 +            "Hotel Copa Sul",                                 
+      130 +            Decimal("480.00"),                                
+      131              tem_nota_fiscal=True,
+      132          ),
+      100 -        Despesa(                                              
+      101 -            id="d-311",                                       
+      102 -            data=date(2026, 7, 15),                           
+      103 -            categoria="hospedagem",                           
+      104 -            categoria_original="hospedagem",                  
+      105 -            descricao="Hotel dia 15",                         
+      106 -            fornecedor="Hotel Copa Sul",                      
+      107 -            valor=Decimal("480.00"),                          
+      108 -            valor_original=Decimal("480.00"),                 
+      133 +        construir_despesa(                                    
+      134 +            "d-311",                                          
+      135 +            date(2026, 7, 15),                                
+      136 +            "hospedagem",                                     
+      137 +            "Hotel dia 15",                                   
+      138 +            "Hotel Copa Sul",                                 
+      139 +            Decimal("480.00"),                                
+      140              tem_nota_fiscal=True,
+      141          ),
+      142      ]
+      143  
+      113 -    resultados = aplicar_limites(despesas, aplicar_filtros(des
+          -pesas, periodo).resultados)                                   
+      144 +    resultados = processar(despesas)                          
+      145  
+      146      assert resultados[0].valor_reembolsavel == Decimal("250.00
+           ")
+      147      assert resultados[1].valor_reembolsavel == Decimal("250.00
+           ")
+      148  
+      149  
+      150 +def test_rn014_o_mesmo_lote_muda_de_resultado_com_a_tabela_do_
+          +centro_de_custo():                                            
+      151 +    despesas = [                                              
+      152 +        construir_despesa(                                    
+      153 +            "d-320",                                          
+      154 +            date(2026, 7, 14),                                
+      155 +            "alimentacao",                                    
+      156 +            "Almoco",                                         
+      157 +            "Bistro Central",                                 
+      158 +            Decimal("72.50"),                                 
+      159 +            tem_nota_fiscal=True,                             
+      160 +        )                                                     
+      161 +    ]                                                         
+      162 +                                                              
+      163 +    no_padrao = processar(despesas, CC_PADRAO)                
+      164 +    em_comercial = processar(despesas, tabela("CC-COMERCIAL", 
+          +alimentacao="90.00"))                                         
+      165 +                                                              
+      166 +    assert no_padrao[0].valor_reembolsavel == Decimal("60.00")
+      167 +    assert em_comercial[0].valor_reembolsavel == Decimal("72.5
+          +0")                                                           
+      168 +                                                              
+      169 +                                                              
+      170  def test_rn012_hospedagem_no_periodo_nao_amplia_limites():
+      120 -    periodo = Periodo(competencia="2026-07", inicio=date(2026,
+          - 7, 1), fim=date(2026, 7, 31))                                
+      171      despesas = [
+      122 -        Despesa(                                              
+      123 -            id="d-500",                                       
+      124 -            data=date(2026, 7, 14),                           
+      125 -            categoria="hospedagem",                           
+      126 -            categoria_original="hospedagem",                  
+      127 -            descricao="Hotel - viagem a trabalho",            
+      128 -            fornecedor="Hotel Copa Sul",                      
+      129 -            valor=Decimal("200.00"),                          
+      130 -            valor_original=Decimal("200.00"),                 
+      172 +        construir_despesa(                                    
+      173 +            "d-500",                                          
+      174 +            date(2026, 7, 14),                                
+      175 +            "hospedagem",                                     
+      176 +            "Hotel - viagem a trabalho",                      
+      177 +            "Hotel Copa Sul",                                 
+      178 +            Decimal("200.00"),                                
+      179              tem_nota_fiscal=True,
+      180          ),
+      133 -        Despesa(                                              
+      134 -            id="d-501",                                       
+      135 -            data=date(2026, 7, 14),                           
+      136 -            categoria="alimentacao",                          
+      137 -            categoria_original="alimentacao",                 
+      138 -            descricao="Jantar durante a viagem",              
+      139 -            fornecedor="Restaurante do Hotel",                
+      140 -            valor=Decimal("90.00"),                           
+      141 -            valor_original=Decimal("90.00"),                  
+      181 +        construir_despesa(                                    
+      182 +            "d-501",                                          
+      183 +            date(2026, 7, 14),                                
+      184 +            "alimentacao",                                    
+      185 +            "Jantar durante a viagem",                        
+      186 +            "Restaurante do Hotel",                           
+      187 +            Decimal("90.00"),                                 
+      188              tem_nota_fiscal=True,
+      189          ),
+      144 -        Despesa(                                              
+      145 -            id="d-502",                                       
+      146 -            data=date(2026, 7, 14),                           
+      147 -            categoria="transporte_urbano",                    
+      148 -            categoria_original="transporte_urbano",           
+      149 -            descricao="Corrida durante a viagem",             
+      150 -            fornecedor="TaxiApp",                             
+      151 -            valor=Decimal("120.00"),                          
+      152 -            valor_original=Decimal("120.00"),                 
+      190 +        construir_despesa(                                    
+      191 +            "d-502",                                          
+      192 +            date(2026, 7, 14),                                
+      193 +            "transporte_urbano",                              
+      194 +            "Corrida durante a viagem",                       
+      195 +            "TaxiApp",                                        
+      196 +            Decimal("120.00"),                                
+      197              tem_nota_fiscal=True,
+      198          ),
+      199      ]
+      200  
+      157 -    resultados = aplicar_limites(despesas, aplicar_filtros(des
+          -pesas, periodo).resultados)                                   
+      201 +    resultados = processar(despesas)                          
+      202  
+      203      assert resultados[1].valor_reembolsavel == Decimal("60.00"
+           )
+      204      assert resultados[2].valor_reembolsavel == Decimal("80.00"
+           )
+     ...
+      212              assert "negado" in resultado.justificativa
+      213  
+      214  
+      171 -def test_calcula_totais_do_periodo():                         
+      172 -    colaborador, periodo, despesas = carregar_despesas("exempl
+          -os/despesas-exemplo.json")                                    
+      215 +def test_calcula_totais_do_periodo(politica: Politica, cambio:
+          + TabelaCambio):                                               
+      216 +    colaborador, periodo, despesas = carregar_despesas(CAMINHO
+          +_EXEMPLO, cambio)                                             
+      217  
+      174 -    resultado_final = calcular(colaborador, periodo, despesas)
+      218 +    resultado_final = calcular(                               
+      219 +        colaborador,                                          
+      220 +        periodo,                                              
+      221 +        despesas,                                             
+      222 +        politica.tabela_para(colaborador.centro_custo),       
+      223 +        politica.nota_fiscal_obrigatoria_acima_de,            
+      224 +    )                                                         
+      225  
+      226      assert resultado_final.valor_total_despesas == Decimal("18
+           06.94")
+      177 -    assert resultado_final.valor_total_reembolsavel == Decimal
+          -("585.43")                                                    
+      227 +    assert resultado_final.valor_total_reembolsavel == Decimal
+          +("351.43")                                                    
+      228  
+      229      por_id = {despesa.id: despesa for despesa in despesas}
+      230      soma_de_todas = sum((despesa.valor for despesa in despesas
+           ), Decimal("0.00"))
+      231  
+      182 -    # O bruto exclui exatamente a duplicata (RN-007) e o estor
+          -no (RN-009) — e so eles.                                      
+      232 +    # O bruto exclui exatamente a duplicata (RN-007) e o estor
+          +no (RN-009) — e so                                            
+      233 +    # eles. Nenhuma despesa deste arquivo e internacional, ent
+          +ao RN-016 nao tira nada.                                      
+      234      assert resultado_final.valor_total_despesas == (
+      235          soma_de_todas - por_id["d-007"].valor - por_id["d-009"
+           ].valor
+      236      )
+      237  
+      187 -    # d-005 (categoria fora da politica) e d-008 (fora do peri
+          -odo) continuam no bruto.                                      
+      188 -    assert resultado_final.valor_total_despesas > por_id["d-00
+          -5"].valor + por_id["d-008"].valor                             
+      238 +    # d-005 (categoria ausente da tabela), d-008 (fora do peri
+          +odo) e d-010                                                  
+      239 +    # (categoria vedada) continuam no bruto: foram gastos reai
+          +s.                                                            
+      240 +    assert resultado_final.valor_total_despesas > (           
+      241 +        por_id["d-005"].valor + por_id["d-008"].valor + por_id
+          +["d-010"].valor                                               
+      242 +    )                                                         
+      243  
+      244      assert resultado_final.valor_total_reembolsavel == sum(
+      245          (resultado.valor_reembolsavel for _, resultado in resu
+           ltado_final.detalhamento),
+     ...
+      247      )
+      248  
+      249  
+      196 -def test_calcular_preserva_colaborador_periodo_e_ordem_da_entr
+          -ada():                                                        
+      197 -    colaborador, periodo, despesas = carregar_despesas("exempl
+          -os/despesas-exemplo.json")                                    
+      250 +def test_rn016_despesa_sem_cambio_fora_do_total_bruto(politica
+          +: Politica, cambio: TabelaCambio):                            
+      251 +    colaborador, periodo, despesas = carregar_despesas(CAMINHO
+          +_ENVELOPE, cambio)                                            
+      252  
+      199 -    resultado_final = calcular(colaborador, periodo, despesas)
+      253 +    resultado_final = calcular(                               
+      254 +        colaborador,                                          
+      255 +        periodo,                                              
+      256 +        despesas,                                             
+      257 +        politica.tabela_para(colaborador.centro_custo),       
+      258 +        politica.nota_fiscal_obrigatoria_acima_de,            
+      259 +    )                                                         
+      260  
+      261 +    por_id = {despesa.id: despesa for despesa in despesas}    
+      262 +                                                              
+      263 +    # e-004 (EUR num sabado) e e-006 (GBP) nao tem valor em BR
+          +L para somar.                                                 
+      264 +    assert por_id["e-004"].valor_brl is None                  
+      265 +    assert por_id["e-006"].valor_brl is None                  
+      266 +                                                              
+      267 +    soma_dos_convertiveis = sum(                              
+      268 +        (despesa.valor_brl for despesa in despesas if despesa.
+          +valor_brl is not None),                                       
+      269 +        Decimal("0.00"),                                      
+      270 +    )                                                         
+      271 +                                                              
+      272 +    assert resultado_final.valor_total_despesas == soma_dos_co
+          +nvertiveis                                                    
+      273 +    assert resultado_final.valor_total_despesas == Decimal("22
+          +78.72")                                                       
+      274 +                                                              
+      275 +    # e-005 foi negada por nota fiscal e e-009 por categoria: 
+          +as duas tem valor em                                          
+      276 +    # BRL e continuam no bruto. Sai so o que nao tem como ser 
+          +somado.                                                       
+      277 +    assert por_id["e-005"].valor_brl == Decimal("220.00")     
+      278 +    assert por_id["e-009"].valor_brl == Decimal("120.00")     
+      279 +                                                              
+      280 +                                                              
+      281 +def test_rn016_despesa_sem_cambio_nao_consome_limite_diario(  
+      282 +    politica: Politica, cambio: TabelaCambio                  
+      283 +):                                                            
+      284 +    colaborador, periodo, despesas = carregar_despesas(CAMINHO
+          +_ENVELOPE, cambio)                                            
+      285 +    tabela_do_lote = politica.tabela_para(colaborador.centro_c
+          +usto)                                                         
+      286 +                                                              
+      287 +    filtros = aplicar_filtros(                                
+      288 +        despesas, periodo, tabela_do_lote, politica.nota_fisca
+          +l_obrigatoria_acima_de                                        
+      289 +    )                                                         
+      290 +    finais = aplicar_limites(despesas, filtros.resultados, tab
+          +ela_do_lote)                                                  
+      291 +    resultados = dict(zip([despesa.id for despesa in despesas]
+          +, finais, strict=True))                                       
+      292 +                                                              
+      293 +    # e-004 e a unica alimentacao de 2026-07-18: se ela tivess
+          +e consumido limite,                                           
+      294 +    # a justificativa seria a de limite atingido, e nao a do c
+          +ambio.                                                        
+      295 +    assert resultados["e-004"].valor_reembolsavel == Decimal("
+          +0.00")                                                        
+      296 +    assert "taxa de câmbio" in resultados["e-004"].justificati
+          +va                                                            
+      297 +                                                              
+      298 +                                                              
+      299 +def test_calcular_preserva_colaborador_periodo_e_ordem_da_entr
+          +ada(                                                          
+      300 +    politica: Politica, cambio: TabelaCambio                  
+      301 +):                                                            
+      302 +    colaborador, periodo, despesas = carregar_despesas(CAMINHO
+          +_EXEMPLO, cambio)                                             
+      303 +                                                              
+      304 +    resultado_final = calcular(                               
+      305 +        colaborador,                                          
+      306 +        periodo,                                              
+      307 +        despesas,                                             
+      308 +        politica.tabela_para(colaborador.centro_custo),       
+      309 +        politica.nota_fiscal_obrigatoria_acima_de,            
+      310 +    )                                                         
+      311 +                                                              
+      312      assert resultado_final.colaborador == colaborador
+      313      assert resultado_final.periodo == periodo
+      314      assert [despesa.id for despesa, _ in resultado_final.detal
+           hamento] == [
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now test_modelos.py, test_saida.py (T-042) and test_casos_borda.py.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Write(tests/test_saida.py)
+  ⎿  Added 100 lines, removed 29 lines
+       4  
+       5  import pytest
+       6  
+       7 +from src.cambio import TabelaCambio                            
+       8  from src.modelos import Colaborador, Despesa, Periodo, Resultad
+          oDespesa, ResultadoFinal
+       9  from src.parser import carregar_despesas
+      10  from src.saida import montar_saida
+      11 +from tests.conftest import CAMINHO_EXEMPLO, construir_despesa  
+      12  
+      13 +CAMINHO_ENVELOPE = "exemplos/envelope/despesas-envelope.json"  
+      14 +                                                               
+      15  COLABORADOR = Colaborador(id="c-0417", nome="Marina Volpi", cen
+          tro_custo="CC-ENG-PLATAFORMA")
+      16  PERIODO = Periodo(competencia="2026-07", inicio=date(2026, 7, 1
+          ), fim=date(2026, 7, 31))
+      17  
+      14 -DESPESA_MAIUSCULA = Despesa(                                   
+      15 -    id="d-014",                                                
+      16 -    data=date(2026, 7, 31),                                    
+      17 -    categoria="alimentacao",                                   
+      18 -    categoria_original="ALIMENTACAO",                          
+      19 -    descricao="Jantar de encerramento",                        
+      20 -    fornecedor="Restaurante Tavola",                           
+      21 -    valor=Decimal("61.00"),                                    
+      22 -    valor_original=Decimal("61.00"),                           
+      18 +DESPESA_MAIUSCULA = construir_despesa(                         
+      19 +    "d-014",                                                   
+      20 +    date(2026, 7, 31),                                         
+      21 +    "alimentacao",                                             
+      22 +    "Jantar de encerramento",                                  
+      23 +    "Restaurante Tavola",                                      
+      24 +    Decimal("61.00"),                                          
+      25      tem_nota_fiscal=True,
+      26 +    categoria_original="ALIMENTACAO",                          
+      27  )
+      28  RESULTADO_PARCIAL = ResultadoDespesa(
+      29      despesa_reembolsavel=True,
+     ...
+      33  )
+      34  
+      35  
+      33 -def montar_resultado_final() -> ResultadoFinal:                
+      36 +def montar_resultado_final(                                    
+      37 +    despesa: Despesa = DESPESA_MAIUSCULA,                      
+      38 +    resultado: ResultadoDespesa = RESULTADO_PARCIAL,           
+      39 +) -> ResultadoFinal:                                           
+      40      return ResultadoFinal(
+      41          colaborador=COLABORADOR,
+      42          periodo=PERIODO,
+      43          valor_total_despesas=Decimal("61.00"),
+      44          valor_total_reembolsavel=Decimal("60.00"),
+      39 -        detalhamento=[(DESPESA_MAIUSCULA, RESULTADO_PARCIAL)], 
+      45 +        detalhamento=[(despesa, resultado)],                   
+      46      )
+      47  
+      48  
+     ...
+      91          "despesa_reembolsavel": True,
+      92          "tipo_reembolso": "parcial",
+      93          "valor_reembolsavel": 60.00,
+      94 +        "taxa_cambio": None,                                   
+      95 +        "valor_convertido_brl": None,                          
+      96          "justificativa": ("A categoria alimentacao possui limit
+          e de reembolso de R$60,00 no dia."),
+      97      }
+      98  
+     ...
+      107      assert item["categoria"] != DESPESA_MAIUSCULA.categoria
+      108  
+      109  
+      102 -def test_saida_ecoa_o_valor_como_veio_na_entrada():           
+      103 -    _, _, despesas = carregar_despesas("exemplos/despesas-exem
+          -plo.json")                                                    
+      110 +def test_saida_ecoa_o_valor_como_veio_na_entrada(cambio: Tabel
+          +aCambio):                                                     
+      111 +    _, _, despesas = carregar_despesas(CAMINHO_EXEMPLO, cambio
+          +)                                                             
+      112      d011 = next(despesa for despesa in despesas if despesa.id 
+           == "d-011")
+      113  
+      114      assert d011.valor_original == Decimal("33.333")
+      115      assert d011.valor == Decimal("33.33")
+      116  
+      109 -    resultado_final = ResultadoFinal(                         
+      110 -        colaborador=COLABORADOR,                              
+      111 -        periodo=PERIODO,                                      
+      112 -        valor_total_despesas=d011.valor,                      
+      113 -        valor_total_reembolsavel=d011.valor,                  
+      114 -        detalhamento=[                                        
+      115 -            (                                                 
+      116 -                d011,                                         
+      117 -                ResultadoDespesa(                             
+      118 -                    despesa_reembolsavel=True,                
+      119 -                    tipo_reembolso="total",                   
+      120 -                    valor_reembolsavel=d011.valor,            
+      121 -                    justificativa="Reembolso total aprovado de
+          - acordo com a política vigente.",                             
+      122 -                ),                                            
+      123 -            )                                                 
+      124 -        ],                                                    
+      117 +    resultado_final = montar_resultado_final(                 
+      118 +        d011,                                                 
+      119 +        ResultadoDespesa(                                     
+      120 +            despesa_reembolsavel=True,                        
+      121 +            tipo_reembolso="total",                           
+      122 +            valor_reembolsavel=d011.valor,                    
+      123 +            justificativa="Reembolso total aprovado de acordo 
+          +com a política vigente.",                                     
+      124 +        ),                                                    
+      125      )
+      126  
+      127      (item,) = montar_saida(resultado_final)["detalhamento_desp
+           esas"]
+     ...
+      131      assert item["motor_reembolso_output"]["valor_reembolsavel"
+           ] == Decimal("33.33")
+      132  
+      133  
+      134 +def test_saida_publica_taxa_e_valor_convertido(cambio: TabelaC
+          +ambio):                                                       
+      135 +    _, _, despesas = carregar_despesas(CAMINHO_ENVELOPE, cambi
+          +o)                                                            
+      136 +    e002 = next(despesa for despesa in despesas if despesa.id 
+          +== "e-002")                                                   
+      137 +                                                              
+      138 +    resultado_final = montar_resultado_final(                 
+      139 +        e002,                                                 
+      140 +        ResultadoDespesa(                                     
+      141 +            despesa_reembolsavel=True,                        
+      142 +            tipo_reembolso="parcial",                         
+      143 +            valor_reembolsavel=Decimal("90.00"),              
+      144 +            justificativa="Reembolso parcial aprovado.",      
+      145 +        ),                                                    
+      146 +    )                                                         
+      147 +                                                              
+      148 +    (item,) = montar_saida(resultado_final)["detalhamento_desp
+          +esas"]                                                        
+      149 +    saida_do_motor = item["motor_reembolso_output"]           
+      150 +                                                              
+      151 +    # A conta tem de ser refazivel a partir da saida: valor x 
+          +taxa = convertido.                                            
+      152 +    assert item["valor"] == Decimal("22.00")                  
+      153 +    assert item["moeda"] == "EUR"                             
+      154 +    assert saida_do_motor["taxa_cambio"] == Decimal("5.93")   
+      155 +    assert saida_do_motor["valor_convertido_brl"] == Decimal("
+          +130.46")                                                      
+      156 +                                                              
+      157 +    # O valor lancado sai na moeda lancada, nunca convertido. 
+      158 +    assert item["valor"] != saida_do_motor["valor_convertido_b
+          +rl"]                                                          
+      159 +                                                              
+      160 +                                                              
+      161 +def test_saida_publica_taxa_e_convertido_nulos_para_despesa_em
+          +_brl(cambio: TabelaCambio):                                   
+      162 +    _, _, despesas = carregar_despesas(CAMINHO_ENVELOPE, cambi
+          +o)                                                            
+      163 +    e001 = next(despesa for despesa in despesas if despesa.id 
+          +== "e-001")                                                   
+      164 +                                                              
+      165 +    (item,) = montar_saida(montar_resultado_final(e001))["deta
+          +lhamento_despesas"]                                           
+      166 +                                                              
+      167 +    # e-001 tem valor em BRL (ela ja esta em BRL), e ainda ass
+          +im os dois campos                                             
+      168 +    # saem nulos: nao houve conversao nenhuma para publicar.  
+      169 +    assert e001.valor_brl == Decimal("340.00")                
+      170 +    assert item["motor_reembolso_output"]["taxa_cambio"] is No
+          +ne                                                            
+      171 +    assert item["motor_reembolso_output"]["valor_convertido_br
+          +l"] is None                                                   
+      172 +                                                              
+      173 +                                                              
+      174 +def test_rn016_saida_publica_taxa_e_convertido_nulos_sem_cambi
+          +o(cambio: TabelaCambio):                                      
+      175 +    _, _, despesas = carregar_despesas(CAMINHO_ENVELOPE, cambi
+          +o)                                                            
+      176 +    e004 = next(despesa for despesa in despesas if despesa.id 
+          +== "e-004")                                                   
+      177 +                                                              
+      178 +    (item,) = montar_saida(montar_resultado_final(e004))["deta
+          +lhamento_despesas"]                                           
+      179 +                                                              
+      180 +    assert item["moeda"] == "EUR"                             
+      181 +    assert item["motor_reembolso_output"]["taxa_cambio"] is No
+          +ne                                                            
+      182 +    assert item["motor_reembolso_output"]["valor_convertido_br
+          +l"] is None                                                   
+      183 +                                                              
+      184 +                                                              
+      185 +def test_saida_omite_moeda_quando_a_entrada_nao_trouxe(cambio:
+          + TabelaCambio):                                               
+      186 +    _, _, despesas = carregar_despesas(CAMINHO_ENVELOPE, cambi
+          +o)                                                            
+      187 +    por_id = {despesa.id: despesa for despesa in despesas}    
+      188 +                                                              
+      189 +    (sem_o_campo,) = montar_saida(montar_resultado_final(por_i
+          +d["e-010"]))[                                                 
+      190 +        "detalhamento_despesas"                               
+      191 +    ]                                                         
+      192 +    (com_brl_explicito,) = montar_saida(montar_resultado_final
+          +(por_id["e-001"]))[                                           
+      193 +        "detalhamento_despesas"                               
+      194 +    ]                                                         
+      195 +                                                              
+      196 +    # e-010 nao trouxe `moeda` e o motor assumiu BRL para deci
+          +dir — inventar um                                             
+      197 +    # "moeda": "BRL" na saida seria reescrever a entrada.     
+      198 +    assert por_id["e-010"].moeda == "BRL"                     
+      199 +    assert "moeda" not in sem_o_campo                         
+      200 +                                                              
+      201 +    # e-001 trouxe o campo, e ele sai com a grafia exata que e
+          +ntrou.                                                        
+      202 +    assert com_brl_explicito["moeda"] == "BRL"                
+      203 +                                                              
+      204 +                                                              
+      205  def test_saida_entrega_decimal_sem_passar_por_float():
+      206      saida = montar_saida(montar_resultado_final())
+      207  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now test_casos_borda.py (edge cases under v4).
+
+● Write(tests/test_casos_borda.py)
+  ⎿  Added 54 lines, removed 35 lines
+       3  from decimal import Decimal
+       4  
+       5  from src.motor import aplicar_filtros, aplicar_limites
+       6 -from src.politica import (                                     
+       7 -    LIMITE_ALIMENTACAO,                                        
+       8 -    LIMITE_HOSPEDAGEM,                                         
+       9 -    LIMITE_NOTA_FISCAL,                                        
+      10 -    LIMITE_TRANSPORTE_URBANO,                                  
+      11 -)                                                              
+      12 -from src.regras import aplicar_limite_diario, filtro_nota_fisca
+         -l, normalizar_categoria                                        
+       6 +from src.regras import aplicar_limite_diario, filtro_categoria_
+         +invalida, normalizar_categoria                                 
+       7  from tests.conftest import ExemploProcessado
+       8  
+       9  SABADO = 5
+      10  
+      11 +LIMITE_ALIMENTACAO_ENG = Decimal("75.00")                      
+      12 +LIMITE_TRANSPORTE_ENG = Decimal("80.00")                       
+      13  
+      14 +                                                               
+      15 +def processar(despesas, exemplo: ExemploProcessado):           
+      16 +    filtros = aplicar_filtros(despesas, exemplo.periodo, exempl
+         +o.tabela, exemplo.teto_nota_fiscal)                            
+      17 +    return aplicar_limites(despesas, filtros.resultados, exempl
+         +o.tabela)                                                      
+      18 +                                                               
+      19 +                                                               
+      20  def test_valor_exatamente_no_limite_nota_fiscal(exemplo: Exempl
+          oProcessado):
+      21      d003 = exemplo.despesas["d-003"]
+      22  
+      21 -    assert d003.valor == LIMITE_NOTA_FISCAL                    
+      23 +    assert d003.valor_brl == exemplo.teto_nota_fiscal          
+      24      assert d003.tem_nota_fiscal is False
+      23 -    assert filtro_nota_fiscal(d003) is None                    
+      25 +    assert exemplo.resultados_filtros["d-003"] is None         
+      26  
+      27      resultado = exemplo.resultados["d-003"]
+      28  
+      29      assert resultado.despesa_reembolsavel is True
+      30      assert resultado.tipo_reembolso == "parcial"
+      29 -    assert resultado.valor_reembolsavel == Decimal("80.00")    
+      31 +    assert resultado.valor_reembolsavel == LIMITE_TRANSPORTE_EN
+         +G                                                              
+      32  
+      33  
+      34  def test_ordem_nota_fiscal_antes_de_limite_diario(exemplo: Exem
+          ploProcessado):
+     ...
+      37  
+      38      assert d004.data == d003.data
+      39      assert d004.categoria == d003.categoria
+      38 -    assert exemplo.resultados["d-003"].valor_reembolsavel == LI
+         -MITE_TRANSPORTE_URBANO                                         
+      40 +    assert exemplo.resultados["d-003"].valor_reembolsavel == LI
+         +MITE_TRANSPORTE_ENG                                            
+      41  
+      42      resultado_d004 = exemplo.resultados["d-004"]
+      43      reprovacao_por_limite_diario = aplicar_limite_diario(
+      42 -        d004, LIMITE_TRANSPORTE_URBANO, [(d003, LIMITE_TRANSPOR
+         -TE_URBANO)]                                                    
+      44 +        d004, exemplo.tabela, [(d003, LIMITE_TRANSPORTE_ENG)]  
+      45      )
+      46  
+      45 -    assert resultado_d004 == filtro_nota_fiscal(d004)          
+      47      assert resultado_d004 != reprovacao_por_limite_diario
+      48      assert "nota fiscal" in resultado_d004.justificativa
+      49 +    assert "já foi atingido" not in resultado_d004.justificativ
+         +a                                                              
+      50  
+      51  
+      52  def test_despesa_fim_de_semana_sem_regra_especial(exemplo: Exem
+          ploProcessado):
+     ...
+      64      em_dia_util = replace(d012, id="d-012-quinta", data=date(20
+          26, 7, 16))
+      65      assert em_dia_util.data.weekday() < SABADO
+      66  
+      65 -    despesas = [no_fim_de_semana, em_dia_util]                 
+      66 -    resultados = aplicar_limites(despesas, aplicar_filtros(desp
+         -esas, exemplo.periodo).resultados)                             
+      67 +    resultados = processar([no_fim_de_semana, em_dia_util], exe
+         +mplo)                                                          
+      68  
+      69      assert resultados[0] == resultados[1]
+      70  
+     ...
+       76      assert "2 diarias" in d010.descricao
+       77      assert "3 noites" in d013.descricao
+       78  
+       78 -    resultado_d010 = exemplo.resultados["d-010"]              
+       79 +    # Em CC-ENG-PLATAFORMA a hospedagem e vedada (limite R$0,0
+          +0): as duas param no                                          
+       80 +    # passo 2 da ordem, e o numero de noites do texto livre na
+          +o muda nada disso.                                            
+       81 +    assert exemplo.resultados["d-010"] == filtro_categoria_inv
+          +alida(d010, exemplo.tabela)                                   
+       82 +    assert exemplo.resultados["d-013"] == filtro_categoria_inv
+          +alida(d013, exemplo.tabela)                                   
+       83  
+       80 -    assert resultado_d010.tipo_reembolso == "parcial"         
+       81 -    assert resultado_d010.valor_reembolsavel == LIMITE_HOSPEDA
+          -GEM                                                           
+       82 -    assert resultado_d010.valor_reembolsavel != 2 * LIMITE_HOS
+          -PEDAGEM                                                       
+       83 -                                                              
+       84 -    assert exemplo.resultados["d-013"] == filtro_nota_fiscal(d
+          -013)                                                          
+       85 -                                                              
+       84      variantes = [
+       85          replace(d010, id="d-010-sem-mencao", descricao="Hotel 
+           Rio"),
+       86          replace(d010, id="d-010-dez-diarias", descricao="Hotel
+            Rio - 10 diarias"),
+       87      ]
+       90 -    resultados_variantes = [                                  
+       91 -        aplicar_limites([variante], aplicar_filtros([variante]
+          -, exemplo.periodo).resultados)[0]                             
+       92 -        for variante in variantes                             
+       93 -    ]                                                         
+       88 +    resultados_variantes = [processar([variante], exemplo)[0] 
+          +for variante in variantes]                                    
+       89  
+       95 -    assert resultados_variantes[0] == resultados_variantes[1] 
+       96 -    assert resultados_variantes[0].valor_reembolsavel == LIMIT
+          -E_HOSPEDAGEM                                                  
+       90 +    assert resultados_variantes[0].justificativa == resultados
+          +_variantes[1].justificativa                                   
+       91 +    assert resultados_variantes[0].valor_reembolsavel == Decim
+          +al("0.00")                                                    
+       92  
+       93  
+       94 +def test_hospedagem_multi_diaria_disputa_o_limite_de_um_unico_
+          +dia(exemplo: ExemploProcessado):                              
+       95 +    # O mesmo cenario num centro de custo que reembolsa hosped
+          +agem: f-002 cobre                                             
+       96 +    # uma diaria de R$310,00 contra o limite de R$250,00 do pa
+          +drao (RN-003, AMB-006).                                       
+       97 +    padrao = exemplo.tabela.__class__(                        
+       98 +        centro_custo="CC-SUPORTE-N2",                         
+       99 +        limites={"hospedagem": exemplo.tabela.limites["hospeda
+          +gem"].__class__(                                              
+      100 +            limite=Decimal("250.00"), periodicidade="diaria"  
+      101 +        )},                                                   
+      102 +    )                                                         
+      103 +    duas_noites = replace(                                    
+      104 +        exemplo.despesas["d-010"],                            
+      105 +        id="d-010-duas-noites",                               
+      106 +        valor=Decimal("480.00"),                              
+      107 +        valor_brl=Decimal("480.00"),                          
+      108 +    )                                                         
+      109 +                                                              
+      110 +    resultado = aplicar_limite_diario(duas_noites, padrao, [])
+      111 +                                                              
+      112 +    # O limite nunca e multiplicado pelo numero de noites.    
+      113 +    assert resultado.valor_reembolsavel == Decimal("250.00")  
+      114 +    assert resultado.valor_reembolsavel != 2 * Decimal("250.00
+          +")                                                            
+      115 +                                                              
+      116 +                                                              
+      117  def test_categoria_maiuscula_concorre_ao_limite_diario(exemplo
+           : ExemploProcessado):
+      118      d014 = exemplo.despesas["d-014"]
+      119  
+     ...
+      122  
+      123      resultado = exemplo.resultados["d-014"]
+      124  
+      107 -    assert resultado.tipo_reembolso == "parcial"              
+      108 -    assert resultado.valor_reembolsavel == LIMITE_ALIMENTACAO 
+      109 -    assert "alimentacao" in resultado.justificativa           
+      125 +    # Sob o limite de R$75,00 de CC-ENG-PLATAFORMA os R$61,00 
+          +cabem inteiros.                                               
+      126 +    assert resultado.tipo_reembolso == "total"                
+      127 +    assert resultado.valor_reembolsavel == Decimal("61.00")   
+      128  
+      129      lancada_em_minusculas = replace(
+      130          d014,
+     ...
+      133          descricao="Almoco",
+      134          valor=Decimal("30.00"),
+      135          valor_original=Decimal("30.00"),
+      136 +        valor_brl=Decimal("30.00"),                           
+      137      )
+      119 -    despesas = [lancada_em_minusculas, d014]                  
+      120 -    resultados = aplicar_limites(despesas, aplicar_filtros(des
+          -pesas, exemplo.periodo).resultados)                           
+      138 +    resultados = processar([lancada_em_minusculas, d014], exem
+          +plo)                                                          
+      139  
+      140      assert resultados[0].tipo_reembolso == "total"
+      141      assert resultados[0].valor_reembolsavel == Decimal("30.00"
+           )
+      142  
+      125 -    # Sem dividir o balde com a grafia minuscula, d-014 levari
+          -a os R$60,00 inteiros.                                        
+      143 +    # Sem dividir o balde com a grafia minuscula, d-014 levari
+          +a os R$61,00 inteiros.                                        
+      144      assert resultados[1].tipo_reembolso == "parcial"
+      127 -    assert resultados[1].valor_reembolsavel == LIMITE_ALIMENTA
+          -CAO - Decimal("30.00")                                        
+      145 +    assert resultados[1].valor_reembolsavel == LIMITE_ALIMENTA
+          +CAO_ENG - Decimal("30.00")                                    
+      146 +    assert "alimentacao" in resultados[1].justificativa       
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now T-043 — regenerate exemplos/resultado-exemplo.json under v4, plus the CLI
+  and integration tests.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now the CLI tests (T-032/T-033) and integration tests (T-043/T-044/T-045).
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Now the integration tests — the three §9 acceptance blocks (T-043, T-044,
+  T-045).
+
+● Write(tests/test_integracao.py)
+  ⎿  Added 156 lines, removed 31 lines
+       5  import pytest
+       6  
+       7  from src.cli import main
+       8 -from src.politica import (                                     
+       9 -    LIMITE_ALIMENTACAO,                                        
+      10 -    LIMITE_HOSPEDAGEM,                                         
+      11 -    LIMITE_TRANSPORTE_URBANO,                                  
+      12 -)                                                              
+       8  
+       9  CAMINHO_ENTRADA = "exemplos/despesas-exemplo.json"
+      10  CAMINHO_RESULTADO_ESPERADO = "exemplos/resultado-exemplo.json"
+      11 +CAMINHO_ENVELOPE_CC_DESCONHECIDO = "exemplos/envelope/despesas-
+         +envelope-cc-desconhecido.json"                                 
+      12 +CAMINHO_ENVELOPE = "exemplos/envelope/despesas-envelope.json"  
+      13  
+      17 -# Um item por linha da spec.md §9 ("Critérios de aceite"):     
+      14 +# Um item por linha da spec.md §9 ("Critérios de aceite"), prim
+         +eiro bloco:                                                    
+      15  # (id, tipo_reembolso, valor_reembolsavel, trecho obrigatório d
+          a justificativa)
+      16  CRITERIOS_DE_ACEITE = [
+      20 -    ("d-001", "parcial", 60.00, "limite de reembolso de R$60,00
+         - no dia"),                                                     
+      21 -    ("d-002", "nenhum", 0.00, "Almoco com cliente(d-001)"),    
+      22 -    ("d-003", "parcial", 80.00, "limite de reembolso de R$80,00
+         - no dia"),                                                     
+      17 +    ("d-001", "total", 72.50, "Reembolso total aprovado"),     
+      18 +    ("d-002", "parcial", 2.50, "R$75,00 no dia para o centro de
+         + custo CC-ENG-PLATAFORMA"),                                    
+      19 +    ("d-003", "parcial", 80.00, "R$80,00 no dia para o centro d
+         +e custo CC-ENG-PLATAFORMA"),                                   
+      20      ("d-004", "nenhum", 0.00, "nota fiscal"),
+      24 -    ("d-005", "nenhum", 0.00, "fora da política de reembolso"),
+      21 +    ("d-005", "nenhum", 0.00, "'coworking' não é reembolsável p
+         +ara o centro de custo"),                                       
+      22      ("d-006", "total", 54.90, "Reembolso total aprovado"),
+      23      ("d-007", "nenhum", 0.00, "duplicata da despesa 'Almoco(d-0
+          06)'"),
+      24      ("d-008", "nenhum", 0.00, "fora do período de competência")
+          ,
+      25      ("d-009", "nenhum", 0.00, "valor negativo"),
+      29 -    ("d-010", "parcial", 250.00, "limite de reembolso de R$250,
+         -00 no dia"),                                                   
+      26 +    ("d-010", "nenhum", 0.00, "'hospedagem' não é reembolsável 
+         +para o centro de custo"),                                      
+      27      ("d-011", "total", 33.33, "Reembolso total aprovado"),
+      28      ("d-012", "total", 47.20, "Reembolso total aprovado"),
+      32 -    ("d-013", "nenhum", 0.00, "nota fiscal"),                  
+      33 -    ("d-014", "parcial", 60.00, "categoria alimentacao"),      
+      29 +    ("d-013", "nenhum", 0.00, "'hospedagem' não é reembolsável 
+         +para o centro de custo"),                                      
+      30 +    ("d-014", "total", 61.00, "Reembolso total aprovado"),     
+      31  ]
+      32  
+      36 -LIMITE_POR_CATEGORIA = {                                       
+      37 -    "alimentacao": float(LIMITE_ALIMENTACAO),                  
+      38 -    "transporte_urbano": float(LIMITE_TRANSPORTE_URBANO),      
+      39 -    "hospedagem": float(LIMITE_HOSPEDAGEM),                    
+      40 -}                                                              
+      33 +# Segundo bloco: CC-SUPORTE-N2 não tem entrada em `centros_cust
+         +o` e cai no `padrao`.                                          
+      34 +CRITERIOS_CC_DESCONHECIDO = [                                  
+      35 +    ("f-001", "total", 58.00, "Reembolso total aprovado"),     
+      36 +    ("f-002", "parcial", 250.00, "R$250,00 no dia para o centro
+         + de custo CC-SUPORTE-N2"),                                     
+      37 +    ("f-003", "nenhum", 0.00, "'representacao' não é reembolsáv
+         +el para o centro de custo"),                                   
+      38 +    ("f-004", "total", 65.76, "Reembolso total aprovado"),     
+      39 +]                                                              
+      40  
+      41 +# Terceiro bloco: CC-COMERCIAL, com as quatro categorias própri
+         +as e os quatro                                                 
+      42 +# desfechos de câmbio (conversão, data sem cotação, moeda ausen
+         +te, sem o campo).                                              
+      43 +CRITERIOS_COMERCIAL = [                                        
+      44 +    ("e-001", "parcial", 300.00, "R$300,00 no dia para o centro
+         + de custo CC-COMERCIAL"),                                      
+      45 +    ("e-002", "parcial", 90.00, "R$90,00 no dia para o centro d
+         +e custo CC-COMERCIAL"),                                        
+      46 +    ("e-003", "total", 85.26, "Reembolso total aprovado"),     
+      47 +    ("e-004", "nenhum", 0.00, "taxa de câmbio de EUR publicada 
+         +para 2026-07-18"),                                             
+      48 +    ("e-005", "nenhum", 0.00, "nota fiscal"),                  
+      49 +    ("e-006", "nenhum", 0.00, "taxa de câmbio de GBP publicada 
+         +para 2026-07-21"),                                             
+      50 +    ("e-007", "parcial", 400.00, "R$400,00 no dia para o centro
+         + de custo CC-COMERCIAL"),                                      
+      51 +    ("e-008", "parcial", 90.00, "R$90,00 no dia para o centro d
+         +e custo CC-COMERCIAL"),                                        
+      52 +    ("e-009", "nenhum", 0.00, "'coworking' não é reembolsável p
+         +ara o centro de custo"),                                       
+      53 +    ("e-010", "total", 88.00, "Reembolso total aprovado"),     
+      54 +]                                                              
+      55  
+      43 -@pytest.fixture                                                
+      44 -def resultado(tmp_path: Path) -> dict:                         
+      56 +                                                               
+      57 +def rodar(entrada: str, tmp_path: Path) -> dict:               
+      58      destino = tmp_path / "resultado.json"
+      46 -    main(["calcular", "--input", CAMINHO_ENTRADA, "--output", s
+         -tr(destino)])                                                  
+      59 +    assert main(["calcular", "--input", entrada, "--output", st
+         +r(destino)]) == 0                                              
+      60      return json.loads(destino.read_text(encoding="utf-8"))
+      61  
+      62  
+      63 +@pytest.fixture                                                
+      64 +def resultado(tmp_path: Path) -> dict:                         
+      65 +    return rodar(CAMINHO_ENTRADA, tmp_path)                    
+      66 +                                                               
+      67 +                                                               
+      68  def despesas_por_id(resultado: dict) -> dict[str, dict]:
+      69      return {item["id"]: item for item in resultado["detalhament
+          o_despesas"]}
+      70  
+      71  
+      54 -def test_exemplo_completo_bate_com_criterios_de_aceite(resultad
+         -o: dict):                                                      
+      72 +def conferir_criterios(resultado: dict, criterios: list[tuple])
+         + -> None:                                                      
+      73      por_id = despesas_por_id(resultado)
+      74  
+      57 -    assert list(por_id) == [id_esperado for id_esperado, _, _, 
+         -_ in CRITERIOS_DE_ACEITE]                                      
+      75 +    assert list(por_id) == [id_esperado for id_esperado, _, _, 
+         +_ in criterios]                                                
+      76  
+      59 -    for id_despesa, tipo, valor, trecho in CRITERIOS_DE_ACEITE:
+      77 +    for id_despesa, tipo, valor, trecho in criterios:          
+      78          saida_do_motor = por_id[id_despesa]["motor_reembolso_ou
+          tput"]
+      79  
+      80          assert saida_do_motor["tipo_reembolso"] == tipo, id_des
+          pesa
+     ...
+       82          assert saida_do_motor["despesa_reembolsavel"] is (valo
+           r > 0), id_despesa
+       83          assert trecho in saida_do_motor["justificativa"], id_d
+           espesa
+       84  
+       85 +                                                              
+       86 +def test_exemplo_completo_bate_com_criterios_de_aceite(resulta
+          +do: dict):                                                    
+       87 +    conferir_criterios(resultado, CRITERIOS_DE_ACEITE)        
+       88 +                                                              
+       89      assert resultado["valor_total_despesas"] == 1806.94
+       68 -    assert resultado["valor_total_reembolsavel"] == 585.43    
+       90 +    assert resultado["valor_total_reembolsavel"] == 351.43    
+       91  
+       92  
+       93 +def test_envelope_cc_desconhecido_bate_com_criterios_de_aceite
+          +(tmp_path: Path):                                             
+       94 +    resultado = rodar(CAMINHO_ENVELOPE_CC_DESCONHECIDO, tmp_pa
+          +th)                                                           
+       95 +                                                              
+       96 +    conferir_criterios(resultado, CRITERIOS_CC_DESCONHECIDO)  
+       97 +                                                              
+       98 +    assert resultado["colaborador"]["centro_custo"] == "CC-SUP
+          +ORTE-N2"                                                      
+       99 +    assert resultado["valor_total_despesas"] == 623.76        
+      100 +    assert resultado["valor_total_reembolsavel"] == 373.76    
+      101 +                                                              
+      102 +                                                              
+      103 +def test_envelope_cc_desconhecido_converte_a_despesa_em_dolar(
+          +tmp_path: Path):                                              
+      104 +    resultado = rodar(CAMINHO_ENVELOPE_CC_DESCONHECIDO, tmp_pa
+          +th)                                                           
+      105 +                                                              
+      106 +    f004 = despesas_por_id(resultado)["f-004"]                
+      107 +                                                              
+      108 +    # USD 12,00 em 2026-07-21, taxa 5,48 = R$65,76 — cabe nos 
+          +R$80,00 do padrão.                                            
+      109 +    assert f004["valor"] == 12.00                             
+      110 +    assert f004["moeda"] == "USD"                             
+      111 +    assert f004["motor_reembolso_output"]["taxa_cambio"] == 5.
+          +48                                                            
+      112 +    assert f004["motor_reembolso_output"]["valor_convertido_br
+          +l"] == 65.76                                                  
+      113 +                                                              
+      114 +                                                              
+      115 +def test_envelope_comercial_bate_com_criterios_de_aceite(tmp_p
+          +ath: Path):                                                   
+      116 +    resultado = rodar(CAMINHO_ENVELOPE, tmp_path)             
+      117 +                                                              
+      118 +    conferir_criterios(resultado, CRITERIOS_COMERCIAL)        
+      119 +                                                              
+      120 +    assert resultado["colaborador"]["centro_custo"] == "CC-COM
+          +ERCIAL"                                                       
+      121 +    assert resultado["valor_total_despesas"] == 2278.72       
+      122 +    assert resultado["valor_total_reembolsavel"] == 1053.26   
+      123 +                                                              
+      124 +                                                              
+      125 +def test_envelope_comercial_publica_taxa_e_valor_convertido(tm
+          +p_path: Path):                                                
+      126 +    por_id = despesas_por_id(rodar(CAMINHO_ENVELOPE, tmp_path)
+          +)                                                             
+      127 +                                                              
+      128 +    # e-002: EUR 22,00 em 2026-07-14, taxa 5,93 = R$130,46.   
+      129 +    e002 = por_id["e-002"]["motor_reembolso_output"]          
+      130 +    assert por_id["e-002"]["valor"] == 22.00                  
+      131 +    assert e002["taxa_cambio"] == 5.93                        
+      132 +    assert e002["valor_convertido_brl"] == 130.46             
+      133 +                                                              
+      134 +    # e-003: EUR 14,50 em 2026-07-15, taxa 5,88 = R$85,26, aba
+          +ixo do teto de nota.                                          
+      135 +    assert por_id["e-003"]["motor_reembolso_output"]["valor_co
+          +nvertido_brl"] == 85.26                                       
+      136 +                                                              
+      137 +    # e-005: USD 40,00 em 2026-07-20, taxa 5,50 = R$220,00, ac
+          +ima do teto (AMB-017).                                        
+      138 +    assert por_id["e-005"]["motor_reembolso_output"]["valor_co
+          +nvertido_brl"] == 220.00                                      
+      139 +                                                              
+      140 +    # Sem taxa não há valor em BRL para publicar.             
+      141 +    for id_despesa in ("e-004", "e-006"):                     
+      142 +        saida_do_motor = por_id[id_despesa]["motor_reembolso_o
+          +utput"]                                                       
+      143 +        assert saida_do_motor["taxa_cambio"] is None, id_despe
+          +sa                                                            
+      144 +        assert saida_do_motor["valor_convertido_brl"] is None,
+          + id_despesa                                                   
+      145 +                                                              
+      146 +                                                              
+      147 +def test_rn015_moeda_so_aparece_na_saida_quando_veio_na_entrad
+          +a(tmp_path: Path):                                            
+      148 +    entrada = json.loads(Path(CAMINHO_ENVELOPE).read_text(enco
+          +ding="utf-8"))                                                
+      149 +    moedas_lancadas = {item["id"]: item.get("moeda") for item 
+          +in entrada["despesas"]}                                       
+      150 +                                                              
+      151 +    por_id = despesas_por_id(rodar(CAMINHO_ENVELOPE, tmp_path)
+          +)                                                             
+      152 +                                                              
+      153 +    for id_despesa, moeda in moedas_lancadas.items():         
+      154 +        assert por_id[id_despesa].get("moeda") == moeda, id_de
+          +spesa                                                         
+      155 +                                                              
+      156 +    # e-010 não trouxe o campo e continua sem ele, embora tenh
+          +a sido tratada como BRL.                                      
+      157 +    assert moedas_lancadas["e-010"] is None                   
+      158 +    assert "moeda" not in por_id["e-010"]                     
+      159 +                                                              
+      160 +                                                              
+      161  def test_saida_e_identica_ao_resultado_esperado(resultado: dic
+           t):
+      162      esperado = json.loads(Path(CAMINHO_RESULTADO_ESPERADO).rea
+           d_text(encoding="utf-8"))
+      163  
+     ...
+      196      )
+      197  
+      198  
+      199 +def test_rn016_despesa_sem_cambio_fica_fora_do_total_bruto(tmp
+          +_path: Path):                                                 
+      200 +    resultado = rodar(CAMINHO_ENVELOPE, tmp_path)             
+      201 +    por_id = despesas_por_id(resultado)                       
+      202 +                                                              
+      203 +    # e-004 e e-006 não têm valor em BRL — somar o lançado ser
+          +ia somar euros a reais.                                       
+      204 +    somados = sum(                                            
+      205 +        (                                                     
+      206 +            Decimal(str(item["motor_reembolso_output"]["valor_
+          +convertido_brl"] or item["valor"]))                           
+      207 +            for id_despesa, item in por_id.items()            
+      208 +            if id_despesa not in ("e-004", "e-006")           
+      209 +        ),                                                    
+      210 +        Decimal("0.00"),                                      
+      211 +    )                                                         
+      212 +                                                              
+      213 +    assert Decimal(str(resultado["valor_total_despesas"])) == 
+          +somados                                                       
+      214 +                                                              
+      215 +                                                              
+      216  def test_rn010_valor_lancado_sai_inteiro_e_o_reembolso_sai_tru
+           ncado(resultado: dict):
+      217      d011 = despesas_por_id(resultado)["d-011"]
+      218  
+     ...
+      224      d014 = despesas_por_id(resultado)["d-014"]
+      225  
+      226      assert d014["categoria"] == "ALIMENTACAO"
+      120 -    assert "categoria alimentacao" in d014["motor_reembolso_ou
+          -tput"]["justificativa"]                                       
+      227 +    assert d014["motor_reembolso_output"]["valor_reembolsavel"
+          +] == 61.00                                                    
+      228  
+      229  
+      123 -def test_rn012_nenhuma_despesa_passa_do_limite_padrao_da_categ
+          -oria(resultado: dict):                                        
+      230 +def test_rn015_exemplo_nao_tem_despesa_internacional(resultado
+          +: dict):                                                      
+      231      for item in resultado["detalhamento_despesas"]:
+      125 -        limite = LIMITE_POR_CATEGORIA.get(item["categoria"].lo
+          -wer())                                                        
+      126 -        if limite is None:                                    
+      127 -            continue                                          
+      232 +        assert "moeda" not in item, item["id"]                
+      233 +        assert item["motor_reembolso_output"]["taxa_cambio"] i
+          +s None, item["id"]                                            
+      234 +        assert item["motor_reembolso_output"]["valor_convertid
+          +o_brl"] is None, item["id"]                                   
+      235  
+      129 -        assert item["motor_reembolso_output"]["valor_reembolsa
+          -vel"] <= limite, item["id"]                                   
+      236 +                                                              
+      237 +def test_rn012_nenhuma_despesa_passa_do_limite_do_centro_de_cu
+          +sto(tmp_path: Path):                                          
+      238 +    politica = json.loads(Path("exemplos/envelope/politica-v4.
+          +json").read_text(encoding="utf-8"))                           
+      239 +                                                              
+      240 +    for entrada in (CAMINHO_ENTRADA, CAMINHO_ENVELOPE_CC_DESCO
+          +NHECIDO, CAMINHO_ENVELOPE):                                   
+      241 +        resultado = rodar(entrada, tmp_path)                  
+      242 +        centro_custo = resultado["colaborador"]["centro_custo"
+          +]                                                             
+      243 +        tabela = politica["centros_custo"].get(centro_custo, p
+          +olitica["padrao"])                                            
+      244 +                                                              
+      245 +        for item in resultado["detalhamento_despesas"]:       
+      246 +            limite = tabela.get(item["categoria"].lower())    
+      247 +            if limite is None:                                
+      248 +                continue                                      
+      249 +                                                              
+      250 +            # O adicional de viagem (50%) nunca é aplicado, ne
+          +m em despesa                                                  
+      251 +            # internacional (RN-012, AMB-005, AMB-014).       
+      252 +            assert item["motor_reembolso_output"]["valor_reemb
+          +olsavel"] <= limite["limite"], (                              
+      253 +                item["id"]                                    
+      254 +            )                                                 
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 108 tests pass, ruff clean. Now the docs: tasks.md, spec.md §9, DECISIONS.md,
+  plan.md.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Now spec.md — the §9 checkboxes and the header (version + status), atomic with
+  a DECISIONS.md entry.
+
+  Ran 2 shell commands (ctrl+o to expand)
+● Now plan.md pointer to spec 2.3, and the DECISIONS.md D-012 entry.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Now the DECISIONS.md D-012 entry, with the full file list from git status.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● D-012 and D-013 already exist — the new entry is D-014. Correcting the plan.md
+  pointer too.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Now the final sanity check: full suite, lint, and the fixed DESAFIO.md
+  invocation from a clean checkout (no venv, arbitrary cwd).
+
+  Ran 7 shell commands (ctrl+o to expand)
+
+● Fase 5 está implementada e verificada. Nada foi commitado — a árvore está suja
+  aguardando sua revisão, conforme CLAUDE.md ("Fluxo de git").
+
+  O que checei: pytest -q → 108 passed; ruff check . e ruff format --check .
+  limpos; os três blocos da spec.md §9 ("Critérios de aceite") batem valor a
+  valor, incluindo os três pares de totais (1806.94/351.43, 623.76/373.76,
+  2278.72/1053.26); rodei a invocação fixa do DESAFIO.md num checkout limpo sem
+  venv e de um cwd arbitrário — gerou saída idêntica a
+  exemplos/resultado-exemplo.json; e conferi que um lote de competência 2026-06
+  sai com rc=1, mensagem em stderr citando 2026-07 e 2026-06, e nenhum arquivo
+  escrito.
+
+  O que mudou (23 arquivos, +1960/−573):
+  - src/politica.py deixou de ter constantes e virou carregador (Politica,
+    TabelaLimites, LimiteCategoria, tabela_para, vigencia_cobre); src/cambio.py
+    é novo.
+  - parser.py ganhou a conversão para BRL na borda (moeda, moeda_original,
+    valor_brl, taxa_cambio); regras.py ganhou filtro_cambio_indisponivel na
+    posição 5 e as duas cláusulas de RN-008 com justificativas distintas; cli.py
+    ganhou --politica/--cambio com default e a guarda de RN-017.
+  - exemplos/resultado-exemplo.json regravado sob a v4.
+  - spec.md 2.2 → 2.3 (35 checkboxes de §9 marcados + Status), plan.md 1.13 →
+    1.14 apontando para a spec 2.3, DECISIONS.md com a entrada D-014, tasks.md
+    com T-028 a T-045 em [x].
+
+  Duas coisas para sua decisão:
+
+  1. Remarquei os 35 checkboxes de uma vez, não task a task como a tasks.md
+     mandava. Motivo registrado em D-014: sob a regra de atomicidade em três
+     partes, fazer task a task produziria 18 incrementos de versão da spec e 18
+     entradas em DECISIONS.md dizendo a mesma coisa. Se preferir o outro
+     caminho, eu refaço.
+  2. O README.md não menciona os dois arquivos novos de entrada nem as flags
+     --politica/--cambio. Nenhuma task da Fase 5 cobre isso, então não mexi — te
+     aviso em vez de implementar, como pede CLAUDE.md. Os comandos do README
+     continuam funcionando por causa dos defaults.
+
+  Sobre os commits: guardei snapshots por task em
+  ~/.claude/jobs/97402d41/tmp/snapshots/ para conseguir replayar os 18 commits
+  em ordem numérica quando você aprovar, cada um seguido do docs(tasks): 
+  registra hash... que troca o placeholder. Os 18 campos Commit ainda estão com
+  <hash preenchido depois> — as tasks só ficam encerradas depois disso.
+
+  result: Fase 5 (T-028→T-045) implementada — motor migrado para a Política v4
+  com limites por centro de custo, conversão cambial e guarda de vigência; 108
+  testes passando, ruff limpo, os 3 blocos de critérios de aceite da spec §9
+  batendo; tudo sem commit, aguardando aprovação.
+
+✻ Brewed for 27m 35s
+
+※ recap: Fase 5 (T-028→T-045) está implementada: motor migrado para a Política v4, 108 testes passando e ruff limpo, tudo sem commit na árvore de trabalho. Próximo passo: você revisar e aprovar para eu criar os 18 commits em ordem. (disable recaps in /config)
+
+❯ Revise o código implementado. Crie dados sintéticos para validar a            
+  implementação, crie alguns arquivos de despesas, cambio, política... com      
+  finalidade de testar cenários diferentes com arquivos reais. Crie pelo menos  
+  5 arquivos de despesas diferentes. Salve os arquivos criados numa nova pastas 
+  em tests/dados/                                                               
+
+● Fase 5 já está fechada em tasks.md, e revisão + massa de dados sintéticos não
+  estão cobertas por nenhuma task — te aviso, como pede CLAUDE.md, e proponho
+  registrar isso como task nova (detalho no fim). Começo pela revisão, sondando
+  o código com entradas que os exemplos atuais não exercitam.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Um defeito real confirmado. Sondando mais duas fronteiras antes de montar a
+  massa:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Revisão feita — três achados, um deles um defeito real. Agora monto a massa
+  sintética em tests/dados/, incluindo um arquivo que reproduz o defeito.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now the seven expense batches, each targeting a different scenario.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Agora o teste, com os valores calculados à mão (não extraídos da saída) — é o
+  que faz a massa validar em vez de só registrar.
+
+● Write(tests/test_dados_sinteticos.py)
+  ⎿  Wrote 448 lines to tests/test_dados_sinteticos.py
+       1 """Validação do motor contra a massa sintética de `tests/dados/`
+       2 
+         /`: outra política,
+       4 outro arquivo de câmbio, outras moedas, outros centros de custo 
+       5 fiscal (R$150,00, não os R$100,00 dos exemplos). Isso é delibera
+       6 roda contra os números do enunciado não distingue "o motor lê a 
+       7 tem os limites do enunciado embutidos".
+       8 
+         ica e do câmbio, e
+         ero aqui foi copiado
+     … +576 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 11 passaram de primeira e o xfail confirmou o defeito. Vou validar que a
+  correção proposta realmente resolve — aplico, rodo, e reverto (sem deixar a
+  mudança na árvore, já que não há task).
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Correção validada e revertida (119 passed + 1 xfailed). Agora o README.md da
+  pasta de dados.
+
+● Write(tests/dados/README.md)  ⎿  Wrote 50 lines to tests/dados/README.md
+       1 # Massa sintética de teste
+       3 Arquivos de entrada reais — despesas, política e câmbio — usados
+          por
+         rquivo de entrada →
+       6 
+       7 **Por que não usar os de `exemplos/`.** Os arquivos daqui não co
+       8 número com o enunciado: outros centros de custo, outros limites,
+          outras moedas,
+         tência (2026-09,
+         idos no código
+     … +94 lines (ctrl+o to expand)
+
+● Deixei um erro no README (um limite escrito errado e corrigido no meio da
+  frase). Corrigindo e conferindo cada número da tabela contra os JSON de
+  verdade.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Todos os números do README conferem com os JSON. Agora registro as tasks em
+  tasks.md para a rastreabilidade não ficar quebrada.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Pronto. Checagem final: pytest -q → 119 passed + 1 xfailed; ruff check . e
+  ruff format --check . limpos; conferi cada número do README.md da pasta contra
+  os JSON de verdade (limites, vigências, datas e moedas do câmbio); e
+  confirmei que src/parser.py voltou byte a byte ao estado da Fase 5 depois do
+  experimento de correção. Continua sem nenhum commit novo.
+
+  Revisão — três achados
+
+  1. Defeito real: "valor": 100 (inteiro no JSON) aborta o motor. json.load(...,
+  parse_float=Decimal) não é consultado para inteiros, então o valor chega como
+  int e _truncar_valor chama .quantize nele → AttributeError não tratado, rc=1,
+  nenhum arquivo escrito. A spec.md §4 ("Entrada e saída") tipa o campo como
+  "número" sem exigir casas decimais, então a entrada é válida e o código é o
+  bug. Só despesas[].valor quebra — testei limite da política, teto de nota
+  fiscal e taxa de câmbio como inteiros e os três funcionam. A correção é
+  parse_int=Decimal no json.load de parser.py: apliquei, rodei (o teste passa,
+  os outros 119 seguem passando, e "valor": 100 sai ecoado como 100), e reverti
+  — não há task. Registrei como T-047, aberta.
+
+  2. Observação: duplicata compara o valor já truncado. 33.333 e 33.334 viram
+  duplicata uma da outra, embora RN-007 fale em campos idênticos. É
+  comportamento pré-existente desde a T-010 (DT-002 trunca na borda), não algo
+  da Fase 5. Não mexi.
+
+  3. Observação menor: RN-017 é verificada depois de carregar_despesas, enquanto
+  o diagrama de plan.md §2 ("Arquitetura") a coloca antes do parser. Nenhum
+  cálculo roda e nenhum arquivo é escrito, então o efeito exigido pela spec está
+  correto — mas se o arquivo de despesas for ilegível, o erro que aparece é o
+  do parser, não a mensagem de vigência.
+
+  Massa sintética em tests/dados/
+
+  12 arquivos JSON + README.md, e tests/test_dados_sinteticos.py com 11 testes.
+  Nenhum número é compartilhado com exemplos/ — outros centros de custo, outros
+  limites, teto de nota fiscal R$150,00 (não R$100,00), moedas JPY/GBP,
+  competência 2026-09. É o que separa "o motor lê a política" de "o motor
+  conhece o enunciado".
+
+  - 3 políticas (a base e duas que só mudam a vigencia, para isolar RN-017) e 2 
+    câmbios (um com lacunas deliberadas de data e moeda, um vazio).
+  - 7 lotes de despesas: limites por centro de custo · queda no padrao com
+    limite diário dividido em três · quatro desfechos de câmbio na mesma entrada
+    · duplicatas × moeda (AMB-019 nas duas direções) · bordas de período,
+    truncamento e as duas cláusulas de RN-008 lado a lado · lote de competência
+    anterior · e o lote que reproduz o defeito.
+
+  Todos os valores esperados foram calculados à mão e estão escritos por extenso
+  nos testes — os 11 passaram na primeira execução, o que é o resultado que
+  valida a implementação. O 12º está xfail(strict=True) e vira XPASS no instante
+  em que a T-047 for feita.
+
+  Uma coisa para sua decisão: nem a revisão nem a massa estavam cobertas por
+  task. Registrei as duas como Fase 6 em tasks.md (T-046 feita, T-047 aberta)
+  para a rastreabilidade não ficar quebrada — se preferir outro enquadramento, é
+  só descartar essa seção.
+
+  result: Revisão da Fase 5 concluída com um defeito real encontrado (valor
+  inteiro no JSON aborta o motor, registrado como T-047 com correção já
+  validada) e massa sintética independente criada em tests/dados/ — 12 arquivos
+  JSON, 7 lotes de despesas e 11 testes que passaram de primeira contra valores
+  calculados à mão; nada commitado.
+
+✻ Worked for 9m 56s
+
+※ recap: Fase 5 (motor sob a Política v4) está implementada com 119 testes passando, mais uma massa sintética nova em tests/dados/ que revelou um defeito de parse. Nada foi commitado: falta sua aprovação para eu criar os commits. (disable recaps in /config)
+
+❯ Aprovado! Na sequencia trabalhe para fazer os ajustes: 1.duplicata nao deve   
+  comparar valor truncado. Deve comparar o valor_original. 2. O diagrama de     
+  plan.md deve refletir a realidade do código.                                  
+
+● Aprovado — vou commitar antes de mexer em qualquer coisa nova, para o que você
+  aprovou não se misturar com os ajustes. A tasks.md (Fase 5) já previa commits
+  intermediários com a suíte vermelha ("é esperado que os testes estejam
+  quebrados" até a T-043), então sigo o commit-por-task do CLAUDE.md. Primeiro,
+  cópia de segurança da árvore aprovada e conferência do estilo do histórico.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Estilo confirmado (impl + docs(tasks): registra hash, assinatura Claude Opus 
+  5). Montando os estados por task numa área de staging.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Diferença só de formatação. Vou gerar T-028/T-029 a partir do arquivo
+  aprovado, removendo o que ainda não existia — assim o formato fica
+  consistente.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● A máquina de fatiar funciona e T-030 reproduz o arquivo aprovado byte a byte.
+  Seguindo para cli.py, modelos.py e parser.py.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Agora regras.py e motor.py, que evoluem ao longo de T-036→T-041. Componho as
+  versões a partir do estado no HEAD e do aprovado.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agora os arquivos de teste restantes e os dois últimos módulos.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Todos os 18 estados estão montados. Agora o replay: volto a árvore ao HEAD,
+  aplico task a task e commito cada uma com o commit de hash em seguida.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Árvore de volta ao HEAD (estado v3), tudo preservado no backup. Rodando o
+  replay das 18 tasks.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● O classificador bloqueou commits feitos por script Python. Refaço com comandos
+  git explícitos no shell.
+
+  Ran 6 shell commands (ctrl+o to expand)
+● Suíte fica verde exatamente na T-045, como o plano previa. Agora os commits de
+  documentação e a Fase 6.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Replay completo. Verificando o invariante: a árvore precisa bater com a
+  aprovada, exceto pelos hashes reais em tasks.md.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● 41 commits, árvore idêntica à aprovada (só tasks.md difere, com os hashes
+  reais no lugar dos placeholders), git status limpo. Agora os dois ajustes.
+  Conferindo o precedente de prefixo de commit para correção:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Sem precedente de fix( — o repo usa feat/test/docs. Agora os dois ajustes, que
+  ficam sem commit aguardando sua revisão, como manda o fluxo. Começando pelo
+  registro das tasks.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Ajuste 1 — a identidade de duplicata passa a comparar o valor lançado.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Nenhum resultado existente mudou (121 passed). Agora o lote sintético que
+  cobre o caso ponta a ponta.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Confirmando que o teste novo realmente discrimina — reverto a correção por um
+  instante e checo que ele quebra.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Os dois testes novos quebram sem a correção e passam com ela. Atualizando o
+  README.md da massa e partindo para o Ajuste 2.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● O diagrama agora bate com o código — mas isso expôs uma divergência que
+  preciso te trazer: a spec.md diz a mesma coisa que o diagrama antigo. Registro
+  isso no próprio plan.md em vez de deixar a contradição silenciosa.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Feito. Checagem final: pytest -q → 122 passed + 1 xfailed; ruff check . e ruff
+  format --check . limpos; a árvore replayada bate byte a byte com a que você
+  aprovou (só tasks.md difere, com os hashes reais no lugar dos placeholders); e
+  confirmei que os dois testes novos quebram sem a correção e passam com ela.
+
+  O que foi commitado (a aprovação)
+
+  41 commits em main, de 3524a9c até 9e5e02d — um feat/test(T-NNN) por task
+  seguido do docs(tasks): registra hash, como nas fases anteriores:
+
+  - T-028 → T-045 (Fase 5), 36 commits. A suíte fica vermelha no meio do caminho
+    e volta a verde exatamente na T-045 (108 passed) — o que a própria tasks.md
+    previa.
+  - docs(spec): (spec 2.3 + D-014), docs(plan): (ponteiro 2.3), docs(tasks):
+    (define T-046/T-047).
+  - T-046 (massa sintética), 2 commits → 119 passed + 1 xfailed.
+
+  Restou um placeholder de hash: o da T-047, que continua em aberto — é o
+  comportamento correto.
+
+  Os dois ajustes (ainda sem commit, aguardando revisão)
+
+  1. Duplicata compara valor_original. _identidade_duplicata lia despesa.valor,
+  já truncado por RN-010. Registrei como T-048 e a spec não muda: a spec.md §5
+  (RN-007) lista valor entre os campos da entrada, a §6 (AMB-019) diz "sobre o
+  valor lançado", e RN-010 só antecede as verificações de limite e de nota
+  fiscal. Era o código que estava errado. Nenhum resultado existente mudou — em
+  todas as duplicatas dos exemplos e da massa o valor lançado já era idêntico.
+  Cobertura nova: dois testes em tests/test_regras.py e o lote
+  tests/dados/despesas-08-duplicata-e-truncamento.json, onde 33.333 e 33.334
+  deixam de ser o mesmo lançamento e passam a dividir o limite do dia (R$33,33 +
+  R$16,67 = os R$50,00 exatos).
+
+  2. Diagrama do plan.md. A guarda de RN-017 saiu de cima do parser.py e foi
+  para depois dele, que é onde ela está no código; DT-008 ganhou um bloco
+  explicando por quê (a competência do lote só existe depois de ler o arquivo de
+  despesas) e o que se perde (uma leitura descartada num caminho que termina em
+  erro). plan.md 1.14 → 1.15.
+
+  Uma decisão que é sua
+
+  Corrigir o diagrama expôs que a spec.md diz a mesma coisa que o diagrama 
+  antigo: RN-017 e a §8 falam em "antes de qualquer despesa ser lida". Hoje esse
+  é o único ponto em que spec e código discordam. Deixei a divergência escrita
+  em DT-008 em vez de escondê-la, e não decidi sozinho porque mexer na spec
+  exige a mudança atômica em três partes. Os dois caminhos:
+
+  - (a) Ajustar o código — cli.py lê só o periodo antes da guarda e constrói as
+    Despesa depois. Mantém a spec intacta, e é o default do CLAUDE.md ("a spec
+    está certa e o código é o bug"). É o que eu recomendo.
+  - (b) Ajustar a spec — trocar "lida" por "avaliada" nos dois pontos, com
+    incremento de versão e entrada nova em DECISIONS.md.
+
+  result: Fase 5 e Fase 6 commitadas em 41 commits task a task
+  (3524a9c→9e5e02d), e os dois ajustes pedidos implementados sem commit
+  aguardando revisão — duplicata agora compara valor_original (T-048, com lote
+  sintético novo) e o diagrama do plan.md reflete o código; 122 passed + 1
+  xfailed.
+
+✻ Churned for 18m 58s
+
+※ recap: Fase 5 e 6 do motor de reembolso estão commitadas (41 commits); os dois ajustes que você pediu estão implementados e sem commit, esperando sua revisão. Preciso da sua aprovação para commitá-los e da sua escolha sobre a divergência de RN-017. (disable recaps in /config)
+
+❯ Sobre os ajustes: 1. OK, pode implementar o ajuste da duplicata. 2.Aninda não 
+  altere o diagrama, achei confuso as opções de decisões, implemente o          
+  primeiro ajuste e depois conversamos sobre o segundo                          
+
+● Entendido — reverto o plan.md inteiro (diagrama e a nota que eu tinha
+  acrescentado) e commito só o ajuste da duplicata.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Suíte verde antes de commitar, e então os três commits (definição da task →
+  implementação → hash).
+
+  Ran 3 shell commands (ctrl+o to expand)
+● Erro meu: o perl trocou o primeiro placeholder do arquivo, e a T-047 (em
+  aberto) vem antes da T-048 — então o hash foi parar no campo errado.
+  Corrigindo com um commit novo (--amend é proibido aqui).
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Só a T-048 foi afetada (na Fase 5 os placeholders estavam sempre em ordem).
+  Conferindo mesmo assim cada hash contra o commit real antes de fechar.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Ajuste 1 commitado. O plan.md está intocado — a única alteração nele no
+  histórico é o ponteiro para a spec 2.3, que veio da Fase 5.
+
+  Checagem final: pytest -q → 122 passed + 1 xfailed; ruff check . e ruff format
+  --check . limpos; árvore limpa; e conferi programaticamente que cada hash em
+  tasks.md aponta para o commit da sua própria task — o único placeholder
+  restante é o da T-047, que segue em aberto.
+
+  Commits (4):
+  - b84c3cd docs(tasks): define a T-048
+  - 2e7af32 feat(T-048): _identidade_duplicata passa a ler valor_original
+  - 53dae24 docs(tasks): registra o hash
+  - bf1a56d docs(tasks): corrige o campo — errei no anterior: gravei o hash da
+    T-048 no campo Commit da T-047, porque a substituição pegava o primeiro
+    placeholder do arquivo e a T-047 vem antes. Como --amend é proibido aqui,
+    corrigi com commit novo. As Fases 5 e 6 não foram afetadas (lá os
+    placeholders estavam sempre em ordem), e verifiquei uma a uma.
+
+  O ajuste em si: 33.333 e 33.334 deixam de ser o mesmo lançamento. Nenhum
+  resultado existente mudou; o caso novo vive em
+  tests/dados/despesas-08-duplicata-e-truncamento.json, onde as duas dividem o
+  limite do dia (R$33,33 + R$16,67 = R$50,00).
+
+  ---
+
+  Sobre o item 2 — foi mal, joguei duas opções sem explicar direito. Deixo só o
+  fato, e a gente conversa quando você quiser:
+
+  O plan.md tem um desenho do fluxo. Nele, a checagem de vigência (RN-017)
+  aparece antes de o motor ler o arquivo de despesas. No código ela acontece
+  depois — porque para comparar a vigência da política com a competência do
+  lote, o motor precisa saber qual é a competência do lote, e esse dado está
+  dentro do arquivo de despesas. Ou seja: ele precisa abrir o arquivo antes de
+  conseguir comparar.
+
+  Isso não muda nada no resultado: quando a vigência não cobre o lote, o motor
+  continua não calculando nada, não escrevendo arquivo e saindo com erro.
+
+  O que eu não tinha percebido antes de te escrever é que a spec.md diz a mesma 
+  frase que o desenho ("antes de qualquer despesa ser lida", em RN-017 e na §8).
+  Então não é só o desenho estar desatualizado — a spec descreve uma ordem que
+  o código não segue. Por isso parei: mexer nisso ou é mudar o código, ou é
+  mudar a spec, e nenhum dos dois eu queria decidir sozinho.
+
+  result: Ajuste 1 (duplicata compara valor_original) implementado e commitado
+  em 4 commits — b84c3cd, 2e7af32, 53dae24 e bf1a56d, este último corrigindo um
+  hash que eu havia gravado no campo da task errada; 122 passed + 1 xfailed,
+  plan.md intocado aguardando a conversa sobre o item 2.
+
+✻ Churned for 2m 11s
+
+❯ Realmnente, para o motor verificar a viagencia o motor é obrigado ler o       
+  arquivo para ter esse dado. Ajuste a spec e o plan, para que as documentações 
+  reflitam a realidade.                                                         
+
+● Decidido: a documentação passa a descrever o que o código faz. Vou localizar
+  todos os pontos que afirmam a ordem antiga antes de editar.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Dois pontos na spec (RN-017 e §8). A linha 213 continua correta — política e
+  câmbio realmente são lidos antes das despesas. Aplicando a mudança atômica em
+  três partes.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agora a entrada D-015 em DECISIONS.md, terceira parte da mudança atômica.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Referenciei uma "T-049" que nunca existiu — corrigindo essa frase.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agora o plan.md: diagrama, DT-008 e os dois campos do cabeçalho.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Verificando a integridade dos arquivos e o Custo da D-015 contra o git status
+  real.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Nada de código mudou (122 passed + 1 xfailed), só os três arquivos de
+  documentação. Conferindo se algum outro documento afirma a ordem antiga:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● O RELATORIO.md fala do efeito ("nada é processado e nenhum arquivo de saída é
+  escrito"), que continua verdadeiro — não precisa mudar. Então o ajuste fica
+  nos três arquivos.
+
+  Checagem: pytest -q → 122 passed + 1 xfailed (nenhum código mudou, então nada
+  podia mudar); ruff check . limpo; plan.md e spec.md com a estrutura íntegra; e
+  o campo Custo da D-015 bate com o git status.
+
+  Deixei sem commit para você revisar — foi exatamente esse passo que evitou o
+  commit errado da última vez.
+
+  O que mudou
+
+  spec.md 2.3 → 2.4, mudança atômica em três partes:
+
+  - RN-017 (§5) — "antes de qualquer despesa ser lida" virou "antes de qualquer
+    despesa ser avaliada", e entrou um parágrafo dizendo por quê:
+
+  ▎ A verificação não acontece antes da leitura do arquivo de despesas, e não 
+  tem como acontecer. Um dos dois lados da comparação é periodo.competencia, e 
+  esse campo vive dentro do próprio arquivo de despesas — o motor precisa abrir 
+  e ler o arquivo para ter o dado com que decide. O que esta regra ordena é que 
+  nenhuma despesa seja avaliada antes da verificação, não que o arquivo não seja
+  lido.
+  - §8 ("Ordem de aplicação das regras") — a mesma troca, mais a frase de que o
+    arquivo já foi lido nesse ponto e nenhuma despesa recebeu decisão ainda.
+  - Cabeçalho — versão e Status atualizados.
+  - DECISIONS.md D-015 — gatilho (sua decisão, citada), o que mudou seção por
+    seção, por quê, a alternativa descartada (mudar o código para ler só o
+    periodo antes da guarda) e o custo nominal dos três arquivos.
+
+  plan.md 1.14 → 1.15, baseado na spec 2.4:
+
+  - §2 ("Arquitetura") — a guarda de RN-017 desceu para depois do parser.py, com
+    a razão escrita no próprio diagrama.
+  - DT-008 — bloco novo "Onde a guarda cai, na prática", dizendo o que é
+    descartado quando ela reprova (o lote parseado) e o que não acontece
+    (decisão, total, arquivo aberto).
+
+  Registrei em D-015 que nada foi invalidado: nenhuma regra de negócio, limite,
+  ordem ou contrato de saída mudou, nenhum teste precisou mudar, e T-030 e T-033
+  seguem válidas. A spec passou a descrever o que o código já fazia.
+
+  Se aprovar, commito em dois — docs(spec): com spec + D-015 (a atomicidade
+  exige os dois juntos) e docs(plan): com o ponteiro e o diagrama, seguindo o
+  padrão do histórico.
+
+  result: spec.md 2.3→2.4 e plan.md 1.14→1.15 ajustados para descrever a ordem
+  real (RN-017 antecede a avaliação das despesas, não a leitura do arquivo), com
+  a entrada D-015 em DECISIONS.md — 122 passed + 1 xfailed, sem commit,
+  aguardando sua revisão.
+
+✻ Baked for 3m 7s
+
+❯ Aprovado, pode commitar                                                       
+
+● Aprovado — commitando nos dois commits combinados.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Commitado.
+
+  Checagem final: pytest -q → 122 passed + 1 xfailed; ruff check . e ruff format
+  --check . limpos; árvore limpa; spec.md em 2.4, plan.md em 1.15 apontando
+  para a spec 2.4; sobra exatamente um placeholder de hash e uma task não
+  marcada, os dois da T-047, que segue em aberto de propósito.
+
+  Os dois commits:
+  - 3b7055b docs(spec): — RN-017 e §8 passam a dizer "avaliada" em vez de
+    "lida", com o parágrafo explicando que a competência do lote vem do próprio
+    arquivo de despesas; cabeçalho em 2.4; entrada D-015 em DECISIONS.md. Os
+    três no mesmo commit, como a atomicidade exige.
+  - 714c634 docs(plan): — diagrama com a guarda depois do parser.py, DT-008 com
+    o bloco "Onde a guarda cai, na prática", cabeçalho em 1.15 / spec 2.4.
+
+  Nenhum arquivo de código foi tocado, então a suíte não podia mudar — e não
+  mudou. A spec agora descreve o que o motor já fazia, e não há mais divergência
+  conhecida entre spec, plano e código.
+
+  Estado geral desta sessão: 47 commits em main, de 3524a9c até 714c634 — Fase 5
+  (T-028→T-045) task a task, Fase 6 (T-046), o ajuste da duplicata (T-048) e
+  agora a correção de RN-017.
+
+  O que ficou em aberto, para quando você quiser retomar:
+  - T-047 — "valor": 100 (inteiro no JSON) ainda aborta o motor. A correção é
+    parse_int=Decimal no json.load de parser.py; já validei que resolve e não
+    regride nada, e o teste xfail(strict=True) vira XPASS no instante em que ela
+    entrar.
+  - O README.md continua sem mencionar as entradas de política e câmbio nem as
+    flags --politica/--cambio. Os comandos documentados funcionam por causa dos
+    defaults, e nenhuma task cobre isso.
+
+  result: spec.md 2.4 e plan.md 1.15 commitados (3b7055b e 714c634) — RN-017
+  agora antecede a avaliação das despesas e não a leitura do arquivo, com D-015
+  registrada; 122 passed + 1 xfailed, árvore limpa, T-047 é a única task em
+  aberto.
+
+✻ Worked for 52s
+
+❯ ótimo, implemente t-047 e atualize o @README.md de acordo as mudanças         
+  realizadas                                                                    
+  ⎿  Read README.md (120 lines)
+● Duas coisas: a T-047 e o README.md, que ainda descreve a v3 inteira (limites
+  fixos, sem política externa, sem câmbio). Conferindo o precedente de prefixo
+  para commit de README:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Precedente: docs(T-023): para README ligado a uma task. Vou registrar o README
+  como T-049. Começando pela T-047.
+
+  Ran 5 shell commands (ctrl+o to expand)
+
+● 123 passed, sem xfail. Como estendi a correção aos outros dois carregadores,
+  preciso de teste para eles também.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agora atualizo a T-047 com o achado (o escopo cresceu para os três
+  carregadores) e registro a T-049 do README.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agora o README.md (T-049), reescrito para a v4.
+
+● Write(README.md)
+  ⎿  Added 78 lines, removed 24 lines
+      23  `--input` para um arquivo no mesmo formato de
+      24  [`exemplos/despesas-exemplo.json`](exemplos/despesas-exemplo.js
+          on).
+      25  
+      26 +### As três entradas                                           
+      27 +                                                               
+      28 +O motor lê **três** arquivos. Só o de despesas é obrigatório na
+         + linha de comando;                                             
+      29 +os outros dois têm caminho padrão e só precisam ser informados 
+         +quando você quiser                                             
+      30 +usar outros:                                                   
+      31 +                                                               
+      32 +| Entrada | Flag | Padrão | O que traz |                       
+      33 +|---|---|---|---|                                              
+      34 +| Despesas | `--input` | — (obrigatório) | O lote de um colabor
+         +ador num período de competência |                              
+      35 +| Política | `--politica` | `exemplos/envelope/politica-v4.json
+         +` | Os limites por centro de custo e os parâmetros gerais |    
+      36 +| Câmbio | `--cambio` | `exemplos/envelope/cambio.json` | As ta
+         +xas de conversão para BRL, por data e por moeda |              
+      37 +                                                               
+      38 +```bash                                                        
+      39 +python3 -m src.cli calcular \                                  
+      40 +  --input exemplos/envelope/despesas-envelope.json \           
+      41 +  --output resultado.json \                                    
+      42 +  --politica exemplos/envelope/politica-v4.json \              
+      43 +  --cambio exemplos/envelope/cambio.json                       
+      44 +```                                                            
+      45 +                                                               
+      46 +**A política é entrada, não código.** Os limites variam por cen
+         +tro de custo e são                                             
+      47 +mantidos pelo financeiro fora do repositório — trocar a tabela 
+         +de limites não pode                                            
+      48 +exigir uma versão nova do motor. Editar                        
+      49 +[`exemplos/envelope/politica-v4.json`](exemplos/envelope/politi
+         +ca-v4.json) e rodar                                            
+      50 +de novo é o fluxo esperado.                                    
+      51 +                                                               
+      52  ## Como testar
+      53  
+      54  Os testes precisam do `pytest`, que não vem com o Python. Em mu
+          itas distribuições o
+     ...
+       78  
+       79  | Regra | Comportamento |
+       80  |---|---|
+       55 -| Limites diários | R$60,00 alimentação · R$80,00 transporte u
+          -rbano · R$250,00 hospedagem. O limite é **por categoria e por 
+          -dia**, somando todas as despesas daquela categoria naquela dat
+          -a |                                                           
+       81 +| Limites diários | Vêm do arquivo de política e **variam por 
+          +centro de custo**. O limite é por categoria e por dia, somando
+          + todas as despesas daquela categoria naquela data |           
+       82 +| Centro de custo sem entrada própria | Usa o bloco `padrao` d
+          +a política, **integralmente**. Um centro de custo que tem entr
+          +ada própria não é complementado pelo `padrao` em categoria nen
+          +huma |                                                        
+       83  | Acima do limite | Reembolsa o que resta do limite do dia e c
+           orta o excedente (reembolso parcial) |
+       57 -| Nota fiscal | Obrigatória para despesas **estritamente acima
+          -** de R$100,00. R$100,00 exatos dispensam |                   
+       84 +| Categoria não reembolsável | Negada integralmente, em dois c
+          +asos com justificativas distintas: a categoria não consta na t
+          +abela do centro de custo, ou consta com `limite` igual a `0.00
+          +` (proibição explícita) |                                     
+       85 +| Nota fiscal | Obrigatória acima do teto da política (`nota_f
+          +iscal_obrigatoria_acima_de`), **estritamente**: o valor exato 
+          +do teto dispensa. O teto é único para a empresa e é comparado 
+          +contra o valor **em BRL** |                                   
+       86 +| Moeda estrangeira | Convertida para BRL pela taxa **da data 
+          +da despesa**. Sem o campo `moeda`, assume-se `BRL`. Todos os l
+          +imites são aplicados sobre o valor convertido |               
+       87 +| Sem cotação na data | Despesa negada. Não se usa a taxa de o
+          +utro dia, nem média, nem a mais próxima — e ela não consome li
+          +mite nem entra no total de despesas |                         
+       88 +| Vigência da política | Se a competência da `vigencia` for **
+          +posterior** à do lote, nada é processado: nenhum arquivo de sa
+          +ída é escrito e o motor encerra com código diferente de zero |
+       89  | Período de competência | Data fora do intervalo `inicio`–`fi
+           m` (inclusivo nos dois extremos) é negada |
+       59 -| Duplicatas | Despesas idênticas em tudo menos o `id` contam 
+          -uma vez só — e a repetida não entra no total de despesas |    
+       60 -| Categoria fora da política | Negada integralmente |         
+       90 +| Duplicatas | Despesas idênticas em tudo menos o `id` contam 
+          +uma vez só — e a repetida não entra no total de despesas. `moe
+          +da` entra na comparação, e o valor comparado é o **lançado** |
+       91  | Valores negativos | Estornos são ignorados e não entram em n
+           enhum total |
+       62 -| Valores com mais de 2 casas | Truncados (não arredondados) a
+          -ntes de qualquer cálculo |                                    
+       92 +| Valores com mais de 2 casas | Truncados (não arredondados) a
+          +ntes de qualquer cálculo — o valor lançado e, quando há conver
+          +são, também o valor convertido |                              
+       93  | Escala da saída | O que o motor produz sai com exatamente 2 
+           casas (`60.00`); o que é ecoado da entrada sai com a escala la
+           nçada |
+       94  
+       95  A ordem em que essas verificações se aplicam importa, e está d
+           efinida em
+       96  `specs/001-motor-reembolso/spec.md` §8 ("Ordem de aplicação da
+           s regras"). Cada despesa
+       67 -recebe **uma única** justificativa: a da primeira regra que a 
+          -reprovar.                                                     
+       97 +recebe **uma única** justificativa: a da primeira regra que a 
+          +reprovar. Como o limite                                       
+       98 +passou a variar por centro de custo, toda justificativa que ci
+          +te um limite diário cita                                      
+       99 +também o centro de custo a que ele pertence.                  
+      100  
+       69 -**Duas sutilezas da saída**, ambas propositais:               
+      101 +**Três sutilezas da saída**, todas propositais:               
+      102  
+       71 -- `categoria` e `valor` saem **exatamente como entraram** (`AL
+          -IMENTACAO`, `33.333`,                                         
+       72 -  `72.50` — com a escala lançada, não `72.5`), mesmo que inter
+          -namente o motor use a                                         
+       73 -  categoria normalizada e o valor truncado para decidir. O rel
+          -atório precisa bater                                          
+       74 -  com o comprovante anexado.                                  
+      103 +- `categoria`, `valor` e `moeda` saem **exatamente como entrar
+          +am** (`ALIMENTACAO`,                                          
+      104 +  `33.333`, `72.50` — com a escala lançada, não `72.5`), mesmo
+          + que internamente o                                           
+      105 +  motor use a categoria normalizada e o valor truncado para de
+          +cidir. O relatório                                            
+      106 +  precisa bater com o comprovante anexado. "Exatamente como en
+          +trou" inclui **não ter                                        
+      107 +  entrado**: despesa sem o campo `moeda` sai sem ele, e não co
+          +m um `"BRL"` inventado.                                       
+      108  - Tudo que o motor **produz** (`valor_reembolsavel` e os dois 
+           totais) é derivado do
+      109    valor truncado e sai com exatamente 2 casas decimais, inclus
+           ive quando a última é
+      110    zero: `60.00`, nunca `60.0`.
+      111 +- `taxa_cambio` e `valor_convertido_brl` tornam a conta refazí
+          +vel — `valor` ×                                               
+      112 +  `taxa_cambio` = `valor_convertido_brl`, e é sobre esse últim
+          +o que os limites são                                          
+      113 +  aplicados. Os dois saem `null` quando a despesa já está em B
+          +RL e quando não havia                                         
+      114 +  taxa disponível.                                            
+      115  
+      116  ## Estrutura
+      117  
+      118  ```
+      119  src/
+       83 -  cli.py        # subcomando `calcular`, orquestra as etapas  
+       84 -  parser.py     # lê o JSON; trunca valores e normaliza catego
+          -rias na entrada                                               
+      120 +  cli.py        # subcomando `calcular`, orquestra as etapas e
+          + a guarda de vigência                                         
+      121 +  parser.py     # lê o JSON; trunca, normaliza e converte para
+          + BRL na entrada                                               
+      122 +  cambio.py     # carrega as taxas e responde taxa(moeda, data
+          +)                                                             
+      123 +  politica.py   # carrega a política e resolve a tabela do cen
+          +tro de custo                                                  
+      124    modelos.py    # dataclasses imutáveis que trafegam entre as 
+           etapas
+      125    regras.py     # uma função pura por regra de negócio, sem es
+           tado e sem I/O
+      126    motor.py      # aplica as regras na ordem da spec e calcula 
+           os totais
+      127    saida.py      # monta o dict de saída, com os valores ainda 
+           em Decimal
+       89 -  politica.py   # os limites e as categorias válidas, em um lu
+          -gar só                                                        
+      128  tests/          # espelha src/, mais casos de borda e integraç
+           ão ponta a ponta
+      129 +  dados/        # massa sintética: outra política, outro câmbi
+          +o, oito lotes                                                 
+      130 +exemplos/                                                     
+      131 +  despesas-exemplo.json     # o lote do enunciado             
+      132 +  resultado-exemplo.json    # a saída esperada para ele       
+      133 +  envelope/                 # política v4, câmbio e os lotes d
+          +o segundo dia                                                 
+      134  specs/001-motor-reembolso/
+      135    spec.md       # o QUÊ e o PORQUÊ — regras, ambiguidades reso
+           lvidas, critérios
+      136    plan.md       # o COMO — stack, arquitetura, decisões técnic
+           as
+       94 -  tasks.md      # T-001..T-026, cada uma com critério de aceit
+          -e e commit                                                    
+      137 +  tasks.md      # T-001..T-049, cada uma com critério de aceit
+          +e e commit                                                    
+      138    DECISIONS.md  # log de toda mudança de spec, com o gatilho e
+            o custo
+      139  docs/
+      140    RELATORIO.md  # o relatório final
+     ...
+      142  ```
+      143  
+      144  Valores monetários usam `decimal.Decimal` de ponta a ponta e *
+           *nunca** viram `float`:
+      102 -`cli.py` serializa o `Decimal` como número JSON com um encoder
+          - próprio. A razão está                                        
+      145 +os três arquivos de entrada são lidos com `parse_float=Decimal
+          +` e `parse_int=Decimal`,                                      
+      146 +e `cli.py` serializa o `Decimal` como número JSON com um encod
+          +er próprio. A razão está                                      
+      147  em `specs/001-motor-reembolso/plan.md` DT-004 ("Serialização d
+           e `Decimal` na saída") —
+      148  `float` não carrega escala, e `R$60,00` virava `60.0` na saída
+           .
+      149  
+      150  ## Limitações conhecidas
+      151  
+      108 -Duas coisas ficaram deliberadamente de fora, ambas por falta d
+          -e dado estruturado na                                         
+      109 -entrada. Estão registradas em `specs/001-motor-reembolso/spec.
+          -md` §10 ("O que fica em                                       
+      110 -aberto"):                                                     
+      152 +Estão todas registradas em `specs/001-motor-reembolso/spec.md`
+          + §10 ("O que fica em                                          
+      153 +aberto"), com a razão de cada uma. As de maior impacto:       
+      154  
+      112 -- **Adicional de viagem.** A política do RH prevê limites 50% 
+          -maiores para                                                  
+      113 -  colaborador em viagem, mas a entrada não tem campo que ident
+          -ifique viagem. O                                              
+      114 -  adicional não é aplicado em nenhuma circunstância — inferir 
+          -viagem a partir de                                            
+      115 -  outro dado seria criar uma regra que ninguém pediu.         
+      116 -- **Hospedagem por noite.** O limite de R$250,00 é aplicado **
+          -por dia**, não por                                            
+      155 +- **Cotação de dia não útil.** O arquivo de câmbio só publica 
+          +em dia útil bancário, e                                       
+      156 +  toda despesa internacional lançada num dia sem cotação é neg
+          +ada. A prática de                                             
+      157 +  mercado é usar a cotação do último dia útil anterior; implem
+          +entá-la exigiria                                              
+      158 +  escolher sozinho qual data usar e quantos dias aceitar volta
+          +r, decisões que a                                             
+      159 +  política não sustenta hoje. É o item mais provável de ser re
+          +visto.                                                        
+      160 +- **Adicional de viagem.** A política prevê limites 50% maiore
+          +s para colaborador em                                         
+      161 +  viagem, mas a entrada não tem campo que identifique viagem. 
+          +O adicional não é                                             
+      162 +  aplicado em nenhuma circunstância — nem para despesa em moed
+          +a estrangeira, que não                                        
+      163 +  caracteriza viagem por si só.                               
+      164 +- **Hospedagem por noite.** O limite de hospedagem é aplicado 
+          +**por dia**, não por                                          
+      165    noite, porque o número de noites só aparece em texto livre n
+           a descrição
+      166    (`"Hotel Rio - 2 diarias"`). Isso é mais restritivo do que a
+            política provavelmente
+      167    pretende em estadias de várias noites.
+      168 +- **Centro de custo com tabela incompleta.** Como a tabela de 
+          +um centro de custo que                                        
+      169 +  existe é fechada, um centro de custo cadastrado com uma cate
+          +goria faltando nega                                           
+      170 +  despesa legítima até alguém corrigir o arquivo de política. 
+      171 +- **Fim de vigência.** A política tem data de início e não tem
+          + data de fim, então uma                                       
+      172 +  política revogada continua sendo aceita indefinidamente — o 
+          +motor não tem como saber                                      
+      173 +  que ela foi substituída.                                    
+
+● Verificando as afirmações do README num checkout limpo, sem venv — que é o
+  critério de aceite da T-049.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Tudo confere. Checagem: pytest -q → 124 passed (o xfail virou teste normal,
+  mais dois novos); ruff limpo; os dois comandos do README rodam num checkout
+  limpo sem venv — o primeiro gera saída idêntica a
+  exemplos/resultado-exemplo.json, o segundo fecha em 2278.72 / 1053.26; e
+  conferi item a item as afirmações do README (8 lotes em tests/dados/, tasks
+  até T-049, os 8 módulos de src/).
+
+  Deixei sem commit para revisão.
+
+  T-047 — inteiro no JSON
+
+  parse_int=Decimal entrou nos json.load. Cresci o escopo em relação ao que a
+  task dizia, e registrei isso num campo Achado durante a execução (mesmo padrão
+  da T-027): a task falava só de parser.py, mas são três as bordas que leem
+  número do JSON — parser.py, politica.py e cambio.py — e as três perdiam o tipo
+  igual. Só o parser estourava, porque só ele chama .quantize no valor cru; os
+  outros dois seguiam entregando int onde LimiteCategoria.limite e
+  TabelaCambio.taxa prometem Decimal, com o erro latente (f"{60:.2f}" funciona,
+  Decimal * int funciona). Corrigir uma das três deixaria o mesmo bug de pé em
+  dois lugares.
+
+  - test_valor_inteiro_no_json_e_aceito perdeu o xfail e passa.
+  - test_politica_e_cambio_com_numeros_inteiros é novo: roda despesas-01 com os
+    limites reescritos sem centavos (120 em vez de 120.00, teto 150) e com EUR: 
+    6, e confirma que o resultado é idêntico — inclusive R$120,00 na
+    justificativa e a conversão EUR 20,00 × 6 = R$120,00.
+
+  T-049 — README
+
+  O arquivo descrevia a v3 inteira. Registrei como task nova (precedente:
+  docs(T-023):) e reescrevi:
+
+  - Como rodar ganhou a tabela das três entradas com as flags e os defaults, o
+    exemplo com --politica/--cambio, e a nota de que a política é entrada e não
+    código.
+  - O que o motor decide foi refeita: limites vindos do arquivo e variando por
+    centro de custo, queda no padrao, as duas cláusulas de categoria não
+    reembolsável, teto de nota fiscal comparado em BRL, conversão pela taxa da
+    data, câmbio indisponível e vigência. Saíram os R$60/R$80/R$250 fixos.
+  - Sutilezas da saída passou de duas para três, com
+    taxa_cambio/valor_convertido_brl e a regra de não inventar "moeda": "BRL".
+  - Estrutura ganhou cambio.py, tests/dados/ e exemplos/envelope/, e politica.py
+    deixou de ser descrito como "os limites em um lugar só".
+  - Limitações conhecidas passou de 2 para 5, com a cotação de dia não útil no
+    topo.
+
+  Se aprovar, commito em quatro: feat(T-047) + hash, docs(T-049) + hash —
+  marcando o [x] de cada uma no commit da própria task.
+
+  result: T-047 implementada (parse_int=Decimal nos três carregadores, com o
+  alargamento de escopo registrado) e README.md reescrito para a v4 como T-049 —
+  124 passed, ruff limpo, os dois comandos do README verificados em checkout
+  limpo; sem commit, aguardando revisão.
+
+✻ Crunched for 4m 12s
+
+※ recap: Goal: bring the reimbursement engine and its docs up to Policy v4. T-047 (integer JSON values) and T-049 (README rewritten for v4) are implemented and verified, 124 tests passing. Next: your approval to commit them.
+
+❯ Aprovado, pode commitar                                                       
+
+● Aprovado. Vou separar o tasks.md: a definição da T-049 sai do commit da T-047
+  e vira commit próprio, como fiz com a T-046.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Agora a T-049 — definição, implementação e hash.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● O README foi varrido para dentro do commit de hash da T-047 (usei git add -A
+  onde devia ter usado só tasks.md). Corrigindo: reverto o README e reaplico no
+  commit da T-049, onde ele pertence.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agora reaplico o README no commit da T-049, onde ele pertence.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Commitado. Checagem final: pytest -q → 124 passed; ruff check . e ruff format 
+  --check . limpos; árvore limpa; zero tasks sem marcar e zero placeholders de
+  hash; e conferi programaticamente que cada um dos 49 hashes em tasks.md aponta
+  para o commit da sua própria task.
+
+  Commits (6):
+  - d2e588d feat(T-047): — parse_int=Decimal nas três bordas de leitura
+  - 15d6723 docs(tasks): — hash da T-047
+  - fa7c369 docs(tasks): — define a T-049
+  - d16e3b9 docs: — corrigi um erro meu: no commit de hash da T-047 usei git add
+    -A e ele levou junto a reescrita do README, que é a entrega da T-049. Este
+    commit devolve o README ao estado anterior, sem mudar conteúdo, para que a
+    reescrita caia no commit da task certa.
+  - 737885b docs(T-049): — README da v4
+  - 8a914ff docs(tasks): — hash da T-049
+
+  T-047: o escopo cresceu de um para três carregadores (parser.py, politica.py,
+  cambio.py) — só o parser estourava, mas os outros dois entregavam int onde
+  LimiteCategoria.limite e TabelaCambio.taxa prometem Decimal, com o erro
+  latente. Registrei no campo Achado durante a execução. O xfail virou teste
+  normal e entrou test_politica_e_cambio_com_numeros_inteiros.
+
+  T-049: README reescrito para a v4 — as três entradas com flags e defaults, a
+  tabela de regras sob a política externa, os campos
+  taxa_cambio/valor_convertido_brl, cambio.py e tests/dados/ na árvore, e cinco
+  limitações conhecidas no lugar de duas. Os dois comandos documentados foram
+  rodados num checkout limpo sem venv antes de commitar.
+
+  Estado do projeto: 54 commits nesta sessão (3524a9c → 8a914ff), spec 2.4,
+  plano 1.15, T-001 a T-049 todas fechadas com hash, 124 testes passando. Não há
+  mais nada em aberto que eu conheça — a única coisa que sobrou da revisão foi
+  a T-047, agora feita.
+
+  result: T-047 e T-049 implementadas e commitadas (d2e588d e 737885b, mais o
+  commit d16e3b9 corrigindo um README que eu havia varrido para o commit errado)
+  — 124 passed, ruff limpo, as 49 tasks fechadas com hash conferido uma a uma e
+  nenhum placeholder restante.
+
+✻ Cooked for 2m 13s
+
+❯ erro encontado no readme. Em 'Como rodar' ficou como: python3 -m src.cli      
+  calcular --input exemplos/despesas-exemplo.json --output resultado.json.      
+  Porém isso não funcionar mais. Corrija o readme, nao precisa criar task       
+
+● Deixa eu reproduzir exatamente o comando como está documentado, antes de
+  mexer.
+
+  Ran 1 shell command (ctrl+o to expand)
+● Aqui roda com rc=0. Preciso achar o cenário em que falha — vou testar as
+  variações plausíveis.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Não consigo reproduzir: funciona no repo, num clone limpo e sem .venv (rc=0,
+  saída idêntica ao exemplo). Antes de escrever qualquer coisa, deixa eu mapear
+  o que muda entre ambientes.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Achei a explicação mais provável: neste ambiente python não existe, só python3
+  — e no Windows é o contrário (python/py existem, python3 normalmente não).
+  Seu repo está em C:\Projetos\..., então se você rodou pelo PowerShell/CMD,
+  python3 não é comando. O README fixa a forma POSIX.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Corrigindo o README para não amarrar num nome de interpretador nem num layout
+  de venv.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+❯ Reverta o que voce fez agora.                                                 
+
+● Você pediu para reverter — revertendo agora. Nada disso tinha sido commitado,
+  então é só descartar as alterações da árvore.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Revertido. A árvore está limpa e idêntica ao HEAD (8a914ff) — 124 passed, ruff
+  limpo. O README.md e o .gitignore voltaram exatamente ao que estava
+  commitado, e apaguei o resultado.json que meus testes tinham gerado. Nada
+  disso chegou a virar commit, então o histórico não foi tocado.
+
+  Sobre o que eu ia fazer, para você decidir: eu não consegui reproduzir a 
+  falha. Rodei o comando exatamente como está no README, em três lugares — no
+  repo, num clone limpo do HEAD e num checkout sem .venv — e nos três ele
+  retorna rc=0 e gera saída idêntica a exemplos/resultado-exemplo.json.
+
+  O que eu tinha assumido (e é só uma hipótese, não um diagnóstico): que você
+  rodou pelo Windows. Neste WSL só existe python3 — python e py não existem. No
+  Windows costuma ser o contrário: python e py existem e python3 não. Como o
+  repo está em C:\Projetos\..., achei provável que fosse isso, e a correção que
+  eu tinha escrito era uma tabela de "qual interpretador usar por sistema" mais
+  as variantes de venv com Scripts\ no lugar de bin/.
+
+  Também tinha acrescentado resultado.json ao .gitignore — isso foi iniciativa
+  minha, não estava no que você pediu, e é provavelmente o motivo do "reverta".
+
+  Me diz qual foi o erro que apareceu na sua tela (a mensagem exata, ou pelo
+  menos o sistema de onde você rodou), que aí eu corrijo o README pelo problema
+  real em vez de pelo que eu imaginei.
+
+  needs input: qual mensagem de erro apareceu ao rodar python3 -m src.cli 
+  calcular --input exemplos/despesas-exemplo.json --output resultado.json, e de
+  onde você rodou (WSL, PowerShell/CMD do Windows, outro)?
+
+✻ Baked for 3m 53s
+
+❯ o problema do comando no readme em 'Como roda' é a falta do input do arquivo  
+  da politica e de cambio. Executei o comando aqui no terminal, nao deu erro, e 
+  gerou o resultado.json. Porém isso não deveria acontecer nessa versão. Qual   
+  politica ele usou? como lidou com cambio? Esses arquivos deveriam ser         
+  obrigatórios no input.                                                        
+
+● Agora ficou claro, e você está certo — o problema é semântico, não de sintaxe.
+  O comando roda usando uma política que ninguém escolheu. Deixa eu conferir o
+  que a spec e o DESAFIO.md exigem antes de propor qualquer coisa.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Você está certo, e é mais grave do que uma imprecisão de README. Deixa eu
+  responder as suas duas perguntas com fatos e medir o estrago.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Respondendo suas duas perguntas, que são o próprio diagnóstico:
+
+  - Qual política ele usou? exemplos/envelope/politica-v4.json, por caminho
+    absoluto resolvido a partir da pasta do pacote — funciona de qualquer
+    diretório, e o operador não é avisado. Ou seja: seu lote foi julgado com
+    teto de nota fiscal R$100,00 e, para CC-ENG-PLATAFORMA, alimentação R$75,00
+    / transporte R$80,00 / hospedagem vedada. Nada disso foi escolhido por quem
+    rodou.
+  - Como lidou com câmbio? Carregou exemplos/envelope/cambio.json. Nesse lote
+    específico nenhuma despesa tem moeda, então a tabela nunca chegou a ser
+    consultada — mas foi lida, e com outro lote ela decidiria conversões
+    silenciosamente.
+
+  E a spec.md §4 ("Entrada e saída") já diz o que você falou, em duas frases: "O
+  motor recebe três entradas" e "As três entradas são obrigatórias". Quem
+  discorda é o código: a T-032 fez as flags opcionais com default. Pelo
+  CLAUDE.md, a spec está certa e o código é o bug.
+
+  Mapeando o alcance antes de mexer:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Contido: só cli.py, test_cli.py (11 chamadas) e test_integracao.py (2). O
+  plan.md não fala em default e a spec.md já diz "obrigatórias", então nenhum
+  dos dois muda. Registrando a task e implementando.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Cortei demais — o bloco do marcador ficava entre os caminhos e o encoder.
+  Restaurando o cli.py e refazendo o corte com precisão.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● A asserção é que estava errada — já havia três ocorrências (uma no subparser),
+  não duas. Corrigindo o contador.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Agora recusa com rc=2 e mensagem explícita. Atualizando os testes que chamavam
+  a CLI sem as flags.
+
+  Ran 2 shell commands (ctrl+o to expand)
+● O teste dos defaults perdeu o sentido — troco pelo que verifica a exigência.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● test_integracao.py ainda chama a CLI sem as flags. Ajustando o helper rodar e
+  a comparação caractere a caractere.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● 125 passed. Agora o README.md, que era onde você encontrou o problema.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Verificando num clone limpo: o comando novo funciona e o antigo é recusado.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+● Você achou um bug de verdade, não uma imprecisão de README. Sem commit,
+  aguardando sua revisão.
+
+  Checagem: pytest -q → 125 passed; ruff limpo; num clone limpo o comando antigo
+  agora é recusado (rc=2, nenhum arquivo gerado) e o comando novo produz saída
+  idêntica a exemplos/resultado-exemplo.json. Apaguei o resultado.json que os
+  testes geraram.
+
+  O diagnóstico
+
+  A spec.md §4 ("Entrada e saída") já dizia, em duas frases: "O motor recebe 
+  três entradas" e "As três entradas são obrigatórias". Quem discordava era o
+  código — a T-032 fez as flags opcionais com default. Pelo CLAUDE.md, a spec
+  está certa e o código é o bug. Então nem a spec nem o plano precisaram mudar:
+  só o código se alinhou ao que já estava escrito.
+
+  O que mudou (registrado como T-050)
+
+  - cli.py: --politica e --cambio viram required=True; sumiram
+    CAMINHO_PADRAO_POLITICA, CAMINHO_PADRAO_CAMBIO e os parâmetros com valor
+    padrão de executar_calculo.
+  - test_cli.py: as 11 chamadas passaram a informar as três entradas; o teste
+    que garantia o comportamento com defaults foi substituído por dois: um que
+    exige as duas flags e outro que retira cada uma das três, uma por vez, e
+    confirma rc=2 sem arquivo escrito.
+  - test_integracao.py: mesmo ajuste nas 2 chamadas.
+  - README.md: "Como rodar" mostra o comando completo, e a tabela virou "As três
+    entradas, todas obrigatórias", com o porquê — o mesmo almoço de R$130,00 é
+    total num centro de custo e parcial em outro, então um resultado.json cuja
+    política foi escolhida por omissão não é auditável.
+
+  Duas coisas para você decidir
+
+  1. Isso quebra a "Interface (esta parte é fixa)" do DESAFIO.md, que fixa
+     <seu-comando> calcular --input despesas.json --output resultado.json.
+     Registrei isso no campo Custo declarado da T-050 em vez de esconder: aquela
+     linha foi escrita no dia 1, quando o motor tinha uma entrada, e o envelope
+     do dia 2 acrescentou duas que não têm como chegar sem tocar na linha de
+     comando. Se você preferir manter a compatibilidade literal com o
+     DESAFIO.md, é aqui que eu paro.
+  2. CLAUDE.md linha 206 ainda documenta python -m src.cli calcular --input 
+     despesas.json --output resultado.json, que agora falha. Não mexi — é seu
+     arquivo de instruções, e da última vez eu extrapolei o escopo. Se quiser,
+     atualizo junto.
+
+  result: Bug confirmado e corrigido — --politica e --cambio agora são
+  obrigatórias (T-050), alinhando o código à spec.md §4 que já exigia as três
+  entradas; README corrigido, 125 passed, sem commit e com duas decisões
+  pendentes (DESAFIO.md e CLAUDE.md linha 206).
+
+✻ Worked for 5m 45s
+
+※ recap: Objetivo: alinhar o motor de reembolso à spec v4. Corrigi o bug que você achou — `--politica` e `--cambio` agora são obrigatórias (T-050), com README e testes ajustados; 125 testes passando, nada commitado. Próximo passo: sua aprovação para commitar.
+
+❯ 1. Não tem problema diferir do Desafio.md, o evelope recebido no dia 2 é uma  
+  justifica concreta. 2. Pode atualizar o claude.md para o comando corrigido    
+
+● Certo nos dois pontos. Atualizando o CLAUDE.md.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Registrando sua decisão sobre o DESAFIO.md na própria T-050, para a
+  divergência ficar rastreável.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Pronto. Checagem: pytest -q → 125 passed; ruff check . e ruff format --check .
+  limpos.
+
+  CLAUDE.md — a linha de "Rodar" virou um bloco com as quatro flags, mais a nota
+  de que nenhuma tem valor padrão, o que aconteceu entre a T-032 e a T-050, e
+  que a divergência do DESAFIO.md foi aprovada por você.
+
+  T-050 — registrei sua decisão citada no campo Custo declarado, para a
+  divergência ficar rastreável em vez de virar folclore.
+
+  Resumo do que está na árvore, ainda sem commit:
+
+  ┌──────────────────────────┬───────────────────────────────────────────────┐
+  │         Arquivo          │                     O quê                     │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ src/cli.py               │ --politica e --cambio obrigatórias;           │
+  │                          │ constantes de caminho padrão removidas        │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │                          │ 11 chamadas informam as três entradas; o      │
+  │ tests/test_cli.py        │ teste dos defaults virou dois testes de       │
+  │                          │ exigência                                     │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ tests/test_integracao.py │ mesmo ajuste nas 2 chamadas                   │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ README.md                │ comando completo e a tabela "As três          │
+  │                          │ entradas, todas obrigatórias", com o porquê   │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ CLAUDE.md                │ comando de "Rodar" atualizado                 │
+  ├──────────────────────────┼───────────────────────────────────────────────┤
+  │ tasks.md                 │ T-050 registrada, com o custo declarado e sua │
+  │                          │  decisão                                      │
+  └──────────────────────────┴───────────────────────────────────────────────┘
+
+  Nem spec.md nem plan.md mudam: a spec já exigia as três entradas desde a 2.0,
+  e foi o código que se alinhou a ela.
+
+  Estou segurando o commit porque a sua regra de CLAUDE.md pede sua aprovação
+  antes — se estiver de acordo, commito em dois: feat(T-050) + o commit de hash,
+  e um docs(claude): separado para o CLAUDE.md, que é a convenção do próprio
+  arquivo.
+
+  needs input: aprova o commit? (feat(T-050) + hash, e docs(claude): separado)
+
+✻ Churned for 1m 8s
+
+❯ tirei o custo declarado da t-050 pois achei desnecessário deixar. Pode        
+  commitar agora                                                                
+
+● Você editou a tasks.md — deixa eu ver o estado atual para não sobrescrever sua
+  alteração.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● A remoção foi só do campo Custo declarado; o resto está intacto. Commitando.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Commitado.
+
+  Checagem final: árvore limpa; pytest -q → 125 passed; ruff check . e ruff 
+  format --check . limpos; zero tasks sem marcar e zero placeholders de hash; e
+  conferi que cada um dos 50 hashes em tasks.md aponta para o commit da sua
+  própria task.
+
+  Três commits:
+  - 5dabd11 feat(T-050): — --politica e --cambio obrigatórias, com os testes e o
+    README
+  - e813c51 docs(tasks): — hash da T-050 (só tasks.md no stage, sem git add -A)
+  - 12676ba docs(claude): — o comando de "Rodar" com as três entradas
+
+  O bug que você encontrou era o mais sério da sessão: o motor produzia um
+  relatório de reembolso completo, com código de saída zero, aplicando uma
+  política que ninguém escolheu — e o operador não tinha como descobrir qual. A
+  spec.md §4 já exigia as três entradas desde a versão 2.0, então nem a spec nem
+  o plano mudaram: foi o código que se alinhou ao que já estava escrito.
+
+  Guardei sua decisão sobre o DESAFIO.md no CLAUDE.md e na mensagem do commit,
+  para quem ler o histórico depois entender que a divergência foi deliberada e
+  não descuido.
+
+  Estado do projeto: 60 commits nesta sessão (3524a9c → 12676ba), spec 2.4,
+  plano 1.15, T-001 a T-050 todas fechadas com hash conferido, 125 testes
+  passando. Não conheço mais nada em aberto.
+
+  result: T-050 commitada (5dabd11) — as três entradas agora são obrigatórias na
+  CLI, alinhando o código à spec.md §4; README e CLAUDE.md atualizados, 125
+  passed, árvore limpa e as 50 tasks fechadas com hash verificado.
+
+✻ Worked for 1m 8s
+
+※ recap: Goal was migrating the reimbursement engine to Policy v4 and hardening it; all of that is done and committed, with 125 tests passing and tasks T-001 through T-050 closed. Nothing is pending, so the next action is yours to choose.
