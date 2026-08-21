@@ -330,7 +330,7 @@ RN-008 estejam quebrados.
 - [x] **T-041** — `motor.py`: `valor_total_despesas` exclui despesa sem valor em BRL, além da duplicata e do estorno que já excluía
   - **Atende:** RN-016, RN-007, RN-009
   - **Aceite:** `tests/test_motor.py::test_rn016_despesa_sem_cambio_fora_do_total_bruto`, `::test_calcula_totais_do_periodo`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `a812cad`
 
 - [ ] **T-042** — `saida.py`: `motor_reembolso_output` ganha `taxa_cambio` e `valor_convertido_brl`; o dict de saída ecoa `moeda` só quando ela veio na entrada
   - **Atende:** spec.md §4 ("Entrada e saída"), RN-015
