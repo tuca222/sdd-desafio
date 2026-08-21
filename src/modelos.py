@@ -27,7 +27,11 @@ class Despesa:
     fornecedor: str
     valor: Decimal
     valor_original: Decimal
+    moeda: str
+    moeda_original: str | None
     tem_nota_fiscal: bool
+    valor_brl: Decimal | None
+    taxa_cambio: Decimal | None
 
 
 @dataclass(frozen=True)

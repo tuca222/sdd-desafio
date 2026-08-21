@@ -37,12 +37,43 @@ def test_despesa_e_imutavel():
         fornecedor="Restaurante Tavola",
         valor=Decimal("72.50"),
         valor_original=Decimal("72.50"),
+        moeda="BRL",
+        moeda_original=None,
         tem_nota_fiscal=True,
+        valor_brl=Decimal("72.50"),
+        taxa_cambio=None,
     )
 
     assert despesa.valor == Decimal("72.50")
+    assert despesa.moeda == "BRL"
+    assert despesa.moeda_original is None
+    assert despesa.valor_brl == Decimal("72.50")
+    assert despesa.taxa_cambio is None
     with pytest.raises(FrozenInstanceError):
         despesa.valor = Decimal("0.00")
+
+
+def test_despesa_internacional_carrega_taxa_e_valor_em_brl():
+    despesa = Despesa(
+        id="e-002",
+        data=date(2026, 7, 14),
+        categoria="alimentacao",
+        categoria_original="alimentacao",
+        descricao="Almoco - Lisboa",
+        fornecedor="Taberna do Chiado",
+        valor=Decimal("22.00"),
+        valor_original=Decimal("22.00"),
+        moeda="EUR",
+        moeda_original="EUR",
+        tem_nota_fiscal=True,
+        valor_brl=Decimal("130.46"),
+        taxa_cambio=Decimal("5.93"),
+    )
+
+    assert despesa.valor == Decimal("22.00")
+    assert despesa.valor_brl == Decimal("130.46")
+    with pytest.raises(FrozenInstanceError):
+        despesa.valor_brl = Decimal("0.00")
 
 
 def test_resultado_despesa_e_imutavel():
@@ -70,7 +101,11 @@ def test_resultado_final_e_imutavel():
         fornecedor="Restaurante Tavola",
         valor=Decimal("72.50"),
         valor_original=Decimal("72.50"),
+        moeda="BRL",
+        moeda_original=None,
         tem_nota_fiscal=True,
+        valor_brl=Decimal("72.50"),
+        taxa_cambio=None,
     )
     resultado_despesa = ResultadoDespesa(
         despesa_reembolsavel=True,
