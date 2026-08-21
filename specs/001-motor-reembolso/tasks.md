@@ -310,7 +310,7 @@ RN-008 estejam quebrados.
 - [x] **T-037** — `regras.py`: `filtro_categoria_invalida` passa a receber a `TabelaLimites` e a cobrir as duas cláusulas de RN-008 (categoria ausente, categoria com limite `0.00`), com justificativas distintas
   - **Atende:** RN-008, AMB-013, RN-014
   - **Aceite:** `tests/test_regras.py::test_rn008_categoria_ausente_da_tabela_do_centro_custo`, `::test_amb013_categoria_com_limite_zero_nega_citando_proibicao`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `b7fcfec`
 
 - [ ] **T-038** — `regras.py`: `filtro_nota_fiscal` compara o valor em BRL contra o teto vindo da política, não a constante nem o valor lançado
   - **Atende:** RN-005, AMB-017, AMB-003
