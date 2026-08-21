@@ -10,6 +10,83 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-014 — Critérios de aceite remarcados: a Fase 5 implementou a v4 · `21/08/2026`
+
+**Gatilho:** o fechamento da Fase 5 de `tasks.md` (T-028 a T-045). O cabeçalho da
+spec 2.2 e a nota de abertura da spec.md §9 ("Critérios de aceite") diziam que "o
+código e os testes ainda implementam a v3" e que por isso os checkboxes estavam
+desmarcados. Com T-028 a T-045 implementadas, as duas frases passaram a ser falsas.
+
+**O que mudou na spec:**
+
+- **Cabeçalho** — versão 2.2 → 2.3, e **Status** passou de "especificada para a
+  Política de Reembolso v4" para "implementada para a Política de Reembolso v4",
+  trocando a frase sobre o código ainda estar na v3 pelo registro de que a Fase 5
+  reescreveu o motor e remarcou os critérios.
+- **spec.md §9 ("Critérios de aceite")** — a nota de abertura deixou de explicar por
+  que os checkboxes estavam desmarcados, e os **35** checkboxes dos quatro blocos
+  (precondição de RN-017, `despesas-exemplo.json`, `despesas-envelope-cc-desconhecido.json`
+  e `despesas-envelope.json`) passaram a `[x]`.
+
+Nenhuma regra de negócio, limite, ordem ou contrato de saída mudou nesta entrada.
+
+**Por quê:** a alternativa era remarcar checkbox a checkbox, uma alteração de
+`spec.md` por task, como a própria `tasks.md` previa. Ela foi descartada porque a
+regra de `CLAUDE.md` ("Regras de trabalho") faz toda alteração em `spec.md` ser
+atômica em três partes — conteúdo, versão/status e entrada em `DECISIONS.md` —, e
+sob essa regra remarcar 35 checkboxes em 18 tasks produziria 18 incrementos de
+versão da spec e 18 entradas neste arquivo dizendo a mesma coisa. O `DECISIONS.md`
+existe para registrar mudança de decisão, e marcar um checkbox não é uma; 18
+entradas sem decisão nenhuma tornariam mais difícil achar as que têm. A remarcação
+virou então uma alteração única, no fechamento da fase, com o custo real de todos
+os arquivos que a Fase 5 tocou listado abaixo — que é a informação que este arquivo
+existe para preservar.
+
+**O que isso invalidou:** nada de spec. No código, a Fase 5 invalidou o motor da v3
+inteiro: as constantes de `src/politica.py` (`LIMITE_ALIMENTACAO`,
+`LIMITE_TRANSPORTE_URBANO`, `LIMITE_HOSPEDAGEM`, `LIMITE_NOTA_FISCAL`,
+`CATEGORIAS_VALIDAS`, `LIMITES_DIARIOS_POR_CATEGORIA`) deixaram de existir, as
+assinaturas de `filtro_categoria_invalida`, `filtro_nota_fiscal`,
+`aplicar_limite_diario`, `aplicar_filtros`, `aplicar_limites`, `calcular` e
+`carregar_despesas` mudaram, e `exemplos/resultado-exemplo.json` foi regravado
+inteiro — `valor_total_reembolsavel` caiu de R$585,43 para R$351,43 e todo
+`motor_reembolso_output` ganhou `taxa_cambio` e `valor_convertido_brl`.
+
+**Tasks afetadas:** T-028 a T-045 (Fase 5 inteira), todas fechadas.
+
+**Custo:**
+
+  - `exemplos/resultado-exemplo.json`
+  - `specs/001-motor-reembolso/DECISIONS.md`
+  - `specs/001-motor-reembolso/plan.md`
+  - `specs/001-motor-reembolso/spec.md`
+  - `specs/001-motor-reembolso/tasks.md`
+  - `src/cambio.py`
+  - `src/cli.py`
+  - `src/modelos.py`
+  - `src/motor.py`
+  - `src/parser.py`
+  - `src/politica.py`
+  - `src/regras.py`
+  - `src/saida.py`
+  - `tests/conftest.py`
+  - `tests/test_cambio.py`
+  - `tests/test_casos_borda.py`
+  - `tests/test_cli.py`
+  - `tests/test_integracao.py`
+  - `tests/test_modelos.py`
+  - `tests/test_motor.py`
+  - `tests/test_parser.py`
+  - `tests/test_politica.py`
+  - `tests/test_regras.py`
+  - `tests/test_saida.py`
+
+**Nota de processo:** a `tasks.md` (Fase 5) instruía marcar os critérios "task a
+task". Esta entrada é o registro de que isso não foi seguido à risca, e por quê —
+não de que a instrução foi esquecida.
+
+---
+
 ## D-013 — Campo que o motor não lê não é campo obrigatório · `20/08/2026`
 
 **Gatilho:** ao fechar a [[D-012]], `moeda_base` passou de obrigatório a não

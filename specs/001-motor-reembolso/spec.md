@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 2.2 · **Status:** especificada para a Política de Reembolso v4 — os itens A (limites por centro de custo, lidos de arquivo externo) e B (despesas internacionais em moeda estrangeira, convertidas pela taxa da data) estão ambos cobertos; o item C (fila de aprovação manual) está fora de escopo por decisão do usuário. O código e os testes ainda implementam a v3 e são reescritos pelas tasks T-028 em diante, por isso os critérios de aceite da spec.md §9 ("Critérios de aceite") estão desmarcados. Os cinco campos dos arquivos de entrada que o motor não lê — `versao`, `fonte`, `observacao`, `moeda_base` e `acrescimo_em_viagem_percentual` — estão todos marcados como não obrigatórios na spec.md §4 ("Entrada e saída") · **Última alteração:** `20/08/2026`
+**Versão:** 2.3 · **Status:** implementada para a Política de Reembolso v4 — os itens A (limites por centro de custo, lidos de arquivo externo) e B (despesas internacionais em moeda estrangeira, convertidas pela taxa da data) estão ambos cobertos por código e teste; o item C (fila de aprovação manual) segue fora de escopo por decisão do usuário. A Fase 5 de `tasks.md` (T-028 a T-045) reescreveu o motor sob a v4, e os critérios de aceite da spec.md §9 ("Critérios de aceite") voltaram a ficar marcados — cada um coberto por um teste automatizado. Os cinco campos dos arquivos de entrada que o motor não lê — `versao`, `fonte`, `observacao`, `moeda_base` e `acrescimo_em_viagem_percentual` — estão todos marcados como não obrigatórios na spec.md §4 ("Entrada e saída") · **Última alteração:** `21/08/2026`
 
 ---
 
@@ -1208,9 +1208,9 @@ ela é inavaliável, e é isso que a justificativa precisa dizer.
 
 Todos os critérios abaixo são avaliados com a política de
 `exemplos/envelope/politica-v4.json` e as taxas de `exemplos/envelope/cambio.json`. Os
-checkboxes estão **desmarcados** porque o código ainda implementa a v3 — eles voltam a
-ser marcados task a task, conforme `tasks.md` (Fase 5), e cada marcação corresponde a um
-teste automatizado, não a conferência manual.
+checkboxes voltaram a ficar **marcados** quando a Fase 5 de `tasks.md` (T-028 a T-045)
+reescreveu o motor sob a v4, e cada marcação corresponde a um teste automatizado, não a
+conferência manual.
 
 > A cobertura fica em `tests/test_integracao.py`, que roda a CLI de verdade (arquivo de
 > entrada → arquivo de saída) e percorre esta lista item a item. Se um critério deixar de
@@ -1220,13 +1220,13 @@ teste automatizado, não a conferência manual.
 `vigencia: 2026-07-01`, competência `2026-07`, e os três arquivos de exemplo são de
 competência `2026-07` — logo os três passam.
 
-- [ ] Um lote de competência `2026-08` processado com esta mesma política é aceito, e
+- [x] Um lote de competência `2026-08` processado com esta mesma política é aceito, e
       produz saída — RN-017, AMB-020.
-- [ ] Um lote de competência `2026-06` processado com esta mesma política é recusado:
+- [x] Um lote de competência `2026-06` processado com esta mesma política é recusado:
       **nenhum** arquivo de saída é escrito, o terminal recebe uma mensagem citando a
       competência de vigência (`2026-07`) e a do lote (`2026-06`), e o código de saída é
       diferente de zero — RN-017.
-- [ ] Uma política com `vigencia: 2026-07-15` processando um lote de competência
+- [x] Uma política com `vigencia: 2026-07-15` processando um lote de competência
       `2026-07` é aceita, e **nenhuma** despesa anterior a `2026-07-15` é negada por
       causa disso — RN-017, AMB-020.
 
@@ -1234,42 +1234,42 @@ competência `2026-07` — logo os três passam.
 tem entrada própria na política: alimentação R$75,00, transporte urbano R$80,00 e
 `hospedagem` com `limite` igual a `0.00`.
 
-- [ ] `d-001` reembolsa R$72,50 (total) e `d-002` reembolsa R$2,50 (parcial) — RN-001,
+- [x] `d-001` reembolsa R$72,50 (total) e `d-002` reembolsa R$2,50 (parcial) — RN-001,
       RN-014. O limite aplicado é o R$75,00 do centro de custo, não os R$60,00 que a v3
       usava para toda a empresa.
-- [ ] `d-003` reembolsa R$80,00 (parcial), sem exigir nota fiscal — RN-002, RN-005.
-- [ ] `d-004` reembolsa R$0,00, com justificativa citando nota fiscal ausente (não
+- [x] `d-003` reembolsa R$80,00 (parcial), sem exigir nota fiscal — RN-002, RN-005.
+- [x] `d-004` reembolsa R$0,00, com justificativa citando nota fiscal ausente (não
       limite diário) — RN-005, RN-013.
-- [ ] `d-005` reembolsa R$0,00, com justificativa citando que `coworking` não é
+- [x] `d-005` reembolsa R$0,00, com justificativa citando que `coworking` não é
       reembolsável para `CC-ENG-PLATAFORMA` — RN-008 (cláusula 1).
-- [ ] `d-006` reembolsa R$54,90 (total); `d-007` reembolsa R$0,00, com justificativa
+- [x] `d-006` reembolsa R$54,90 (total); `d-007` reembolsa R$0,00, com justificativa
       citando `d-006` como duplicata original, e o valor de `d-007` não é somado em
       `valor_total_despesas` — RN-007.
-- [ ] `d-008` reembolsa R$0,00, com justificativa citando período de competência —
+- [x] `d-008` reembolsa R$0,00, com justificativa citando período de competência —
       RN-006.
-- [ ] `d-009` aparece no detalhamento com R$0,00, mas não é somado em
+- [x] `d-009` aparece no detalhamento com R$0,00, mas não é somado em
       `valor_total_despesas` nem em `valor_total_reembolsavel` — RN-009.
-- [ ] `d-010` reembolsa R$0,00, com justificativa citando que `hospedagem` não é
+- [x] `d-010` reembolsa R$0,00, com justificativa citando que `hospedagem` não é
       reembolsável para `CC-ENG-PLATAFORMA` — RN-008 (cláusula 2), AMB-013. Seu valor
       (R$480,00) **continua** somando em `valor_total_despesas`: foi gasto real.
-- [ ] `d-011` reembolsa R$33,33 (total, valor truncado de `33.333`) — RN-010.
-- [ ] `d-012` reembolsa R$47,20 (total), sem nenhuma restrição por ser fim de semana.
-- [ ] `d-013` reembolsa R$0,00, com justificativa citando a categoria não reembolsável —
+- [x] `d-011` reembolsa R$33,33 (total, valor truncado de `33.333`) — RN-010.
+- [x] `d-012` reembolsa R$47,20 (total), sem nenhuma restrição por ser fim de semana.
+- [x] `d-013` reembolsa R$0,00, com justificativa citando a categoria não reembolsável —
       RN-008 (cláusula 2), RN-013. A nota fiscal ausente **não** é a justificativa:
       RN-008 é o passo 2 da ordem e RN-005 é o passo 6.
-- [ ] `d-014` reembolsa R$61,00 (total), com a categoria `ALIMENTACAO` tratada como
+- [x] `d-014` reembolsa R$61,00 (total), com a categoria `ALIMENTACAO` tratada como
       `alimentacao` — RN-011, RN-014. Sob o limite de R$75,00 do centro de custo o valor
       cabe inteiro; sob os R$60,00 da v3 era parcial.
-- [ ] `valor_total_despesas` = R$1.806,94 (exclui a duplicata `d-007` e o estorno
+- [x] `valor_total_despesas` = R$1.806,94 (exclui a duplicata `d-007` e o estorno
       `d-009`) e `valor_total_reembolsavel` = R$351,43 — RN-007, RN-009, RN-014. O total
       bruto **não mudou** com a v4, porque não depende de limite; o reembolsável caiu de
       R$585,43 para R$351,43.
-- [ ] Nenhuma despesa recebe o adicional de `acrescimo_em_viagem_percentual` por
+- [x] Nenhuma despesa recebe o adicional de `acrescimo_em_viagem_percentual` por
       "viagem" em nenhuma circunstância — RN-012.
-- [ ] Toda despesa deste arquivo sai com `taxa_cambio` e `valor_convertido_brl` em
+- [x] Toda despesa deste arquivo sai com `taxa_cambio` e `valor_convertido_brl` em
       `null`, e nenhuma ganha um campo `moeda` que não veio na entrada — RN-015,
       spec.md §4 ("Entrada e saída").
-- [ ] O **texto** do JSON de saída é idêntico ao de `exemplos/resultado-exemplo.json`:
+- [x] O **texto** do JSON de saída é idêntico ao de `exemplos/resultado-exemplo.json`:
       `valor_reembolsavel` e os dois totais saem com exatamente 2 casas decimais
       (`72.50`, `0.00`), e os campos ecoados saem com a escala lançada (`72.50`,
       `33.333`) — spec.md §4 ("Entrada e saída"). Este critério é sobre o texto, não
@@ -1280,50 +1280,50 @@ tem entrada própria na política: alimentação R$75,00, transporte urbano R$80
 `CC-SUPORTE-N2`, que **não** tem entrada em `centros_custo` e portanto cai no `padrao`:
 alimentação R$60,00, transporte urbano R$80,00 e hospedagem R$250,00.
 
-- [ ] `f-001` (alimentação R$58,00) reembolsa R$58,00 (total) — RN-001, RN-014.
-- [ ] `f-002` (hospedagem R$310,00) reembolsa R$250,00 (parcial) — RN-003, RN-014.
-- [ ] `f-003` (`representacao` R$190,00) reembolsa R$0,00, com justificativa citando que
+- [x] `f-001` (alimentação R$58,00) reembolsa R$58,00 (total) — RN-001, RN-014.
+- [x] `f-002` (hospedagem R$310,00) reembolsa R$250,00 (parcial) — RN-003, RN-014.
+- [x] `f-003` (`representacao` R$190,00) reembolsa R$0,00, com justificativa citando que
       `representacao` não é reembolsável para `CC-SUPORTE-N2` — RN-008 (cláusula 1),
       RN-014, AMB-012. O valor **soma** em `valor_total_despesas`.
-- [ ] `f-004` (USD 12,00 em `2026-07-21`, taxa 5,48) reembolsa R$65,76 (total), com
+- [x] `f-004` (USD 12,00 em `2026-07-21`, taxa 5,48) reembolsa R$65,76 (total), com
       `taxa_cambio` = `5.48` e `valor_convertido_brl` = `65.76` — RN-015. O limite de
       transporte urbano do `padrao` é R$80,00 e o valor cabe inteiro.
-- [ ] `valor_total_despesas` = R$623,76 e `valor_total_reembolsavel` = R$373,76 —
+- [x] `valor_total_despesas` = R$623,76 e `valor_total_reembolsavel` = R$373,76 —
       RN-014, RN-015.
 
 **Rodando `exemplos/envelope/despesas-envelope.json`** — colaborador em `CC-COMERCIAL`,
 com entrada própria na política: alimentação R$90,00, transporte urbano R$150,00,
 hospedagem R$400,00 e `representacao` R$300,00.
 
-- [ ] `e-001` (`representacao` R$340,00, `"moeda": "BRL"`) reembolsa R$300,00 (parcial),
+- [x] `e-001` (`representacao` R$340,00, `"moeda": "BRL"`) reembolsa R$300,00 (parcial),
       com `taxa_cambio` e `valor_convertido_brl` em `null` — RN-001, RN-014, RN-015.
-- [ ] `e-002` (alimentação EUR 22,00 em `2026-07-14`) tem `taxa_cambio` = `5.93` e
+- [x] `e-002` (alimentação EUR 22,00 em `2026-07-14`) tem `taxa_cambio` = `5.93` e
       `valor_convertido_brl` = `130.46`, e reembolsa R$90,00 (parcial) — RN-015, RN-001.
       O `valor` sai como `22.00`, na moeda lançada.
-- [ ] `e-003` (alimentação EUR 14,50 em `2026-07-15`, **sem** nota fiscal) tem
+- [x] `e-003` (alimentação EUR 14,50 em `2026-07-15`, **sem** nota fiscal) tem
       `valor_convertido_brl` = `85.26` e reembolsa R$85,26 (total): não cruza o teto de
       nota fiscal, que é comparado contra os R$85,26 — RN-005, RN-015, AMB-017.
-- [ ] `e-004` (alimentação EUR 30,00 em `2026-07-18`, sábado sem cotação) reembolsa
+- [x] `e-004` (alimentação EUR 30,00 em `2026-07-18`, sábado sem cotação) reembolsa
       R$0,00, com `taxa_cambio` e `valor_convertido_brl` em `null` e justificativa
       citando a moeda `EUR` e a data `2026-07-18`. **Não** soma em
       `valor_total_despesas` e **não** consome limite de alimentação daquele dia —
       RN-016, AMB-015.
-- [ ] `e-005` (transporte USD 40,00 em `2026-07-20`, **sem** nota fiscal) tem
+- [x] `e-005` (transporte USD 40,00 em `2026-07-20`, **sem** nota fiscal) tem
       `valor_convertido_brl` = `220.00` e reembolsa R$0,00, com justificativa citando
       nota fiscal ausente. Soma R$220,00 em `valor_total_despesas` — RN-005, RN-015,
       AMB-017.
-- [ ] `e-006` (`representacao` GBP 55,00 em `2026-07-21`) reembolsa R$0,00, com
+- [x] `e-006` (`representacao` GBP 55,00 em `2026-07-21`) reembolsa R$0,00, com
       justificativa citando a moeda `GBP` e a data. **Não** soma em
       `valor_total_despesas` — RN-016, AMB-016. A data tem cotação de USD e EUR, e ainda
       assim a despesa é negada: o que falta é a moeda, não a data.
-- [ ] `e-007` (hospedagem R$1.200,00) reembolsa R$400,00 (parcial) — RN-003, RN-014.
-- [ ] `e-008` (alimentação R$95,00) reembolsa R$90,00 (parcial) — RN-001, RN-014.
-- [ ] `e-009` (`coworking` R$120,00) reembolsa R$0,00, com justificativa citando que
+- [x] `e-007` (hospedagem R$1.200,00) reembolsa R$400,00 (parcial) — RN-003, RN-014.
+- [x] `e-008` (alimentação R$95,00) reembolsa R$90,00 (parcial) — RN-001, RN-014.
+- [x] `e-009` (`coworking` R$120,00) reembolsa R$0,00, com justificativa citando que
       `coworking` não é reembolsável para `CC-COMERCIAL` — RN-008 (cláusula 1). Soma em
       `valor_total_despesas`.
-- [ ] `e-010` (alimentação R$88,00, **sem** o campo `moeda`) reembolsa R$88,00 (total),
+- [x] `e-010` (alimentação R$88,00, **sem** o campo `moeda`) reembolsa R$88,00 (total),
       e sai **sem** campo `moeda` — RN-015.
-- [ ] `valor_total_despesas` = R$2.278,72 e `valor_total_reembolsavel` = R$1.053,26 —
+- [x] `valor_total_despesas` = R$2.278,72 e `valor_total_reembolsavel` = R$1.053,26 —
       RN-014, RN-015, RN-016. O total bruto exclui `e-004` e `e-006`, as duas despesas
       sem valor em BRL, e inclui `e-005` e `e-009`, que têm valor em BRL e foram negadas
       por outros motivos.
