@@ -325,7 +325,7 @@ RN-008 estejam quebrados.
 - [x] **T-040** — `regras.py`: `moeda` entra na identidade de duplicata, na forma normalizada e sobre o valor lançado
   - **Atende:** RN-007, AMB-019
   - **Aceite:** `tests/test_regras.py::test_amb019_moedas_diferentes_nao_sao_duplicatas`, `::test_amb019_moeda_ausente_e_brl_explicito_sao_duplicatas`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `b8118ec`
 
 - [ ] **T-041** — `motor.py`: `valor_total_despesas` exclui despesa sem valor em BRL, além da duplicata e do estorno que já excluía
   - **Atende:** RN-016, RN-007, RN-009
