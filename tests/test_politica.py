@@ -38,3 +38,36 @@ def test_observacao_da_politica_nao_entra_no_modelo():
     # spec.md §4 ("Entrada e saída"): `observacao` não é lida pelo motor. plan.md §3
     # ("Modelo de dados"): campo que existe no modelo acaba sendo lido por alguém.
     assert not hasattr(hospedagem, "observacao")
+
+
+def test_rn014_centro_custo_com_entrada_usa_a_propria_tabela():
+    politica = carregar_politica(CAMINHO_POLITICA)
+
+    tabela = politica.tabela_para("CC-ENG-PLATAFORMA")
+
+    assert tabela.centro_custo == "CC-ENG-PLATAFORMA"
+    assert tabela.limites["alimentacao"].limite == Decimal("75.00")
+    # O padrão traz R$60,00 para a mesma categoria, e ele não é usado aqui.
+    assert politica.tabela_padrao["alimentacao"].limite == Decimal("60.00")
+
+
+def test_rn014_centro_custo_sem_entrada_cai_no_padrao():
+    politica = carregar_politica(CAMINHO_POLITICA)
+
+    tabela = politica.tabela_para("CC-SUPORTE-N2")
+
+    assert tabela.centro_custo == "CC-SUPORTE-N2"
+    assert tabela.limites == politica.tabela_padrao
+    assert tabela.limites["alimentacao"].limite == Decimal("60.00")
+    assert tabela.limites["hospedagem"].limite == Decimal("250.00")
+
+
+def test_amb012_tabela_do_centro_custo_nao_e_complementada_pelo_padrao():
+    politica = carregar_politica(CAMINHO_POLITICA)
+
+    # CC-ADM existe em `centros_custo` e não lista `hospedagem`.
+    tabela = politica.tabela_para("CC-ADM")
+
+    assert "hospedagem" in politica.tabela_padrao
+    assert "hospedagem" not in tabela.limites
+    assert set(tabela.limites) == {"alimentacao", "transporte_urbano"}

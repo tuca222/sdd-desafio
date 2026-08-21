@@ -24,6 +24,16 @@ class Politica:
     tabela_por_centro_custo: dict[str, dict[str, LimiteCategoria]]
     nota_fiscal_obrigatoria_acima_de: Decimal
 
+    def tabela_para(self, centro_custo: str) -> TabelaLimites:
+        """RN-014: a tabela do centro de custo, ou o `padrao` — sempre integral.
+
+        O `padrao` nunca complementa a tabela de um centro de custo que existe:
+        ela é a lista completa e fechada das categorias reembolsáveis dele
+        (AMB-012).
+        """
+        limites = self.tabela_por_centro_custo.get(centro_custo, self.tabela_padrao)
+        return TabelaLimites(centro_custo=centro_custo, limites=limites)
+
 
 
 def _tabela(bruto: dict[str, Any]) -> dict[str, LimiteCategoria]:

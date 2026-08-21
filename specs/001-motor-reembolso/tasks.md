@@ -267,7 +267,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_politica.py::test_carrega_politica_com_valores_decimais`
   - **Commit:** `e848ff8`
 
-- [ ] **T-029** — `politica.py`: `Politica.tabela_para(centro_custo)` resolve a tabela aplicável — entrada própria integral, ou `padrao` integral, sem merge
+- [x] **T-029** — `politica.py`: `Politica.tabela_para(centro_custo)` resolve a tabela aplicável — entrada própria integral, ou `padrao` integral, sem merge
   - **Atende:** RN-014, AMB-012
   - **Aceite:** `tests/test_politica.py::test_rn014_centro_custo_com_entrada_usa_a_propria_tabela`, `::test_rn014_centro_custo_sem_entrada_cai_no_padrao`, `::test_amb012_tabela_do_centro_custo_nao_e_complementada_pelo_padrao`
   - **Commit:** `<hash preenchido depois>`
