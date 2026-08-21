@@ -312,7 +312,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_regras.py::test_rn008_categoria_ausente_da_tabela_do_centro_custo`, `::test_amb013_categoria_com_limite_zero_nega_citando_proibicao`
   - **Commit:** `b7fcfec`
 
-- [ ] **T-038** — `regras.py`: `filtro_nota_fiscal` compara o valor em BRL contra o teto vindo da política, não a constante nem o valor lançado
+- [x] **T-038** — `regras.py`: `filtro_nota_fiscal` compara o valor em BRL contra o teto vindo da política, não a constante nem o valor lançado
   - **Atende:** RN-005, AMB-017, AMB-003
   - **Aceite:** `tests/test_regras.py::test_amb017_teto_de_nota_fiscal_compara_valor_convertido`, `::test_rn005_valor_exatamente_no_teto_nao_exige`
   - **Commit:** `<hash preenchido depois>`

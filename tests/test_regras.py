@@ -297,3 +297,96 @@ def test_rn016_despesa_com_valor_em_brl_passa_pelo_filtro():
 
     assert filtro_cambio_indisponivel(e002) is None
     assert filtro_cambio_indisponivel(em_reais) is None
+
+
+def test_rn005_nota_fiscal_obrigatoria_acima_do_teto():
+    d004 = construir_despesa(
+        "d-004",
+        date(2026, 7, 6),
+        "transporte_urbano",
+        "Corrida hotel",
+        "TaxiApp",
+        Decimal("100.01"),
+        tem_nota_fiscal=False,
+    )
+
+    resultado = filtro_nota_fiscal(d004, TETO_NOTA_FISCAL)
+
+    assert resultado is not None
+    assert resultado.despesa_reembolsavel is False
+    assert resultado.tipo_reembolso == "nenhum"
+    assert resultado.valor_reembolsavel == Decimal("0.00")
+    assert "negado" in resultado.justificativa
+    assert "nota fiscal" in resultado.justificativa
+
+
+def test_rn005_valor_acima_do_teto_com_nota_fiscal_aceito():
+    d010 = construir_despesa(
+        "d-010",
+        date(2026, 7, 14),
+        "hospedagem",
+        "Hotel Rio - 2 diarias",
+        "Hotel Copa Sul",
+        Decimal("480.00"),
+        tem_nota_fiscal=True,
+    )
+
+    assert filtro_nota_fiscal(d010, TETO_NOTA_FISCAL) is None
+
+
+def test_rn005_valor_exatamente_no_teto_nao_exige():
+    d003 = construir_despesa(
+        "d-003",
+        date(2026, 7, 6),
+        "transporte_urbano",
+        "Corrida aeroporto",
+        "TaxiApp",
+        Decimal("100.00"),
+        tem_nota_fiscal=False,
+    )
+
+    assert d003.valor_brl == TETO_NOTA_FISCAL
+    assert filtro_nota_fiscal(d003, TETO_NOTA_FISCAL) is None
+
+
+def test_amb017_teto_de_nota_fiscal_compara_valor_convertido():
+    # e-005: USD 40,00 em 2026-07-20 pela taxa 5,50 = R$220,00.
+    e005 = construir_despesa(
+        "e-005",
+        date(2026, 7, 20),
+        "transporte_urbano",
+        "Corridas do dia",
+        "Bolt",
+        Decimal("40.00"),
+        tem_nota_fiscal=False,
+        moeda="USD",
+        moeda_original="USD",
+        valor_brl=Decimal("220.00"),
+        taxa_cambio=Decimal("5.50"),
+    )
+    # e-003: EUR 14,50 em 2026-07-15 pela taxa 5,88 = R$85,26.
+    e003 = construir_despesa(
+        "e-003",
+        date(2026, 7, 15),
+        "alimentacao",
+        "Cafe e sanduiche",
+        "Padaria Lisboa",
+        Decimal("14.50"),
+        tem_nota_fiscal=False,
+        moeda="EUR",
+        moeda_original="EUR",
+        valor_brl=Decimal("85.26"),
+        taxa_cambio=Decimal("5.88"),
+    )
+
+    # 40,00 é menor que o teto e R$220,00 não é: quem decide é o valor convertido.
+    resultado_e005 = filtro_nota_fiscal(e005, TETO_NOTA_FISCAL)
+
+    assert e005.valor < TETO_NOTA_FISCAL
+    assert resultado_e005 is not None
+    assert resultado_e005.tipo_reembolso == "nenhum"
+    assert resultado_e005.valor_reembolsavel == Decimal("0.00")
+    assert "negado" in resultado_e005.justificativa
+
+    # E R$85,26 não cruza o teto, embora a despesa seja internacional.
+    assert filtro_nota_fiscal(e003, TETO_NOTA_FISCAL) is None

@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 
 from src.modelos import Despesa, Periodo, ResultadoDespesa
-from src.politica import LIMITE_NOTA_FISCAL, TabelaLimites
+from src.politica import TabelaLimites
 
 
 def normalizar_categoria(categoria: str) -> str:
@@ -123,14 +123,16 @@ def filtro_cambio_indisponivel(despesa: Despesa) -> ResultadoDespesa | None:
     return None
 
 
-def filtro_nota_fiscal(despesa: Despesa) -> ResultadoDespesa | None:
-    if despesa.valor > LIMITE_NOTA_FISCAL and not despesa.tem_nota_fiscal:
+def filtro_nota_fiscal(despesa: Despesa, teto: Decimal) -> ResultadoDespesa | None:
+    # AMB-017: o teto está em BRL, então quem é comparado com ele é o valor
+    # convertido, nunca o número lançado na moeda estrangeira.
+    if despesa.valor_brl is not None and despesa.valor_brl > teto and not despesa.tem_nota_fiscal:
         return ResultadoDespesa(
             despesa_reembolsavel=False,
             tipo_reembolso="nenhum",
             valor_reembolsavel=Decimal("0.00"),
             justificativa=(
-                f"Despesas acima de {formatar_reais(LIMITE_NOTA_FISCAL)} necessitam "
+                f"Despesas acima de {formatar_reais(teto)} necessitam "
                 "de nota fiscal para reembolso. Esta despesa não possui nota "
                 "fiscal. Reembolso negado."
             ),
