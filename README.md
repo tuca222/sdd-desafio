@@ -14,7 +14,11 @@ abrir o código.
 O motor usa **apenas a biblioteca padrão do Python**. Não há nada para instalar:
 
 ```bash
-python3 -m src.cli calcular --input exemplos/despesas-exemplo.json --output resultado.json
+python3 -m src.cli calcular \
+  --input exemplos/despesas-exemplo.json \
+  --output resultado.json \
+  --politica exemplos/envelope/politica-v4.json \
+  --cambio exemplos/envelope/cambio.json
 ```
 
 **Requisito:** Python 3.12 ou superior (`python3 --version`).
@@ -23,25 +27,23 @@ O arquivo de entrada não é alterado. Para usar suas próprias despesas, aponte
 `--input` para um arquivo no mesmo formato de
 [`exemplos/despesas-exemplo.json`](exemplos/despesas-exemplo.json).
 
-### As três entradas
+### As três entradas, todas obrigatórias
 
-O motor lê **três** arquivos. Só o de despesas é obrigatório na linha de comando;
-os outros dois têm caminho padrão e só precisam ser informados quando você quiser
-usar outros:
+O motor lê **três** arquivos, e os três precisam ser informados na linha de comando:
 
-| Entrada | Flag | Padrão | O que traz |
-|---|---|---|---|
-| Despesas | `--input` | — (obrigatório) | O lote de um colaborador num período de competência |
-| Política | `--politica` | `exemplos/envelope/politica-v4.json` | Os limites por centro de custo e os parâmetros gerais |
-| Câmbio | `--cambio` | `exemplos/envelope/cambio.json` | As taxas de conversão para BRL, por data e por moeda |
+| Entrada | Flag | O que traz |
+|---|---|---|
+| Despesas | `--input` | O lote de um colaborador num período de competência |
+| Política | `--politica` | Os limites por centro de custo e os parâmetros gerais |
+| Câmbio | `--cambio` | As taxas de conversão para BRL, por data e por moeda |
 
-```bash
-python3 -m src.cli calcular \
-  --input exemplos/envelope/despesas-envelope.json \
-  --output resultado.json \
-  --politica exemplos/envelope/politica-v4.json \
-  --cambio exemplos/envelope/cambio.json
-```
+**Nenhuma delas tem valor padrão, de propósito.** O resultado depende inteiramente
+de qual política e de qual tabela de câmbio foram usadas: os mesmos R$130,00 de
+almoço são reembolso total num centro de custo e parcial em outro. Se o motor
+escolhesse um arquivo por omissão, o `resultado.json` deixaria de ser rastreável a
+partir do comando que o gerou — quem confere não teria como saber quais limites
+foram aplicados. Faltando qualquer uma das três, a CLI recusa a invocação e não
+escreve arquivo nenhum.
 
 **A política é entrada, não código.** Os limites variam por centro de custo e são
 mantidos pelo financeiro fora do repositório — trocar a tabela de limites não pode

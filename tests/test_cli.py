@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from src.cambio import TabelaCambio
-from src.cli import CAMINHO_PADRAO_CAMBIO, CAMINHO_PADRAO_POLITICA, main
+from src.cli import main
 from src.motor import calcular
 from src.parser import carregar_despesas
 from src.politica import Politica
@@ -15,6 +15,10 @@ from src.saida import montar_saida
 CAMINHO_EXEMPLO = "exemplos/despesas-exemplo.json"
 CAMINHO_POLITICA = "exemplos/envelope/politica-v4.json"
 CAMINHO_CAMBIO = "exemplos/envelope/cambio.json"
+
+# As tres entradas sao obrigatorias (spec.md §4, "Entrada e saida"), entao toda
+# invocacao da CLI informa as tres.
+ENVELOPE = ["--politica", CAMINHO_POLITICA, "--cambio", CAMINHO_CAMBIO]
 
 
 def escrever_politica(destino: Path, **campos) -> str:
@@ -33,7 +37,7 @@ def escrever_lote(destino: Path, competencia: str, inicio: str, fim: str) -> str
 def test_cli_calcular_gera_arquivo_de_saida(tmp_path: Path):
     destino = tmp_path / "resultado.json"
 
-    codigo = main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino)])
+    codigo = main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino), *ENVELOPE])
 
     assert codigo == 0
     assert destino.exists()
@@ -49,7 +53,7 @@ def test_cli_escreve_exatamente_o_que_o_motor_produz(
     tmp_path: Path, politica: Politica, cambio: TabelaCambio
 ):
     destino = tmp_path / "resultado.json"
-    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino)])
+    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino), *ENVELOPE])
 
     colaborador, periodo, despesas = carregar_despesas(CAMINHO_EXEMPLO, cambio)
     esperado = montar_saida(
@@ -71,7 +75,7 @@ def test_cli_escreve_exatamente_o_que_o_motor_produz(
 
 def test_cli_escreve_valores_monetarios_com_duas_casas(tmp_path: Path):
     destino = tmp_path / "resultado.json"
-    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino)])
+    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino), *ENVELOPE])
 
     texto = destino.read_text(encoding="utf-8")
 
@@ -101,7 +105,7 @@ def test_cli_nao_confunde_texto_da_entrada_com_valor_monetario(tmp_path: Path):
     arquivo.write_text(json.dumps(entrada), encoding="utf-8")
 
     destino = tmp_path / "resultado.json"
-    main(["calcular", "--input", str(arquivo), "--output", str(destino)])
+    main(["calcular", "--input", str(arquivo), "--output", str(destino), *ENVELOPE])
 
     escrito = json.loads(destino.read_text(encoding="utf-8"), parse_float=Decimal)
 
@@ -113,14 +117,23 @@ def test_cli_nao_altera_o_arquivo_de_entrada(tmp_path: Path):
     entrada.write_text(Path(CAMINHO_EXEMPLO).read_text(encoding="utf-8"), encoding="utf-8")
     conteudo_antes = entrada.read_bytes()
 
-    main(["calcular", "--input", str(entrada), "--output", str(tmp_path / "resultado.json")])
+    main(
+        [
+            "calcular",
+            "--input",
+            str(entrada),
+            "--output",
+            str(tmp_path / "resultado.json"),
+            *ENVELOPE,
+        ]
+    )
 
     assert entrada.read_bytes() == conteudo_antes
 
 
 def test_cli_grava_acentuacao_sem_escapar(tmp_path: Path):
     destino = tmp_path / "resultado.json"
-    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino)])
+    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino), *ENVELOPE])
 
     texto = destino.read_text(encoding="utf-8")
 
@@ -170,36 +183,45 @@ def test_cli_aceita_politica_e_cambio_alternativos(tmp_path: Path):
     assert "R$40,00" in por_id["d-001"]["motor_reembolso_output"]["justificativa"]
 
 
-def test_cli_usa_a_politica_e_o_cambio_padrao_quando_as_flags_nao_vem(tmp_path: Path):
-    # A invocação fixa do DESAFIO.md não passa --politica nem --cambio.
-    com_flags = tmp_path / "com-flags.json"
-    sem_flags = tmp_path / "sem-flags.json"
+def test_cli_exige_politica_e_cambio(tmp_path: Path):
+    """spec.md §4 ("Entrada e saída"): as **três** entradas são obrigatórias.
 
-    main(
-        [
-            "calcular",
-            "--input",
-            CAMINHO_EXEMPLO,
-            "--output",
-            str(com_flags),
-            "--politica",
-            CAMINHO_POLITICA,
-            "--cambio",
-            CAMINHO_CAMBIO,
-        ]
-    )
-    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(sem_flags)])
+    Antes da [[T-050]] as duas flags tinham default, e a invocação abaixo rodava e
+    escrevia `resultado.json` — julgando o lote com a política de
+    `exemplos/envelope/`, que quem rodou não escolheu e não viu. Um relatório de
+    reembolso cujos limites não são rastreáveis a partir do comando que o gerou não
+    é auditável, que é o oposto do que a spec pede.
+    """
+    destino = tmp_path / "resultado.json"
 
-    assert Path(CAMINHO_PADRAO_POLITICA).exists()
-    assert Path(CAMINHO_PADRAO_CAMBIO).exists()
-    assert sem_flags.read_text(encoding="utf-8") == com_flags.read_text(encoding="utf-8")
+    with pytest.raises(SystemExit) as erro:
+        main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino)])
+
+    assert erro.value.code == 2
+    assert not destino.exists()
+
+
+def test_cli_exige_cada_uma_das_tres_entradas(tmp_path: Path):
+    destino = tmp_path / "resultado.json"
+    completo = ["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino), *ENVELOPE]
+
+    # Retirar qualquer um dos três caminhos de entrada derruba a invocação.
+    for flag in ("--input", "--politica", "--cambio"):
+        indice = completo.index(flag)
+        incompleto = completo[:indice] + completo[indice + 2 :]
+
+        with pytest.raises(SystemExit) as erro:
+            main(incompleto)
+
+        assert erro.value.code == 2, flag
+        assert not destino.exists(), flag
 
 
 def test_rn017_lote_de_competencia_anterior_nao_gera_saida(tmp_path: Path, capsys):
     entrada = escrever_lote(tmp_path / "junho.json", "2026-06", "2026-06-01", "2026-06-30")
     destino = tmp_path / "resultado.json"
 
-    codigo = main(["calcular", "--input", entrada, "--output", str(destino)])
+    codigo = main(["calcular", "--input", entrada, "--output", str(destino), *ENVELOPE])
 
     # O que se afirma é a ausência do arquivo mais o código de saída — um
     # resultado.json com tudo zerado tem a forma de um relatório válido.
@@ -217,7 +239,7 @@ def test_rn017_lote_coberto_gera_saida_normalmente(tmp_path: Path):
     entrada = escrever_lote(tmp_path / "agosto.json", "2026-08", "2026-07-01", "2026-08-31")
     destino = tmp_path / "resultado.json"
 
-    codigo = main(["calcular", "--input", entrada, "--output", str(destino)])
+    codigo = main(["calcular", "--input", entrada, "--output", str(destino), *ENVELOPE])
 
     assert codigo == 0
     assert destino.exists()
@@ -240,9 +262,11 @@ def test_rn017_vigencia_no_meio_do_mes_nao_nega_despesa_anterior(tmp_path: Path)
             str(de_quinze),
             "--politica",
             caminho_politica,
+            "--cambio",
+            CAMINHO_CAMBIO,
         ]
     )
-    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(de_primeiro)])
+    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(de_primeiro), *ENVELOPE])
 
     assert codigo == 0
     assert de_quinze.read_text(encoding="utf-8") == de_primeiro.read_text(encoding="utf-8")

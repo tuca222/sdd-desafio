@@ -447,6 +447,29 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
     spec.md §5 ("Regras de negócio")
   - **Commit:** `737885b`
 
+- [x] **T-050** — `cli.py`: `--politica` e `--cambio` passam a ser obrigatórias
+  - **Atende:** spec.md §4 ("Entrada e saída") — "O motor recebe **três entradas**" e
+    "As **três** entradas são obrigatórias"
+  - **Por que existe:** a [[T-032]] fez as duas flags **opcionais, com default**, para
+    que a invocação fixa do `DESAFIO.md` continuasse funcionando sem elas. O efeito é
+    que `calcular --input despesas.json --output resultado.json` roda, devolve
+    `resultado.json` e código zero — julgando o lote com uma política que quem rodou
+    não escolheu e não viu: `exemplos/envelope/politica-v4.json`, por caminho absoluto
+    resolvido a partir da pasta do pacote, junto com o câmbio de
+    `exemplos/envelope/cambio.json`. Um relatório de reembolso cujo conjunto de limites
+    não é rastreável a partir do comando que o gerou é exatamente o que a spec.md §4
+    ("Entrada e saída") existe para impedir: o campo `versao` da política está lá
+    "para auditoria humana do arquivo", e não há auditoria possível se o arquivo é
+    escolhido por omissão. Detectado pelo usuário ao ler o `README.md`.
+  - **Escopo:** `required=True` nas duas flags; somem as constantes
+    `CAMINHO_PADRAO_POLITICA` e `CAMINHO_PADRAO_CAMBIO` e os parâmetros com valor
+    padrão de `executar_calculo`. Os testes que chamavam a CLI sem as flags passam a
+    informá-las, e o `README.md` mostra o comando completo. Nenhuma regra de negócio
+    muda, e nenhum resultado de nenhum lote muda.
+  - **Aceite:** `tests/test_cli.py::test_cli_exige_politica_e_cambio` — a invocação sem
+    as duas flags encerra com código 2 e **não** escreve arquivo de saída
+  - **Commit:** `<hash preenchido depois>`
+
 ---
 
 ## Cobertura

@@ -4,7 +4,6 @@ import re
 import sys
 from collections.abc import Iterator, Sequence
 from decimal import Decimal
-from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
@@ -13,13 +12,6 @@ from src.motor import calcular
 from src.parser import carregar_despesas
 from src.politica import carregar_politica
 from src.saida import montar_saida
-
-# Resolvidos a partir do próprio pacote, e não do diretório de trabalho: a
-# invocação fixa do DESAFIO.md não passa `--politica` nem `--cambio`, e precisa
-# funcionar de onde quer que o motor seja chamado.
-_RAIZ = Path(__file__).resolve().parent.parent
-CAMINHO_PADRAO_POLITICA = str(_RAIZ / "exemplos" / "envelope" / "politica-v4.json")
-CAMINHO_PADRAO_CAMBIO = str(_RAIZ / "exemplos" / "envelope" / "cambio.json")
 
 # Sorteado a cada execução: a substituição em iterencode() varre também os fragmentos
 # de string, então um marcador fixo permitiria que uma descrição de despesa vinda da
@@ -70,13 +62,13 @@ def _construir_parser() -> argparse.ArgumentParser:
     calcular_cmd.add_argument(
         "--politica",
         dest="politica",
-        default=CAMINHO_PADRAO_POLITICA,
+        required=True,
         help="Caminho do JSON da política de reembolso vigente.",
     )
     calcular_cmd.add_argument(
         "--cambio",
         dest="cambio",
-        default=CAMINHO_PADRAO_CAMBIO,
+        required=True,
         help="Caminho do JSON com as taxas de câmbio por data e moeda.",
     )
 
@@ -86,8 +78,8 @@ def _construir_parser() -> argparse.ArgumentParser:
 def executar_calculo(
     caminho_entrada: str,
     caminho_saida: str,
-    caminho_politica: str = CAMINHO_PADRAO_POLITICA,
-    caminho_cambio: str = CAMINHO_PADRAO_CAMBIO,
+    caminho_politica: str,
+    caminho_cambio: str,
 ) -> int:
     politica = carregar_politica(caminho_politica)
     cambio = carregar_cambio(caminho_cambio)

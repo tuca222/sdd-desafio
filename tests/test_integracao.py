@@ -10,6 +10,11 @@ CAMINHO_ENTRADA = "exemplos/despesas-exemplo.json"
 CAMINHO_RESULTADO_ESPERADO = "exemplos/resultado-exemplo.json"
 CAMINHO_ENVELOPE_CC_DESCONHECIDO = "exemplos/envelope/despesas-envelope-cc-desconhecido.json"
 CAMINHO_ENVELOPE = "exemplos/envelope/despesas-envelope.json"
+CAMINHO_POLITICA = "exemplos/envelope/politica-v4.json"
+CAMINHO_CAMBIO = "exemplos/envelope/cambio.json"
+
+# As tres entradas sao obrigatorias (spec.md §4, "Entrada e saida").
+ENVELOPE = ["--politica", CAMINHO_POLITICA, "--cambio", CAMINHO_CAMBIO]
 
 # Um item por linha da spec.md §9 ("Critérios de aceite"), primeiro bloco:
 # (id, tipo_reembolso, valor_reembolsavel, trecho obrigatório da justificativa)
@@ -56,7 +61,7 @@ CRITERIOS_COMERCIAL = [
 
 def rodar(entrada: str, tmp_path: Path) -> dict:
     destino = tmp_path / "resultado.json"
-    assert main(["calcular", "--input", entrada, "--output", str(destino)]) == 0
+    assert main(["calcular", "--input", entrada, "--output", str(destino), *ENVELOPE]) == 0
     return json.loads(destino.read_text(encoding="utf-8"))
 
 
@@ -166,7 +171,7 @@ def test_saida_e_identica_ao_resultado_esperado(resultado: dict):
 
 def test_saida_bate_com_o_exemplo_caractere_a_caractere(tmp_path: Path):
     destino = tmp_path / "resultado.json"
-    main(["calcular", "--input", CAMINHO_ENTRADA, "--output", str(destino)])
+    main(["calcular", "--input", CAMINHO_ENTRADA, "--output", str(destino), *ENVELOPE])
 
     # spec.md §9 ("Criterios de aceite"): a comparacao e sobre o texto, nao sobre o
     # resultado do parsing. Como dicts, 60.0 e 60.00 sao o mesmo valor — foi por
