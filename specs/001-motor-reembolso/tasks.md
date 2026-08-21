@@ -265,7 +265,7 @@ RN-008 estejam quebrados.
 - [x] **T-028** — `politica.py`: substitui as constantes por um carregador que lê o JSON da política com `parse_float=Decimal` e devolve `Politica`, `TabelaLimites` e `LimiteCategoria`
   - **Atende:** spec.md §4 ("Entrada e saída"), plan.md §4 ("Como a política é representada"), plan.md DT-006
   - **Aceite:** `tests/test_politica.py::test_carrega_politica_com_valores_decimais`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `e848ff8`
 
 - [ ] **T-029** — `politica.py`: `Politica.tabela_para(centro_custo)` resolve a tabela aplicável — entrada própria integral, ou `padrao` integral, sem merge
   - **Atende:** RN-014, AMB-012
