@@ -245,6 +245,68 @@ def test_rn007_duplicata_ignora_capitalizacao_da_categoria():
     assert "Almoco(d-600)" in resultado.justificativa
 
 
+def test_amb019_moedas_diferentes_nao_sao_duplicatas():
+    em_euro = construir_despesa(
+        "d-700",
+        date(2026, 7, 14),
+        "alimentacao",
+        "Almoco",
+        "Taberna do Chiado",
+        Decimal("22.00"),
+        tem_nota_fiscal=True,
+        moeda="EUR",
+        moeda_original="EUR",
+        valor_brl=Decimal("130.46"),
+        taxa_cambio=Decimal("5.93"),
+    )
+    em_reais = construir_despesa(
+        "d-701",
+        date(2026, 7, 14),
+        "alimentacao",
+        "Almoco",
+        "Taberna do Chiado",
+        Decimal("22.00"),
+        tem_nota_fiscal=True,
+        moeda_original="BRL",
+    )
+
+    # EUR 22,00 e BRL 22,00 são gastos de valores completamente diferentes.
+    assert filtro_duplicata(em_reais, [em_euro]) is None
+    assert filtro_duplicata(em_euro, [em_reais]) is None
+
+
+def test_amb019_moeda_ausente_e_brl_explicito_sao_duplicatas():
+    sem_o_campo = construir_despesa(
+        "d-710",
+        date(2026, 7, 27),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("88.00"),
+        tem_nota_fiscal=True,
+    )
+    com_brl_explicito = construir_despesa(
+        "d-711",
+        date(2026, 7, 27),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("88.00"),
+        tem_nota_fiscal=True,
+        moeda_original="BRL",
+    )
+
+    assert sem_o_campo.moeda_original is None
+    assert com_brl_explicito.moeda_original == "BRL"
+
+    resultado = filtro_duplicata(com_brl_explicito, [sem_o_campo])
+
+    assert resultado is not None
+    assert resultado.tipo_reembolso == "nenhum"
+    assert resultado.valor_reembolsavel == Decimal("0.00")
+    assert "Almoco(d-710)" in resultado.justificativa
+
+
 def test_rn016_cambio_indisponivel_nega_despesa():
     e004 = construir_despesa(
         "e-004",

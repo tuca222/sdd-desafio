@@ -77,13 +77,17 @@ def filtro_fora_periodo(despesa: Despesa, periodo: Periodo) -> ResultadoDespesa 
     return None
 
 
-def _identidade_duplicata(despesa: Despesa) -> tuple[date, str, str, str, Decimal, bool]:
+def _identidade_duplicata(despesa: Despesa) -> tuple[date, str, str, str, Decimal, str, bool]:
+    # RN-007/AMB-019: a comparação é sobre o valor **lançado** e a `moeda`
+    # normalizada, nunca sobre o valor convertido — senão a decisão passaria a
+    # depender da taxa do dia.
     return (
         despesa.data,
         despesa.categoria,
         despesa.descricao,
         despesa.fornecedor,
         despesa.valor,
+        despesa.moeda,
         despesa.tem_nota_fiscal,
     )
 

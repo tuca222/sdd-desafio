@@ -322,7 +322,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_regras.py::test_rn001_limite_diario_alimentacao`, `::test_rn002_limite_diario_transporte`, `::test_rn003_limite_diario_hospedagem`, `::test_rn014_limite_varia_por_centro_de_custo`
   - **Commit:** `9419e32`
 
-- [ ] **T-040** — `regras.py`: `moeda` entra na identidade de duplicata, na forma normalizada e sobre o valor lançado
+- [x] **T-040** — `regras.py`: `moeda` entra na identidade de duplicata, na forma normalizada e sobre o valor lançado
   - **Atende:** RN-007, AMB-019
   - **Aceite:** `tests/test_regras.py::test_amb019_moedas_diferentes_nao_sao_duplicatas`, `::test_amb019_moeda_ausente_e_brl_explicito_sao_duplicatas`
   - **Commit:** `<hash preenchido depois>`
