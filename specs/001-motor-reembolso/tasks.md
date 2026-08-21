@@ -295,7 +295,7 @@ RN-008 estejam quebrados.
 - [x] **T-034** — `modelos.py`/`parser.py`: `Despesa` ganha `moeda` e `moeda_original`; a moeda é normalizada para maiúsculas na borda e assume `BRL` quando o campo não vem
   - **Atende:** RN-015, plan.md DT-005
   - **Aceite:** `tests/test_parser.py::test_rn015_moeda_ausente_assume_brl`, `::test_rn015_moeda_normalizada_para_maiusculas`, `::test_rn015_moeda_original_preservada_como_none_quando_ausente`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `81c6e6b`
 
 - [ ] **T-035** — `parser.py`: converte a despesa para BRL na borda, preenchendo `valor_brl` e `taxa_cambio` (ou os dois com `None` quando não há taxa); trunca o valor convertido em 2 casas
   - **Atende:** RN-015, RN-010, AMB-018, plan.md DT-007
