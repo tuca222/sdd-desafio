@@ -347,7 +347,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_integracao.py::test_envelope_cc_desconhecido_bate_com_criterios_de_aceite`
   - **Commit:** `439b5da`
 
-- [ ] **T-045** — Teste de integração de `exemplos/envelope/despesas-envelope.json`
+- [x] **T-045** — Teste de integração de `exemplos/envelope/despesas-envelope.json`
   - **Atende:** spec.md §9 ("Critérios de aceite"), terceiro bloco — `valor_total_despesas = 2278.72`, `valor_total_reembolsavel = 1053.26`
   - **Aceite:** `tests/test_integracao.py::test_envelope_comercial_bate_com_criterios_de_aceite`
   - **Commit:** `<hash preenchido depois>`
