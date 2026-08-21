@@ -468,7 +468,7 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
     muda, e nenhum resultado de nenhum lote muda.
   - **Aceite:** `tests/test_cli.py::test_cli_exige_politica_e_cambio` — a invocação sem
     as duas flags encerra com código 2 e **não** escreve arquivo de saída
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `5dabd11`
 
 ---
 
