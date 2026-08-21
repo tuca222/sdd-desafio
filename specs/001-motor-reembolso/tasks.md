@@ -404,7 +404,7 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
   - **Aceite:** `tests/test_dados_sinteticos.py::test_valor_inteiro_no_json_e_aceito`
     passa sem `xfail`, sobre `tests/dados/despesas-07-valor-inteiro.json`, e
     `::test_politica_e_cambio_com_numeros_inteiros` cobre as outras duas bordas
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `d2e588d`
 
 - [x] **T-048** — `regras.py`: a identidade de duplicata compara o `valor_original`,
   não o valor já truncado
