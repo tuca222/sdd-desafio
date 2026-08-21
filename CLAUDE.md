@@ -203,7 +203,22 @@ merge. Todo trabalho, meu ou de um agente, é direto na `main`.
 ## Stack e comandos
 
 - Linguagem: Python 3.12.3
-- Rodar: `python -m src.cli calcular --input despesas.json --output resultado.json`
+- Rodar — **as três entradas são obrigatórias** (`spec.md` §4, "Entrada e saída"):
+
+  ```
+  python -m src.cli calcular \
+    --input despesas.json \
+    --output resultado.json \
+    --politica exemplos/envelope/politica-v4.json \
+    --cambio exemplos/envelope/cambio.json
+  ```
+
+  Nenhuma das três tem valor padrão. Elas tiveram, entre a T-032 e a T-050, e o
+  efeito era um `resultado.json` julgado por uma política que quem rodou não
+  escolheu e não via — ver a T-050 em `tasks.md`. Isso difere da linha fixada em
+  `DESAFIO.md` ("Interface (esta parte é fixa)"), que foi escrita quando o motor
+  tinha uma entrada só; o envelope do dia 2 acrescentou duas, e o usuário aprovou
+  a divergência.
 - Testes: `pytest -v`
 - Lint/format: `ruff check . && ruff format .`
 
