@@ -305,7 +305,7 @@ RN-008 estejam quebrados.
 - [x] **T-036** — `regras.py` + `motor.py`: `filtro_cambio_indisponivel` entra na posição 5 da ordem, entre duplicata e nota fiscal
   - **Atende:** RN-016, RN-013, AMB-015, AMB-016, spec.md §8 ("Ordem de aplicação das regras")
   - **Aceite:** `tests/test_regras.py::test_rn016_cambio_indisponivel_nega_despesa`, `tests/test_motor.py::test_pipeline_aplica_filtros_na_ordem_definida`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `be1f28a`
 
 - [ ] **T-037** — `regras.py`: `filtro_categoria_invalida` passa a receber a `TabelaLimites` e a cobrir as duas cláusulas de RN-008 (categoria ausente, categoria com limite `0.00`), com justificativas distintas
   - **Atende:** RN-008, AMB-013, RN-014
