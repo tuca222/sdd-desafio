@@ -1,6 +1,6 @@
 # Plano Técnico — Motor de Cálculo de Reembolso
 
-**Versão:** 1.14 · **Baseado na spec:** 2.3 — revisado contra a spec 2.3 na implementação da Fase 5 de `tasks.md`; a mudança da spec 2.2 para a 2.3 é de status (critérios de aceite remarcados), e nenhuma decisão técnica deste plano mudou por causa dela. Ver `DECISIONS.md` [[D-014]]
+**Versão:** 1.15 · **Baseado na spec:** 2.4 — revisado contra a spec 2.4 na implementação da Fase 5 de `tasks.md` e na correção de RN-017 que a seguiu. A plan.md §2 ("Arquitetura") e a plan.md DT-008 ("RN-017 é uma guarda no `cli.py`, não um filtro do pipeline") passaram a descrever a ordem real: a guarda de vigência roda depois do `parser.py`. Ver `DECISIONS.md` [[D-015]]
 
 ---
 
@@ -21,21 +21,25 @@ politica-v4.json → politica.py (parse + Decimal + resolve a tabela do centro
 cambio.json      → cambio.py   (parse + Decimal → TabelaCambio, que responde
                                 taxa(moeda, data) -> Decimal | None)
                                               ↓
-                 RN-017: vigencia da politica × periodo.competencia.
-                 Reprovou → cli.py imprime o motivo e encerra sem escrever
-                 arquivo nenhum; nada abaixo desta linha roda.
-                                              ↓
 despesas.json → parser.py (parse + Decimal + truncamento RN-010 +
                           normalização de categoria RN-011 e de moeda RN-015 +
                           conversão para BRL, consultando a TabelaCambio)
-             → motor.py (recebe a TabelaLimites já resolvida; orquestra a
+                                              ↓
+                 RN-017: vigencia da politica × periodo.competencia — a
+                 competencia vem do arquivo de despesas, entao a guarda so
+                 pode rodar depois de ele ser lido (spec.md §5, RN-017).
+                 Reprovou → cli.py imprime o motivo em stderr e encerra com
+                 codigo diferente de zero, sem escrever arquivo nenhum; nada
+                 abaixo desta linha roda.
+                                              ↓
+                motor.py (recebe a TabelaLimites já resolvida; orquestra a
                           ordem de aplicação definida na spec.md §8 "Ordem de
                           aplicação das regras" + agregação de limite diário,
                           chamando as funções puras de regras.py; devolve um
                           ResultadoFinal já com os dois totais do período
                           calculados)
-             → saida.py (monta o dict de saída; Decimal segue Decimal)
-             → resultado.json
+             →  saida.py (monta o dict de saída; Decimal segue Decimal)
+             →  resultado.json
 
 cli.py orquestra as etapas (politica + cambio + parser → motor → saida →
 escrita) e é onde o Decimal vira texto, no encoder de DT-004.
@@ -308,6 +312,16 @@ explicitamente que nada seja escrito.
 arquivo. Ele não tem o `periodo` na mão nesse momento, e passá-lo ao carregador
 só para essa verificação acoplaria o carregamento da política ao lote — o mesmo
 arquivo deixaria de poder ser carregado uma vez e usado para vários lotes.
+**Onde a guarda cai, na prática:** entre o `parser.py` e o `motor.py`, e não
+antes do `parser.py`. Um dos dois lados da comparação é `periodo.competencia`,
+que vive dentro do arquivo de despesas — `carregar_despesas` o devolve junto com
+as despesas, e sem essa leitura não há o que comparar. Quando a guarda reprova, o
+lote já foi parseado (inclusive convertido para BRL) e esse trabalho é descartado
+sem produzir nada: nenhuma despesa recebe decisão, nenhum total é somado e nenhum
+arquivo é aberto para escrita. É exatamente o que a spec.md §5 (RN-017) pede, que
+antecede a **avaliação** das despesas e não a leitura do arquivo — ver
+`DECISIONS.md` [[D-015]]. O preço é uma leitura desperdiçada num caminho que
+termina em erro.
 **Consequência:** o único ponto do código que decide "não vai haver saída" é o
 `cli.py`, que já é o único que escreve arquivo. A regra em si continua testável
 sem I/O, como todas as outras.
