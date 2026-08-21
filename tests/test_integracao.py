@@ -90,6 +90,28 @@ def test_exemplo_completo_bate_com_criterios_de_aceite(resultado: dict):
     assert resultado["valor_total_reembolsavel"] == 351.43
 
 
+def test_envelope_cc_desconhecido_bate_com_criterios_de_aceite(tmp_path: Path):
+    resultado = rodar(CAMINHO_ENVELOPE_CC_DESCONHECIDO, tmp_path)
+
+    conferir_criterios(resultado, CRITERIOS_CC_DESCONHECIDO)
+
+    assert resultado["colaborador"]["centro_custo"] == "CC-SUPORTE-N2"
+    assert resultado["valor_total_despesas"] == 623.76
+    assert resultado["valor_total_reembolsavel"] == 373.76
+
+
+def test_envelope_cc_desconhecido_converte_a_despesa_em_dolar(tmp_path: Path):
+    resultado = rodar(CAMINHO_ENVELOPE_CC_DESCONHECIDO, tmp_path)
+
+    f004 = despesas_por_id(resultado)["f-004"]
+
+    # USD 12,00 em 2026-07-21, taxa 5,48 = R$65,76 — cabe nos R$80,00 do padrão.
+    assert f004["valor"] == 12.00
+    assert f004["moeda"] == "USD"
+    assert f004["motor_reembolso_output"]["taxa_cambio"] == 5.48
+    assert f004["motor_reembolso_output"]["valor_convertido_brl"] == 65.76
+
+
 def test_saida_e_identica_ao_resultado_esperado(resultado: dict):
     esperado = json.loads(Path(CAMINHO_RESULTADO_ESPERADO).read_text(encoding="utf-8"))
 
