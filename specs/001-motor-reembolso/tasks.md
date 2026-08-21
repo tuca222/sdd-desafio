@@ -290,7 +290,7 @@ RN-008 estejam quebrados.
 - [x] **T-033** — `cli.py`: quando `vigencia_cobre` reprova, imprime em `stderr` o motivo citando as duas competências, **não escreve arquivo de saída** e encerra com código diferente de zero
   - **Atende:** RN-017, plan.md DT-008
   - **Aceite:** `tests/test_cli.py::test_rn017_lote_de_competencia_anterior_nao_gera_saida`, `::test_rn017_lote_coberto_gera_saida_normalmente`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `58d36ff`
 
 - [ ] **T-034** — `modelos.py`/`parser.py`: `Despesa` ganha `moeda` e `moeda_original`; a moeda é normalizada para maiúsculas na borda e assume `BRL` quando o campo não vem
   - **Atende:** RN-015, plan.md DT-005
