@@ -262,7 +262,7 @@ recusar o lote), e T-043 é o ponto em que a suíte volta a ficar verde por
 inteiro. Até lá é esperado que os testes de RN-001, RN-002, RN-003, RN-005 e
 RN-008 estejam quebrados.
 
-- [ ] **T-028** — `politica.py`: substitui as constantes por um carregador que lê o JSON da política com `parse_float=Decimal` e devolve `Politica`, `TabelaLimites` e `LimiteCategoria`
+- [x] **T-028** — `politica.py`: substitui as constantes por um carregador que lê o JSON da política com `parse_float=Decimal` e devolve `Politica`, `TabelaLimites` e `LimiteCategoria`
   - **Atende:** spec.md §4 ("Entrada e saída"), plan.md §4 ("Como a política é representada"), plan.md DT-006
   - **Aceite:** `tests/test_politica.py::test_carrega_politica_com_valores_decimais`
   - **Commit:** `<hash preenchido depois>`
