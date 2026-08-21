@@ -36,6 +36,7 @@ de cabeça contra o valor esperado escrito em `tests/test_dados_sinteticos.py`.
 | `despesas-05-bordas-e-truncamento.json` | `CC-JURIDICO` | Primeiro e último dia do período (inclusivos) e um dia de cada lado (negados); `39.999` truncado; as **duas** cláusulas de RN-008 lado a lado (limite `0.00` vs. categoria ausente); AMB-012 (o `padrao` não completa tabela existente); estorno fora dos totais; e a ordem RN-008 (passo 2) antes de RN-005 (passo 6). |
 | `despesas-06-competencia-anterior.json` | `CC-ESTAGIO` | Lote de competência `2026-08`. Recusado pela política de setembro, aceito pela de julho. Também exercita um centro de custo com **uma única** categoria. |
 | `despesas-07-valor-inteiro.json` | `CC-MARKETING` | `"valor": 100` — número JSON válido, sem casas decimais. **Hoje o motor aborta com este arquivo**; o teste correspondente está marcado `xfail(strict=True)` e vira `XPASS` no instante em que o defeito for corrigido. Ver a nota abaixo. |
+| `despesas-08-duplicata-e-truncamento.json` | `CC-MARKETING` | Duplicata comparada sobre o valor **lançado**, não sobre o truncado: `33.333` e `33.334` chegam ao limite diário valendo R$33,33 cada e ainda assim são dois lançamentos distintos, enquanto duas despesas de `20.005` são a mesma. Ver [[T-048]]. |
 
 ## Defeito conhecido reproduzido por `despesas-07`
 

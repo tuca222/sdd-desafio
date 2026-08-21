@@ -34,6 +34,7 @@ DUPLICATAS_E_MOEDA = "despesas-04-duplicatas-e-moeda.json"
 BORDAS_E_TRUNCAMENTO = "despesas-05-bordas-e-truncamento.json"
 COMPETENCIA_ANTERIOR = "despesas-06-competencia-anterior.json"
 VALOR_INTEIRO = "despesas-07-valor-inteiro.json"
+DUPLICATA_E_TRUNCAMENTO = "despesas-08-duplicata-e-truncamento.json"
 
 
 def rodar(
@@ -444,3 +445,39 @@ def test_valor_inteiro_no_json_e_aceito(tmp_path: Path):
 
     assert resultado["valor_total_despesas"] == 140.00
     assert resultado["valor_total_reembolsavel"] == 90.00
+
+
+def test_duplicata_compara_o_valor_lancado(tmp_path: Path):
+    """CC-MARKETING (padrão: alimentação R$50,00).
+
+    s8-001 e s8-002 diferem só na terceira casa decimal — `33.333` contra
+    `33.334` —, e as duas chegam ao limite diário valendo R$33,33. **Não** são o
+    mesmo lançamento: RN-007 compara os campos da entrada e AMB-019 diz que a
+    comparação é sobre o valor lançado. s8-001 leva R$33,33 e s8-002 leva os
+    R$16,67 que sobraram dos R$50,00 do dia.
+
+    s8-003 e s8-004 são `20.005` as duas: valor lançado idêntico, duplicata de
+    verdade, e o valor de s8-004 fica fora do total bruto.
+    """
+    resultado = rodar(DUPLICATA_E_TRUNCAMENTO, tmp_path)
+
+    conferir(
+        resultado,
+        [
+            ("s8-001", "total", 33.33, "Reembolso total aprovado"),
+            ("s8-002", "parcial", 16.67, "R$50,00 no dia para o centro de custo CC-MARKETING"),
+            ("s8-003", "total", 20.00, "Reembolso total aprovado"),
+            ("s8-004", "nenhum", 0.00, "duplicata da despesa 'Jantar de equipe(s8-003)'"),
+        ],
+    )
+
+    despesas = por_id(resultado)
+
+    # O valor lançado sai inteiro na saída, e é ele que separa s8-001 de s8-002.
+    assert despesas["s8-001"]["valor"] == 33.333
+    assert despesas["s8-002"]["valor"] == 33.334
+
+    # 33,33 + 33,33 + 20,00. Só a duplicata de verdade fica fora do bruto.
+    assert resultado["valor_total_despesas"] == 86.66
+    # 33,33 + 16,67 + 20,00 — os dois primeiros somam exatamente o limite do dia.
+    assert resultado["valor_total_reembolsavel"] == 70.00

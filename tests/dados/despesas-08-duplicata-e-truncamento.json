@@ -1,0 +1,50 @@
+{
+  "colaborador": {
+    "id": "c-2008",
+    "nome": "Tarek Villalobos",
+    "centro_custo": "CC-MARKETING"
+  },
+  "periodo": {
+    "competencia": "2026-09",
+    "inicio": "2026-09-01",
+    "fim": "2026-09-30"
+  },
+  "despesas": [
+    {
+      "id": "s8-001",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Almoco no bistro",
+      "fornecedor": "Bistro Aurora",
+      "valor": 33.333,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s8-002",
+      "data": "2026-09-14",
+      "categoria": "alimentacao",
+      "descricao": "Almoco no bistro",
+      "fornecedor": "Bistro Aurora",
+      "valor": 33.334,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s8-003",
+      "data": "2026-09-15",
+      "categoria": "alimentacao",
+      "descricao": "Jantar de equipe",
+      "fornecedor": "Cantina Sul",
+      "valor": 20.005,
+      "tem_nota_fiscal": true
+    },
+    {
+      "id": "s8-004",
+      "data": "2026-09-15",
+      "categoria": "alimentacao",
+      "descricao": "Jantar de equipe",
+      "fornecedor": "Cantina Sul",
+      "valor": 20.005,
+      "tem_nota_fiscal": true
+    }
+  ]
+}

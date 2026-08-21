@@ -394,7 +394,7 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
     passa sem `xfail`, sobre `tests/dados/despesas-07-valor-inteiro.json`
   - **Commit:** `<hash preenchido depois>`
 
-- [ ] **T-048** — `regras.py`: a identidade de duplicata compara o `valor_original`,
+- [x] **T-048** — `regras.py`: a identidade de duplicata compara o `valor_original`,
   não o valor já truncado
   - **Atende:** RN-007, AMB-019, RN-010
   - **Por que existe:** detectado na revisão de `21/08/2026`. `_identidade_duplicata`

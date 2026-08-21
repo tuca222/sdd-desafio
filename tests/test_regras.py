@@ -688,3 +688,63 @@ def test_amb014_despesa_internacional_nao_amplia_limite():
     assert resultado_internacional.valor_reembolsavel == Decimal("60.00")
     assert resultado_nacional.valor_reembolsavel == Decimal("60.00")
     assert resultado_internacional.tipo_reembolso == resultado_nacional.tipo_reembolso == "parcial"
+
+
+def test_rn007_valores_que_truncam_no_mesmo_centavo_nao_sao_duplicatas():
+    com_tres_casas = construir_despesa(
+        "d-620",
+        date(2026, 7, 9),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("33.33"),
+        tem_nota_fiscal=True,
+        valor_original=Decimal("33.333"),
+    )
+    com_quatro_casas = construir_despesa(
+        "d-621",
+        date(2026, 7, 9),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("33.33"),
+        tem_nota_fiscal=True,
+        valor_original=Decimal("33.334"),
+    )
+
+    # As duas chegam ao motor com o mesmo valor truncado — e e por isso que a
+    # comparacao nao pode ser feita sobre ele.
+    assert com_tres_casas.valor == com_quatro_casas.valor
+    assert com_tres_casas.valor_original != com_quatro_casas.valor_original
+
+    assert filtro_duplicata(com_quatro_casas, [com_tres_casas]) is None
+
+
+def test_rn007_valor_lancado_identico_continua_sendo_duplicata():
+    primeira = construir_despesa(
+        "d-630",
+        date(2026, 7, 9),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("20.00"),
+        tem_nota_fiscal=True,
+        valor_original=Decimal("20.005"),
+    )
+    segunda = construir_despesa(
+        "d-631",
+        date(2026, 7, 9),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("20.00"),
+        tem_nota_fiscal=True,
+        valor_original=Decimal("20.005"),
+    )
+
+    resultado = filtro_duplicata(segunda, [primeira])
+
+    assert resultado is not None
+    assert resultado.tipo_reembolso == "nenhum"
+    assert resultado.valor_reembolsavel == Decimal("0.00")
+    assert "Almoco(d-630)" in resultado.justificativa

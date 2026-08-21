@@ -81,12 +81,17 @@ def _identidade_duplicata(despesa: Despesa) -> tuple[date, str, str, str, Decima
     # RN-007/AMB-019: a comparação é sobre o valor **lançado** e a `moeda`
     # normalizada, nunca sobre o valor convertido — senão a decisão passaria a
     # depender da taxa do dia.
+    #
+    # "Lançado" é `valor_original`, e não `valor`: este último já passou pelo
+    # truncamento de RN-010, que a spec aplica antes das verificações de limite e
+    # de nota fiscal — não antes desta. Comparar o truncado faria `33.333` e
+    # `33.334`, que são gastos diferentes, virarem o mesmo lançamento.
     return (
         despesa.data,
         despesa.categoria,
         despesa.descricao,
         despesa.fornecedor,
-        despesa.valor,
+        despesa.valor_original,
         despesa.moeda,
         despesa.tem_nota_fiscal,
     )
