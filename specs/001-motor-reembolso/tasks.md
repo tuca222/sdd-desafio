@@ -300,7 +300,7 @@ RN-008 estejam quebrados.
 - [x] **T-035** — `parser.py`: converte a despesa para BRL na borda, preenchendo `valor_brl` e `taxa_cambio` (ou os dois com `None` quando não há taxa); trunca o valor convertido em 2 casas
   - **Atende:** RN-015, RN-010, AMB-018, plan.md DT-007
   - **Aceite:** `tests/test_parser.py::test_rn015_converte_pela_taxa_da_data_da_despesa`, `::test_amb018_valor_convertido_e_truncado_nao_arredondado`, `::test_rn015_despesa_em_brl_nao_tem_taxa`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `b6c0e20`
 
 - [ ] **T-036** — `regras.py` + `motor.py`: `filtro_cambio_indisponivel` entra na posição 5 da ordem, entre duplicata e nota fiscal
   - **Atende:** RN-016, RN-013, AMB-015, AMB-016, spec.md §8 ("Ordem de aplicação das regras")
