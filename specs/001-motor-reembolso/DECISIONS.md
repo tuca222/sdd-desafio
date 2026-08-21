@@ -10,6 +10,69 @@ Ordem cronológica inversa: a mais recente primeiro.
 
 ---
 
+## D-015 — RN-017 antecede a avaliação das despesas, não a leitura do arquivo · `21/08/2026`
+
+**Gatilho:** a revisão da Fase 5 encontrou uma divergência entre a spec e o código, e o
+agente a levou ao usuário sem decidir. RN-017 e a spec.md §8 ("Ordem de aplicação das
+regras") diziam que a verificação de vigência acontece "antes de qualquer despesa ser
+**lida**", e o diagrama da plan.md §2 ("Arquitetura") desenhava a guarda acima do
+`parser.py`. O código faz o contrário: `cli.py` chama `carregar_despesas` e só então
+verifica a vigência. O usuário decidiu: *"para o motor verificar a vigência o motor é
+obrigado ler o arquivo para ter esse dado. Ajuste a spec e o plan, para que as
+documentações reflitam a realidade."*
+
+**O que mudou na spec:**
+
+- **Cabeçalho** — versão 2.3 → 2.4, com o **Status** registrando a troca.
+- **spec.md §5 (RN-017)** — "antes de qualquer despesa ser lida" virou "antes de
+  qualquer despesa ser **avaliada**". Entrou um parágrafo novo dizendo que a verificação
+  não acontece antes da leitura do arquivo e não tem como acontecer, porque
+  `periodo.competencia` vive dentro do arquivo de despesas, e delimitando o que a regra
+  de fato proíbe: nenhuma despesa avaliada, nenhum total somado, nenhum arquivo de saída
+  aberto.
+- **spec.md §8 ("Ordem de aplicação das regras")** — a mesma troca de "lida" por
+  "avaliada" no parágrafo de abertura, mais a frase de que o arquivo já foi lido nesse
+  ponto e nenhuma despesa recebeu decisão ainda.
+
+**Por quê:** "antes de qualquer despesa ser lida" descrevia uma ordem impossível. A
+comparação de RN-017 tem dois lados, e um deles — `periodo.competencia` — só existe
+depois que o arquivo de despesas é aberto (spec.md §4, "Entrada e saída"). A frase
+sobreviveu porque descrevia bem o **efeito** desejado (nada é processado quando a
+política não vale) usando a palavra errada para o **mecanismo**.
+
+A alternativa descartada era mudar o código em vez da spec: `cli.py` leria só o
+`periodo` do arquivo, verificaria a vigência e só então construiria as `Despesa`. Ela
+foi descartada porque o efeito que RN-017 existe para garantir já está garantido — não
+há saída, não há decisão, não há total — e o preço seria partir `carregar_despesas` em
+dois caminhos de leitura do mesmo arquivo, criando um segundo lugar para o formato da
+entrada ser interpretado. O que se ganharia é evitar o trabalho de parsear um lote que
+vai ser descartado, num caminho que já termina em erro.
+
+**O que isso invalidou:** nada. Nenhuma regra de negócio mudou, nenhum limite, nenhuma
+ordem, nenhum contrato de saída. O comportamento do motor é o mesmo antes e depois desta
+entrada, e nenhum teste precisou mudar — a spec passou a descrever o que o código já
+fazia. A `plan.md` §2 ("Arquitetura") e a plan.md DT-008 ("RN-017 é uma guarda no
+`cli.py`, não um filtro do pipeline") deixaram de valer como estavam e foram corrigidas
+no commit `docs(plan):` que acompanha esta entrada.
+
+**Tasks afetadas:** nenhuma. T-030 (`vigencia_cobre`) e T-033 (a guarda no `cli.py`)
+continuam válidas e fechadas — esta entrada torna a spec compatível com elas.
+
+**Custo:**
+
+  - `specs/001-motor-reembolso/DECISIONS.md`
+  - `specs/001-motor-reembolso/plan.md`
+  - `specs/001-motor-reembolso/spec.md`
+
+**Nota de processo:** a divergência apareceu quando o usuário pediu que o diagrama da
+`plan.md` §2 ("Arquitetura") refletisse o código. Corrigir só o diagrama teria deixado a
+`plan.md` contradizendo a `spec.md` em silêncio — o agente parou antes de fazer isso e
+trouxe a escolha, que é da spec e não do plano. Numa primeira tentativa ele apresentou as
+duas saídas de um jeito que o usuário considerou confuso, e o pedido foi separar as
+coisas: fechar o ajuste da duplicata ([[T-048]]) antes de decidir esta.
+
+---
+
 ## D-014 — Critérios de aceite remarcados: a Fase 5 implementou a v4 · `21/08/2026`
 
 **Gatilho:** o fechamento da Fase 5 de `tasks.md` (T-028 a T-045). O cabeçalho da

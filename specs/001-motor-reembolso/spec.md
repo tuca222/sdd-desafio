@@ -1,6 +1,6 @@
 # Spec — Motor de Cálculo de Reembolso
 
-**Versão:** 2.3 · **Status:** implementada para a Política de Reembolso v4 — os itens A (limites por centro de custo, lidos de arquivo externo) e B (despesas internacionais em moeda estrangeira, convertidas pela taxa da data) estão ambos cobertos por código e teste; o item C (fila de aprovação manual) segue fora de escopo por decisão do usuário. A Fase 5 de `tasks.md` (T-028 a T-045) reescreveu o motor sob a v4, e os critérios de aceite da spec.md §9 ("Critérios de aceite") voltaram a ficar marcados — cada um coberto por um teste automatizado. Os cinco campos dos arquivos de entrada que o motor não lê — `versao`, `fonte`, `observacao`, `moeda_base` e `acrescimo_em_viagem_percentual` — estão todos marcados como não obrigatórios na spec.md §4 ("Entrada e saída") · **Última alteração:** `21/08/2026`
+**Versão:** 2.4 · **Status:** implementada para a Política de Reembolso v4 — os itens A (limites por centro de custo, lidos de arquivo externo) e B (despesas internacionais em moeda estrangeira, convertidas pela taxa da data) estão ambos cobertos por código e teste; o item C (fila de aprovação manual) segue fora de escopo por decisão do usuário. A Fase 5 de `tasks.md` (T-028 a T-045) reescreveu o motor sob a v4, e os critérios de aceite da spec.md §9 ("Critérios de aceite") estão todos marcados, cada um coberto por um teste automatizado. RN-017 passou a dizer que a verificação de vigência antecede a **avaliação** das despesas, e não a leitura do arquivo — ver `DECISIONS.md` [[D-015]]. Os cinco campos dos arquivos de entrada que o motor não lê — `versao`, `fonte`, `observacao`, `moeda_base` e `acrescimo_em_viagem_percentual` — estão todos marcados como não obrigatórios na spec.md §4 ("Entrada e saída") · **Última alteração:** `21/08/2026`
 
 ---
 
@@ -664,8 +664,8 @@ e a alimentação de `e-004` não consome nada do limite do dia `2026-07-18`.
 ### RN-017 — Vigência da política contra a competência do lote
 
 **Regra:** antes de qualquer cálculo de reembolso — antes do primeiro passo da spec.md
-§8 ("Ordem de aplicação das regras"), e antes de qualquer despesa ser lida —, o motor
-verifica que a política recebida vale para o lote:
+§8 ("Ordem de aplicação das regras"), e antes de qualquer despesa ser **avaliada** —, o
+motor verifica que a política recebida vale para o lote:
 
 ```
 competência de `vigencia` <= `periodo.competencia`
@@ -673,6 +673,15 @@ competência de `vigencia` <= `periodo.competencia`
 
 A competência de `vigencia` é o ano e o mês da data (`2026-07-01` → `2026-07`). A
 comparação é entre competências, não entre datas, e o operador é "igual ou anterior".
+
+**A verificação não acontece antes da leitura do arquivo de despesas, e não tem como
+acontecer.** Um dos dois lados da comparação é `periodo.competencia`, e esse campo vive
+dentro do próprio arquivo de despesas (spec.md §4, "Entrada e saída") — o motor precisa
+abrir e ler o arquivo para ter o dado com que decide. O que esta regra ordena é que
+nenhuma despesa seja **avaliada** antes da verificação, não que o arquivo não seja lido:
+quando ela reprova, o lote já foi lido e nada além disso aconteceu — nenhuma despesa
+recebeu decisão ou justificativa, nenhum total foi somado e nenhum arquivo de saída foi
+aberto.
 
 Esta é a única regra desta spec que **não** produz uma decisão por despesa. Ela é uma
 precondição do lote inteiro: ou a política vale para aquele mês de competência e o
@@ -1153,10 +1162,12 @@ Casos citados por `d-NNN` são despesas de `exemplos/despesas-exemplo.json`
 
 ## 8. Ordem de aplicação das regras
 
-Antes desta ordem começar, e antes de qualquer despesa ser lida, RN-017 verifica que a
-política recebida vale para a competência do lote. Se ela não valer, nada abaixo
-acontece: não há saída, e o motor encerra com mensagem no terminal. A ordem a seguir só
-se aplica a um lote que passou por essa precondição.
+Antes desta ordem começar, e antes de qualquer despesa ser avaliada, RN-017 verifica que
+a política recebida vale para a competência do lote. O arquivo de despesas já foi lido
+nesse ponto — é dele que sai a `periodo.competencia` que RN-017 compara —, mas nenhuma
+despesa recebeu decisão ainda. Se a política não valer, nada abaixo acontece: não há
+saída, e o motor encerra com mensagem no terminal. A ordem a seguir só se aplica a um
+lote que passou por essa precondição.
 
 Quando mais de uma regra de negação poderia se aplicar à mesma despesa, a ordem
 abaixo define qual prevalece — cada despesa recebe **uma única justificativa**,
