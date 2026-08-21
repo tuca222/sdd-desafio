@@ -727,7 +727,7 @@ minha — spec, task, `DECISIONS.md`, saída do programa —, nenhum de teste ve
 **Para qual não valeria?**
 
 **Não tenho evidência para responder isso pelo tipo de projeto.**
-
+Mas deixo registrado que facilitou muito para implementar a nova poltica, mesmo precisando alterar parte significativa do projeto, e o lado bom é que fica tudo documentado e versionado.
 
 **O que eu faria diferente:**
 
@@ -735,7 +735,7 @@ minha — spec, task, `DECISIONS.md`, saída do programa —, nenhum de teste ve
   contrato da minha decisão; deixar o mesmo agente que interpretou a regra escrever o
   teste dela transforma o teste em repetição da interpretação (Caso 3).
 
-- **Tentaria usar subagentes, skills, hooks**  Acredito que não utilizar essas ferramentas adicionais acabei perdendo grandes beneficios que eles podem trazer aplicados junto com SDD.
+- **Tentaria usar subagentes, skills, hooks** Acredito que não utilizar essas ferramentas adicionais acabei perdendo grandes beneficios que eles podem trazer aplicados junto com SDD.
 
 
 **A coisa mais desconfortável que aprendi sobre como eu trabalho com IA:**
