@@ -445,7 +445,7 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
   - **Aceite:** seguir os passos do README do zero produz `resultado.json` sem
     intervenção manual, e nenhuma afirmação da tabela de regras contradiz a
     spec.md §5 ("Regras de negócio")
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `737885b`
 
 ---
 
