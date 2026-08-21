@@ -277,7 +277,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_politica.py::test_rn017_vigencia_da_competencia_do_lote_cobre`, `::test_rn017_vigencia_de_competencia_anterior_cobre`, `::test_rn017_vigencia_de_competencia_posterior_nao_cobre`
   - **Commit:** `88d6681`
 
-- [ ] **T-031** — `cambio.py`: carrega `cambio.json` e expõe `TabelaCambio.taxa(moeda, data) -> Decimal | None`, devolvendo `None` tanto para data ausente quanto para moeda ausente na data
+- [x] **T-031** — `cambio.py`: carrega `cambio.json` e expõe `TabelaCambio.taxa(moeda, data) -> Decimal | None`, devolvendo `None` tanto para data ausente quanto para moeda ausente na data
   - **Atende:** spec.md §4 ("Entrada e saída"), RN-015, RN-016
   - **Aceite:** `tests/test_cambio.py::test_taxa_existente_na_data`, `::test_rn016_data_sem_cotacao_devolve_none`, `::test_rn016_moeda_ausente_na_data_devolve_none`
   - **Commit:** `<hash preenchido depois>`
