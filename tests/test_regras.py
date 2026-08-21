@@ -1,10 +1,11 @@
 from datetime import date
 from decimal import Decimal
 
-from src.modelos import Despesa, Periodo
-from src.politica import LIMITE_ALIMENTACAO, LIMITE_HOSPEDAGEM, LIMITE_TRANSPORTE_URBANO
+from src.modelos import Periodo
+from src.politica import LimiteCategoria, TabelaLimites
 from src.regras import (
     aplicar_limite_diario,
+    filtro_cambio_indisponivel,
     filtro_categoria_invalida,
     filtro_duplicata,
     filtro_fora_periodo,
@@ -12,11 +13,41 @@ from src.regras import (
     filtro_valor_negativo,
     normalizar_categoria,
 )
+from tests.conftest import construir_despesa
 
 PERIODO_JULHO_2026 = Periodo(
     competencia="2026-07",
     inicio=date(2026, 7, 1),
     fim=date(2026, 7, 31),
+)
+
+TETO_NOTA_FISCAL = Decimal("100.00")
+
+
+def tabela(centro_custo: str, **limites: str) -> TabelaLimites:
+    return TabelaLimites(
+        centro_custo=centro_custo,
+        limites={
+            categoria: LimiteCategoria(limite=Decimal(limite), periodicidade="dia")
+            for categoria, limite in limites.items()
+        },
+    )
+
+
+# CC-ENG-PLATAFORMA da política vigente: alimentação R$75,00, transporte R$80,00,
+# hospedagem vedada (limite R$0,00). Montada na mão — plan.md §6 ("Estratégia de
+# testes") mantém os testes de `regras.py` sem I/O.
+CC_ENG = tabela(
+    "CC-ENG-PLATAFORMA",
+    alimentacao="75.00",
+    transporte_urbano="80.00",
+    hospedagem="0.00",
+)
+CC_PADRAO = tabela(
+    "CC-SUPORTE-N2",
+    alimentacao="60.00",
+    transporte_urbano="80.00",
+    hospedagem="250.00",
 )
 
 
@@ -25,15 +56,13 @@ def test_rn011_normaliza_categoria_case_insensitive():
 
 
 def test_rn009_valor_negativo_ignorado():
-    d009 = Despesa(
-        id="d-009",
-        data=date(2026, 7, 11),
-        categoria="transporte_urbano",
-        categoria_original="transporte_urbano",
-        descricao="Estorno de corrida cancelada",
-        fornecedor="TaxiApp",
-        valor=Decimal("-45.00"),
-        valor_original=Decimal("-45.00"),
+    d009 = construir_despesa(
+        "d-009",
+        date(2026, 7, 11),
+        "transporte_urbano",
+        "Estorno de corrida cancelada",
+        "TaxiApp",
+        Decimal("-45.00"),
         tem_nota_fiscal=False,
     )
 
@@ -46,38 +75,14 @@ def test_rn009_valor_negativo_ignorado():
     assert "negado" in resultado.justificativa
 
 
-def test_rn008_categoria_fora_da_politica():
-    d005 = Despesa(
-        id="d-005",
-        data=date(2026, 7, 7),
-        categoria="coworking",
-        categoria_original="coworking",
-        descricao="Diaria em espaco compartilhado",
-        fornecedor="HubOffice",
-        valor=Decimal("89.00"),
-        valor_original=Decimal("89.00"),
-        tem_nota_fiscal=True,
-    )
-
-    resultado = filtro_categoria_invalida(d005)
-
-    assert resultado is not None
-    assert resultado.despesa_reembolsavel is False
-    assert resultado.tipo_reembolso == "nenhum"
-    assert resultado.valor_reembolsavel == Decimal("0.00")
-    assert "negado" in resultado.justificativa
-
-
 def test_rn006_fora_do_periodo_negado():
-    d008 = Despesa(
-        id="d-008",
-        data=date(2026, 4, 15),
-        categoria="alimentacao",
-        categoria_original="alimentacao",
-        descricao="Almoco de abril lancado com atraso",
-        fornecedor="Restaurante Tavola",
-        valor=Decimal("41.00"),
-        valor_original=Decimal("41.00"),
+    d008 = construir_despesa(
+        "d-008",
+        date(2026, 4, 15),
+        "alimentacao",
+        "Almoco de abril lancado com atraso",
+        "Restaurante Tavola",
+        Decimal("41.00"),
         tem_nota_fiscal=True,
     )
 
@@ -91,26 +96,22 @@ def test_rn006_fora_do_periodo_negado():
 
 
 def test_rn006_data_no_extremo_do_periodo_aceita():
-    despesa_no_inicio = Despesa(
-        id="d-100",
-        data=PERIODO_JULHO_2026.inicio,
-        categoria="alimentacao",
-        categoria_original="alimentacao",
-        descricao="Despesa no primeiro dia do periodo",
-        fornecedor="Fornecedor Teste",
-        valor=Decimal("10.00"),
-        valor_original=Decimal("10.00"),
+    despesa_no_inicio = construir_despesa(
+        "d-100",
+        PERIODO_JULHO_2026.inicio,
+        "alimentacao",
+        "Despesa no primeiro dia do periodo",
+        "Fornecedor Teste",
+        Decimal("10.00"),
         tem_nota_fiscal=True,
     )
-    despesa_no_fim = Despesa(
-        id="d-101",
-        data=PERIODO_JULHO_2026.fim,
-        categoria="alimentacao",
-        categoria_original="alimentacao",
-        descricao="Despesa no ultimo dia do periodo",
-        fornecedor="Fornecedor Teste",
-        valor=Decimal("10.00"),
-        valor_original=Decimal("10.00"),
+    despesa_no_fim = construir_despesa(
+        "d-101",
+        PERIODO_JULHO_2026.fim,
+        "alimentacao",
+        "Despesa no ultimo dia do periodo",
+        "Fornecedor Teste",
+        Decimal("10.00"),
         tem_nota_fiscal=True,
     )
 
@@ -119,26 +120,22 @@ def test_rn006_data_no_extremo_do_periodo_aceita():
 
 
 def test_rn007_duplicata_negada_primeira_mantida():
-    d006 = Despesa(
-        id="d-006",
-        data=date(2026, 7, 9),
-        categoria="alimentacao",
-        categoria_original="alimentacao",
-        descricao="Almoco",
-        fornecedor="Bistro Central",
-        valor=Decimal("54.90"),
-        valor_original=Decimal("54.90"),
+    d006 = construir_despesa(
+        "d-006",
+        date(2026, 7, 9),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("54.90"),
         tem_nota_fiscal=True,
     )
-    d007 = Despesa(
-        id="d-007",
-        data=date(2026, 7, 9),
-        categoria="alimentacao",
-        categoria_original="alimentacao",
-        descricao="Almoco",
-        fornecedor="Bistro Central",
-        valor=Decimal("54.90"),
-        valor_original=Decimal("54.90"),
+    d007 = construir_despesa(
+        "d-007",
+        date(2026, 7, 9),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("54.90"),
         tem_nota_fiscal=True,
     )
 
@@ -155,27 +152,24 @@ def test_rn007_duplicata_negada_primeira_mantida():
 
 
 def test_rn007_duplicata_ignora_capitalizacao_da_categoria():
-    lancada_em_minusculas = Despesa(
-        id="d-600",
-        data=date(2026, 7, 9),
-        categoria="alimentacao",
-        categoria_original="alimentacao",
-        descricao="Almoco",
-        fornecedor="Bistro Central",
-        valor=Decimal("54.90"),
-        valor_original=Decimal("54.90"),
+    lancada_em_minusculas = construir_despesa(
+        "d-600",
+        date(2026, 7, 9),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("54.90"),
         tem_nota_fiscal=True,
     )
-    lancada_em_maiusculas = Despesa(
-        id="d-601",
-        data=date(2026, 7, 9),
-        categoria="alimentacao",
-        categoria_original="ALIMENTACAO",
-        descricao="Almoco",
-        fornecedor="Bistro Central",
-        valor=Decimal("54.90"),
-        valor_original=Decimal("54.90"),
+    lancada_em_maiusculas = construir_despesa(
+        "d-601",
+        date(2026, 7, 9),
+        "alimentacao",
+        "Almoco",
+        "Bistro Central",
+        Decimal("54.90"),
         tem_nota_fiscal=True,
+        categoria_original="ALIMENTACAO",
     )
 
     resultado = filtro_duplicata(lancada_em_maiusculas, [lancada_em_minusculas])
@@ -186,218 +180,55 @@ def test_rn007_duplicata_ignora_capitalizacao_da_categoria():
     assert "Almoco(d-600)" in resultado.justificativa
 
 
-def test_rn005_nota_fiscal_obrigatoria_acima_de_100():
-    d004 = Despesa(
-        id="d-004",
-        data=date(2026, 7, 6),
-        categoria="transporte_urbano",
-        categoria_original="transporte_urbano",
-        descricao="Corrida hotel",
-        fornecedor="TaxiApp",
-        valor=Decimal("100.01"),
-        valor_original=Decimal("100.01"),
-        tem_nota_fiscal=False,
+def test_rn016_cambio_indisponivel_nega_despesa():
+    e004 = construir_despesa(
+        "e-004",
+        date(2026, 7, 18),
+        "alimentacao",
+        "Jantar de sabado",
+        "Cervejaria Ramiro",
+        Decimal("30.00"),
+        tem_nota_fiscal=True,
+        moeda="EUR",
+        moeda_original="EUR",
+        valor_brl=None,
     )
 
-    resultado = filtro_nota_fiscal(d004)
+    resultado = filtro_cambio_indisponivel(e004)
 
     assert resultado is not None
     assert resultado.despesa_reembolsavel is False
     assert resultado.tipo_reembolso == "nenhum"
     assert resultado.valor_reembolsavel == Decimal("0.00")
     assert "negado" in resultado.justificativa
+    assert "EUR" in resultado.justificativa
+    assert "2026-07-18" in resultado.justificativa
 
 
-def test_rn005_valor_acima_de_100_com_nota_fiscal_aceito():
-    d010 = Despesa(
-        id="d-010",
-        data=date(2026, 7, 14),
-        categoria="hospedagem",
-        categoria_original="hospedagem",
-        descricao="Hotel Rio - 2 diarias",
-        fornecedor="Hotel Copa Sul",
-        valor=Decimal("480.00"),
-        valor_original=Decimal("480.00"),
+def test_rn016_despesa_com_valor_em_brl_passa_pelo_filtro():
+    e002 = construir_despesa(
+        "e-002",
+        date(2026, 7, 14),
+        "alimentacao",
+        "Almoco - Lisboa",
+        "Taberna do Chiado",
+        Decimal("22.00"),
         tem_nota_fiscal=True,
+        moeda="EUR",
+        moeda_original="EUR",
+        valor_brl=Decimal("130.46"),
+        taxa_cambio=Decimal("5.93"),
     )
-
-    assert filtro_nota_fiscal(d010) is None
-
-
-def test_rn005_valor_exatamente_100_nao_exige():
-    d003 = Despesa(
-        id="d-003",
-        data=date(2026, 7, 6),
-        categoria="transporte_urbano",
-        categoria_original="transporte_urbano",
-        descricao="Corrida aeroporto",
-        fornecedor="TaxiApp",
-        valor=Decimal("100.00"),
-        valor_original=Decimal("100.00"),
-        tem_nota_fiscal=False,
-    )
-
-    assert filtro_nota_fiscal(d003) is None
-
-
-def test_rn001_limite_diario_alimentacao():
-    d001 = Despesa(
-        id="d-001",
-        data=date(2026, 7, 3),
-        categoria="alimentacao",
-        categoria_original="alimentacao",
-        descricao="Almoco com cliente",
-        fornecedor="Restaurante Tavola",
-        valor=Decimal("72.50"),
-        valor_original=Decimal("72.50"),
+    em_reais = construir_despesa(
+        "e-001",
+        date(2026, 7, 13),
+        "representacao",
+        "Jantar com prospect",
+        "Casa Trindade",
+        Decimal("340.00"),
         tem_nota_fiscal=True,
-    )
-    d002 = Despesa(
-        id="d-002",
-        data=date(2026, 7, 3),
-        categoria="alimentacao",
-        categoria_original="alimentacao",
-        descricao="Jantar apos reuniao",
-        fornecedor="Cantina do Porto",
-        valor=Decimal("38.00"),
-        valor_original=Decimal("38.00"),
-        tem_nota_fiscal=True,
+        moeda_original="BRL",
     )
 
-    resultado_d001 = aplicar_limite_diario(d001, LIMITE_ALIMENTACAO, [])
-
-    assert resultado_d001.despesa_reembolsavel is True
-    assert resultado_d001.tipo_reembolso == "parcial"
-    assert resultado_d001.valor_reembolsavel == Decimal("60.00")
-    assert "parcial" in resultado_d001.justificativa
-
-    resultado_d002 = aplicar_limite_diario(
-        d002, LIMITE_ALIMENTACAO, [(d001, resultado_d001.valor_reembolsavel)]
-    )
-
-    assert resultado_d002.despesa_reembolsavel is False
-    assert resultado_d002.tipo_reembolso == "nenhum"
-    assert resultado_d002.valor_reembolsavel == Decimal("0.00")
-    assert "negado" in resultado_d002.justificativa
-    assert "Almoco com cliente(d-001)" in resultado_d002.justificativa
-
-
-def test_rn002_limite_diario_transporte():
-    d003 = Despesa(
-        id="d-003",
-        data=date(2026, 7, 6),
-        categoria="transporte_urbano",
-        categoria_original="transporte_urbano",
-        descricao="Corrida aeroporto",
-        fornecedor="TaxiApp",
-        valor=Decimal("100.00"),
-        valor_original=Decimal("100.00"),
-        tem_nota_fiscal=False,
-    )
-
-    resultado = aplicar_limite_diario(d003, LIMITE_TRANSPORTE_URBANO, [])
-
-    assert resultado.despesa_reembolsavel is True
-    assert resultado.tipo_reembolso == "parcial"
-    assert resultado.valor_reembolsavel == Decimal("80.00")
-    assert "parcial" in resultado.justificativa
-
-
-def test_rn004_valor_dentro_do_limite_reembolsa_total():
-    d006 = Despesa(
-        id="d-006",
-        data=date(2026, 7, 9),
-        categoria="alimentacao",
-        categoria_original="alimentacao",
-        descricao="Almoco",
-        fornecedor="Bistro Central",
-        valor=Decimal("54.90"),
-        valor_original=Decimal("54.90"),
-        tem_nota_fiscal=True,
-    )
-
-    resultado = aplicar_limite_diario(d006, LIMITE_ALIMENTACAO, [])
-
-    assert resultado.despesa_reembolsavel is True
-    assert resultado.tipo_reembolso == "total"
-    assert resultado.valor_reembolsavel == Decimal("54.90")
-    assert "total" in resultado.justificativa
-
-
-def test_rn003_limite_diario_hospedagem():
-    d010 = Despesa(
-        id="d-010",
-        data=date(2026, 7, 14),
-        categoria="hospedagem",
-        categoria_original="hospedagem",
-        descricao="Hotel Rio - 2 diarias",
-        fornecedor="Hotel Copa Sul",
-        valor=Decimal("480.00"),
-        valor_original=Decimal("480.00"),
-        tem_nota_fiscal=True,
-    )
-
-    resultado = aplicar_limite_diario(d010, LIMITE_HOSPEDAGEM, [])
-
-    assert resultado.despesa_reembolsavel is True
-    assert resultado.tipo_reembolso == "parcial"
-    assert resultado.valor_reembolsavel == Decimal("250.00")
-    assert "parcial" in resultado.justificativa
-
-
-def test_rn012_sem_adicional_de_viagem():
-    almoco_acima_do_limite = Despesa(
-        id="d-400",
-        data=date(2026, 7, 14),
-        categoria="alimentacao",
-        categoria_original="alimentacao",
-        descricao="Almoco em viagem",
-        fornecedor="Restaurante do Hotel",
-        valor=Decimal("90.00"),
-        valor_original=Decimal("90.00"),
-        tem_nota_fiscal=True,
-    )
-    corrida_acima_do_limite = Despesa(
-        id="d-401",
-        data=date(2026, 7, 14),
-        categoria="transporte_urbano",
-        categoria_original="transporte_urbano",
-        descricao="Corrida em viagem",
-        fornecedor="TaxiApp",
-        valor=Decimal("120.00"),
-        valor_original=Decimal("120.00"),
-        tem_nota_fiscal=True,
-    )
-
-    resultado_alimentacao = aplicar_limite_diario(almoco_acima_do_limite, LIMITE_ALIMENTACAO, [])
-    resultado_transporte = aplicar_limite_diario(
-        corrida_acima_do_limite, LIMITE_TRANSPORTE_URBANO, []
-    )
-
-    # Os valores sao os limites padrao ampliados em 50% (60 -> 90, 80 -> 120):
-    # se o adicional fosse aplicado, ambos virariam reembolso total.
-    assert resultado_alimentacao.tipo_reembolso == "parcial"
-    assert resultado_alimentacao.valor_reembolsavel == Decimal("60.00")
-    assert resultado_transporte.tipo_reembolso == "parcial"
-    assert resultado_transporte.valor_reembolsavel == Decimal("80.00")
-
-
-def test_rn003_hospedagem_dentro_do_limite_reembolsa_total():
-    hospedagem_barata = Despesa(
-        id="d-200",
-        data=date(2026, 7, 14),
-        categoria="hospedagem",
-        categoria_original="hospedagem",
-        descricao="Pousada 1 noite",
-        fornecedor="Pousada Central",
-        valor=Decimal("180.00"),
-        valor_original=Decimal("180.00"),
-        tem_nota_fiscal=True,
-    )
-
-    resultado = aplicar_limite_diario(hospedagem_barata, LIMITE_HOSPEDAGEM, [])
-
-    assert resultado.despesa_reembolsavel is True
-    assert resultado.tipo_reembolso == "total"
-    assert resultado.valor_reembolsavel == Decimal("180.00")
-    assert "total" in resultado.justificativa
+    assert filtro_cambio_indisponivel(e002) is None
+    assert filtro_cambio_indisponivel(em_reais) is None

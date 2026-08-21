@@ -83,6 +83,24 @@ def filtro_duplicata(
     return None
 
 
+def filtro_cambio_indisponivel(despesa: Despesa) -> ResultadoDespesa | None:
+    # RN-016: sem taxa não existe valor em BRL, e sem valor em BRL não há pergunta
+    # a fazer sobre nota fiscal nem sobre limite — a despesa é inavaliável. A
+    # justificativa cita moeda e data para que o financeiro saiba o que publicar.
+    if despesa.valor_brl is None:
+        return ResultadoDespesa(
+            despesa_reembolsavel=False,
+            tipo_reembolso="nenhum",
+            valor_reembolsavel=Decimal("0.00"),
+            justificativa=(
+                f"Não há taxa de câmbio de {despesa.moeda} publicada para "
+                f"{despesa.data.isoformat()}, e sem ela a despesa não pode ser "
+                "convertida para BRL. Reembolso negado."
+            ),
+        )
+    return None
+
+
 def filtro_nota_fiscal(despesa: Despesa) -> ResultadoDespesa | None:
     if despesa.valor > LIMITE_NOTA_FISCAL and not despesa.tem_nota_fiscal:
         return ResultadoDespesa(

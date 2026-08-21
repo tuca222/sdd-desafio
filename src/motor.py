@@ -6,6 +6,7 @@ from src.modelos import Colaborador, Despesa, Periodo, ResultadoDespesa, Resulta
 from src.politica import LIMITES_DIARIOS_POR_CATEGORIA
 from src.regras import (
     aplicar_limite_diario,
+    filtro_cambio_indisponivel,
     filtro_categoria_invalida,
     filtro_duplicata,
     filtro_fora_periodo,
@@ -41,8 +42,11 @@ def aplicar_filtros(despesas: list[Despesa], periodo: Periodo) -> ResultadoFiltr
             resultados.append(reprovacao)
             continue
 
+        # A despesa entra no conjunto comparado por RN-007 assim que passa a
+        # verificação 3, e continua nele mesmo que seja negada pelos passos 5 e 6
+        # — ver spec.md §8 ("Ordem de aplicação das regras").
         despesas_ja_aceitas.append(despesa)
-        resultados.append(filtro_nota_fiscal(despesa))
+        resultados.append(filtro_cambio_indisponivel(despesa) or filtro_nota_fiscal(despesa))
 
     return ResultadoFiltros(resultados=resultados, ids_duplicatas=ids_duplicatas)
 

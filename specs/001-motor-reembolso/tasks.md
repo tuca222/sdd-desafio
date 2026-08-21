@@ -302,7 +302,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_parser.py::test_rn015_converte_pela_taxa_da_data_da_despesa`, `::test_amb018_valor_convertido_e_truncado_nao_arredondado`, `::test_rn015_despesa_em_brl_nao_tem_taxa`
   - **Commit:** `b6c0e20`
 
-- [ ] **T-036** — `regras.py` + `motor.py`: `filtro_cambio_indisponivel` entra na posição 5 da ordem, entre duplicata e nota fiscal
+- [x] **T-036** — `regras.py` + `motor.py`: `filtro_cambio_indisponivel` entra na posição 5 da ordem, entre duplicata e nota fiscal
   - **Atende:** RN-016, RN-013, AMB-015, AMB-016, spec.md §8 ("Ordem de aplicação das regras")
   - **Aceite:** `tests/test_regras.py::test_rn016_cambio_indisponivel_nega_despesa`, `tests/test_motor.py::test_pipeline_aplica_filtros_na_ordem_definida`
   - **Commit:** `<hash preenchido depois>`
