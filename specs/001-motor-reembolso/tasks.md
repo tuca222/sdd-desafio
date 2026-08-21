@@ -280,7 +280,7 @@ RN-008 estejam quebrados.
 - [x] **T-031** — `cambio.py`: carrega `cambio.json` e expõe `TabelaCambio.taxa(moeda, data) -> Decimal | None`, devolvendo `None` tanto para data ausente quanto para moeda ausente na data
   - **Atende:** spec.md §4 ("Entrada e saída"), RN-015, RN-016
   - **Aceite:** `tests/test_cambio.py::test_taxa_existente_na_data`, `::test_rn016_data_sem_cotacao_devolve_none`, `::test_rn016_moeda_ausente_na_data_devolve_none`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `be07c05`
 
 - [ ] **T-032** — `cli.py`: flags opcionais `--politica` e `--cambio`, com default; carrega os dois arquivos e os passa adiante. A invocação fixa do `DESAFIO.md` continua funcionando sem elas
   - **Atende:** spec.md §4 ("Entrada e saída"), interface fixa do desafio (`DESAFIO.md`), plan.md DT-006
