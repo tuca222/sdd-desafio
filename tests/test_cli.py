@@ -5,12 +5,29 @@ from pathlib import Path
 
 import pytest
 
-from src.cli import main
+from src.cambio import TabelaCambio
+from src.cli import CAMINHO_PADRAO_CAMBIO, CAMINHO_PADRAO_POLITICA, main
 from src.motor import calcular
 from src.parser import carregar_despesas
+from src.politica import Politica
 from src.saida import montar_saida
 
 CAMINHO_EXEMPLO = "exemplos/despesas-exemplo.json"
+CAMINHO_POLITICA = "exemplos/envelope/politica-v4.json"
+CAMINHO_CAMBIO = "exemplos/envelope/cambio.json"
+
+
+def escrever_politica(destino: Path, **campos) -> str:
+    politica = json.loads(Path(CAMINHO_POLITICA).read_text(encoding="utf-8")) | campos
+    destino.write_text(json.dumps(politica), encoding="utf-8")
+    return str(destino)
+
+
+def escrever_lote(destino: Path, competencia: str, inicio: str, fim: str) -> str:
+    entrada = json.loads(Path(CAMINHO_EXEMPLO).read_text(encoding="utf-8"))
+    entrada["periodo"] = {"competencia": competencia, "inicio": inicio, "fim": fim}
+    destino.write_text(json.dumps(entrada), encoding="utf-8")
+    return str(destino)
 
 
 def test_cli_calcular_gera_arquivo_de_saida(tmp_path: Path):
@@ -24,16 +41,26 @@ def test_cli_calcular_gera_arquivo_de_saida(tmp_path: Path):
     resultado = json.loads(destino.read_text(encoding="utf-8"))
 
     assert resultado["valor_total_despesas"] == 1806.94
-    assert resultado["valor_total_reembolsavel"] == 585.43
+    assert resultado["valor_total_reembolsavel"] == 351.43
     assert len(resultado["detalhamento_despesas"]) == 14
 
 
-def test_cli_escreve_exatamente_o_que_o_motor_produz(tmp_path: Path):
+def test_cli_escreve_exatamente_o_que_o_motor_produz(
+    tmp_path: Path, politica: Politica, cambio: TabelaCambio
+):
     destino = tmp_path / "resultado.json"
     main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(destino)])
 
-    colaborador, periodo, despesas = carregar_despesas(CAMINHO_EXEMPLO)
-    esperado = montar_saida(calcular(colaborador, periodo, despesas))
+    colaborador, periodo, despesas = carregar_despesas(CAMINHO_EXEMPLO, cambio)
+    esperado = montar_saida(
+        calcular(
+            colaborador,
+            periodo,
+            despesas,
+            politica.tabela_para(colaborador.centro_custo),
+            politica.nota_fiscal_obrigatoria_acima_de,
+        )
+    )
 
     # parse_float=Decimal na releitura: o motor produz Decimal e e assim que o
     # arquivo tem de reparsear, sem passar por float em ponto nenhum do caminho.
@@ -51,9 +78,9 @@ def test_cli_escreve_valores_monetarios_com_duas_casas(tmp_path: Path):
     # spec.md §4 ("Entrada e saida"): o que o motor produz sai com exatamente 2
     # casas decimais, inclusive quando a ultima e zero.
     assert '"valor_total_despesas": 1806.94' in texto
-    assert '"valor_reembolsavel": 60.00' in texto
+    assert '"valor_reembolsavel": 2.50' in texto
     assert '"valor_reembolsavel": 0.00' in texto
-    assert '"valor_reembolsavel": 250.00' in texto
+    assert '"valor_reembolsavel": 80.00' in texto
 
     # E os campos ecoados saem com a escala lancada, nem truncada nem esticada.
     assert '"valor": 72.50' in texto
@@ -97,8 +124,10 @@ def test_cli_grava_acentuacao_sem_escapar(tmp_path: Path):
 
     texto = destino.read_text(encoding="utf-8")
 
-    assert "já foi atingido" in texto
-    assert "\\u00e1" not in texto
+    assert "política vigente" in texto
+    assert "não é reembolsável" in texto
+    assert "período de competência" in texto
+    assert "\\u00" not in texto
 
 
 def test_cli_exige_input_e_output(tmp_path: Path):
@@ -106,3 +135,61 @@ def test_cli_exige_input_e_output(tmp_path: Path):
         main(["calcular", "--input", CAMINHO_EXEMPLO])
 
     assert erro.value.code == 2
+
+
+def test_cli_aceita_politica_e_cambio_alternativos(tmp_path: Path):
+    # Mesma entrada, política com um limite de alimentação diferente: o resultado
+    # tem de mudar, e é isso que prova que a flag foi usada.
+    politica_alternativa = json.loads(Path(CAMINHO_POLITICA).read_text(encoding="utf-8"))
+    politica_alternativa["centros_custo"]["CC-ENG-PLATAFORMA"]["alimentacao"]["limite"] = 40.00
+    caminho_politica = tmp_path / "politica.json"
+    caminho_politica.write_text(json.dumps(politica_alternativa), encoding="utf-8")
+
+    destino = tmp_path / "resultado.json"
+    codigo = main(
+        [
+            "calcular",
+            "--input",
+            CAMINHO_EXEMPLO,
+            "--output",
+            str(destino),
+            "--politica",
+            str(caminho_politica),
+            "--cambio",
+            CAMINHO_CAMBIO,
+        ]
+    )
+
+    assert codigo == 0
+
+    resultado = json.loads(destino.read_text(encoding="utf-8"))
+    por_id = {item["id"]: item for item in resultado["detalhamento_despesas"]}
+
+    # d-001 (R$72,50) deixa de caber no limite e vira parcial de R$40,00.
+    assert por_id["d-001"]["motor_reembolso_output"]["valor_reembolsavel"] == 40.00
+    assert "R$40,00" in por_id["d-001"]["motor_reembolso_output"]["justificativa"]
+
+
+def test_cli_usa_a_politica_e_o_cambio_padrao_quando_as_flags_nao_vem(tmp_path: Path):
+    # A invocação fixa do DESAFIO.md não passa --politica nem --cambio.
+    com_flags = tmp_path / "com-flags.json"
+    sem_flags = tmp_path / "sem-flags.json"
+
+    main(
+        [
+            "calcular",
+            "--input",
+            CAMINHO_EXEMPLO,
+            "--output",
+            str(com_flags),
+            "--politica",
+            CAMINHO_POLITICA,
+            "--cambio",
+            CAMINHO_CAMBIO,
+        ]
+    )
+    main(["calcular", "--input", CAMINHO_EXEMPLO, "--output", str(sem_flags)])
+
+    assert Path(CAMINHO_PADRAO_POLITICA).exists()
+    assert Path(CAMINHO_PADRAO_CAMBIO).exists()
+    assert sem_flags.read_text(encoding="utf-8") == com_flags.read_text(encoding="utf-8")

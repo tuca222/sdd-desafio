@@ -282,7 +282,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_cambio.py::test_taxa_existente_na_data`, `::test_rn016_data_sem_cotacao_devolve_none`, `::test_rn016_moeda_ausente_na_data_devolve_none`
   - **Commit:** `be07c05`
 
-- [ ] **T-032** — `cli.py`: flags opcionais `--politica` e `--cambio`, com default; carrega os dois arquivos e os passa adiante. A invocação fixa do `DESAFIO.md` continua funcionando sem elas
+- [x] **T-032** — `cli.py`: flags opcionais `--politica` e `--cambio`, com default; carrega os dois arquivos e os passa adiante. A invocação fixa do `DESAFIO.md` continua funcionando sem elas
   - **Atende:** spec.md §4 ("Entrada e saída"), interface fixa do desafio (`DESAFIO.md`), plan.md DT-006
   - **Aceite:** `tests/test_cli.py::test_cli_calcular_gera_arquivo_de_saida`, `::test_cli_aceita_politica_e_cambio_alternativos`
   - **Commit:** `<hash preenchido depois>`

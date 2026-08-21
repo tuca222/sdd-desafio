@@ -3,12 +3,22 @@ import json
 import re
 from collections.abc import Iterator, Sequence
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from src.cambio import carregar_cambio
 from src.motor import calcular
 from src.parser import carregar_despesas
+from src.politica import carregar_politica
 from src.saida import montar_saida
+
+# Resolvidos a partir do próprio pacote, e não do diretório de trabalho: a
+# invocação fixa do DESAFIO.md não passa `--politica` nem `--cambio`, e precisa
+# funcionar de onde quer que o motor seja chamado.
+_RAIZ = Path(__file__).resolve().parent.parent
+CAMINHO_PADRAO_POLITICA = str(_RAIZ / "exemplos" / "envelope" / "politica-v4.json")
+CAMINHO_PADRAO_CAMBIO = str(_RAIZ / "exemplos" / "envelope" / "cambio.json")
 
 # Sorteado a cada execução: a substituição em iterencode() varre também os fragmentos
 # de string, então um marcador fixo permitiria que uma descrição de despesa vinda da
@@ -56,13 +66,39 @@ def _construir_parser() -> argparse.ArgumentParser:
         required=True,
         help="Caminho do JSON de resultado a ser escrito.",
     )
+    calcular_cmd.add_argument(
+        "--politica",
+        dest="politica",
+        default=CAMINHO_PADRAO_POLITICA,
+        help="Caminho do JSON da política de reembolso vigente.",
+    )
+    calcular_cmd.add_argument(
+        "--cambio",
+        dest="cambio",
+        default=CAMINHO_PADRAO_CAMBIO,
+        help="Caminho do JSON com as taxas de câmbio por data e moeda.",
+    )
 
     return parser
 
 
-def executar_calculo(caminho_entrada: str, caminho_saida: str) -> None:
-    colaborador, periodo, despesas = carregar_despesas(caminho_entrada)
-    resultado_final = calcular(colaborador, periodo, despesas)
+def executar_calculo(
+    caminho_entrada: str,
+    caminho_saida: str,
+    caminho_politica: str = CAMINHO_PADRAO_POLITICA,
+    caminho_cambio: str = CAMINHO_PADRAO_CAMBIO,
+) -> int:
+    politica = carregar_politica(caminho_politica)
+    cambio = carregar_cambio(caminho_cambio)
+    colaborador, periodo, despesas = carregar_despesas(caminho_entrada, cambio)
+
+    resultado_final = calcular(
+        colaborador,
+        periodo,
+        despesas,
+        politica.tabela_para(colaborador.centro_custo),
+        politica.nota_fiscal_obrigatoria_acima_de,
+    )
 
     with open(caminho_saida, "w", encoding="utf-8") as arquivo:
         json.dump(
@@ -74,11 +110,17 @@ def executar_calculo(caminho_entrada: str, caminho_saida: str) -> None:
         )
         arquivo.write("\n")
 
+    return 0
+
 
 def main(argv: Sequence[str] | None = None) -> int:
     argumentos = _construir_parser().parse_args(argv)
-    executar_calculo(argumentos.entrada, argumentos.saida)
-    return 0
+    return executar_calculo(
+        argumentos.entrada,
+        argumentos.saida,
+        argumentos.politica,
+        argumentos.cambio,
+    )
 
 
 if __name__ == "__main__":
