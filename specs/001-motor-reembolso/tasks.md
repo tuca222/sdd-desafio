@@ -373,7 +373,7 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
     o que separa "o motor lê a política" de "o motor conhece o enunciado".
   - **Aceite:** `tests/test_dados_sinteticos.py` — 11 testes, todos com o valor
     esperado calculado à mão e escrito por extenso no próprio teste
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `9e5e02d`
 
 - [ ] **T-047** — `parser.py`: `despesas[].valor` lançado como inteiro do JSON
   (`100`, sem casas decimais) deixa de abortar o motor
