@@ -327,7 +327,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_regras.py::test_amb019_moedas_diferentes_nao_sao_duplicatas`, `::test_amb019_moeda_ausente_e_brl_explicito_sao_duplicatas`
   - **Commit:** `b8118ec`
 
-- [ ] **T-041** — `motor.py`: `valor_total_despesas` exclui despesa sem valor em BRL, além da duplicata e do estorno que já excluía
+- [x] **T-041** — `motor.py`: `valor_total_despesas` exclui despesa sem valor em BRL, além da duplicata e do estorno que já excluía
   - **Atende:** RN-016, RN-007, RN-009
   - **Aceite:** `tests/test_motor.py::test_rn016_despesa_sem_cambio_fora_do_total_bruto`, `::test_calcula_totais_do_periodo`
   - **Commit:** `<hash preenchido depois>`

@@ -210,3 +210,107 @@ def test_pipeline_da_uma_unica_justificativa_por_despesa(exemplo: ExemploProcess
         if resultado is not None:
             assert resultado.tipo_reembolso == "nenhum"
             assert "negado" in resultado.justificativa
+
+
+def test_calcula_totais_do_periodo(politica: Politica, cambio: TabelaCambio):
+    colaborador, periodo, despesas = carregar_despesas(CAMINHO_EXEMPLO, cambio)
+
+    resultado_final = calcular(
+        colaborador,
+        periodo,
+        despesas,
+        politica.tabela_para(colaborador.centro_custo),
+        politica.nota_fiscal_obrigatoria_acima_de,
+    )
+
+    assert resultado_final.valor_total_despesas == Decimal("1806.94")
+    assert resultado_final.valor_total_reembolsavel == Decimal("351.43")
+
+    por_id = {despesa.id: despesa for despesa in despesas}
+    soma_de_todas = sum((despesa.valor for despesa in despesas), Decimal("0.00"))
+
+    # O bruto exclui exatamente a duplicata (RN-007) e o estorno (RN-009) — e so
+    # eles. Nenhuma despesa deste arquivo e internacional, entao RN-016 nao tira nada.
+    assert resultado_final.valor_total_despesas == (
+        soma_de_todas - por_id["d-007"].valor - por_id["d-009"].valor
+    )
+
+    # d-005 (categoria ausente da tabela), d-008 (fora do periodo) e d-010
+    # (categoria vedada) continuam no bruto: foram gastos reais.
+    assert resultado_final.valor_total_despesas > (
+        por_id["d-005"].valor + por_id["d-008"].valor + por_id["d-010"].valor
+    )
+
+    assert resultado_final.valor_total_reembolsavel == sum(
+        (resultado.valor_reembolsavel for _, resultado in resultado_final.detalhamento),
+        Decimal("0.00"),
+    )
+
+
+def test_rn016_despesa_sem_cambio_fora_do_total_bruto(politica: Politica, cambio: TabelaCambio):
+    colaborador, periodo, despesas = carregar_despesas(CAMINHO_ENVELOPE, cambio)
+
+    resultado_final = calcular(
+        colaborador,
+        periodo,
+        despesas,
+        politica.tabela_para(colaborador.centro_custo),
+        politica.nota_fiscal_obrigatoria_acima_de,
+    )
+
+    por_id = {despesa.id: despesa for despesa in despesas}
+
+    # e-004 (EUR num sabado) e e-006 (GBP) nao tem valor em BRL para somar.
+    assert por_id["e-004"].valor_brl is None
+    assert por_id["e-006"].valor_brl is None
+
+    soma_dos_convertiveis = sum(
+        (despesa.valor_brl for despesa in despesas if despesa.valor_brl is not None),
+        Decimal("0.00"),
+    )
+
+    assert resultado_final.valor_total_despesas == soma_dos_convertiveis
+    assert resultado_final.valor_total_despesas == Decimal("2278.72")
+
+    # e-005 foi negada por nota fiscal e e-009 por categoria: as duas tem valor em
+    # BRL e continuam no bruto. Sai so o que nao tem como ser somado.
+    assert por_id["e-005"].valor_brl == Decimal("220.00")
+    assert por_id["e-009"].valor_brl == Decimal("120.00")
+
+
+def test_rn016_despesa_sem_cambio_nao_consome_limite_diario(
+    politica: Politica, cambio: TabelaCambio
+):
+    colaborador, periodo, despesas = carregar_despesas(CAMINHO_ENVELOPE, cambio)
+    tabela_do_lote = politica.tabela_para(colaborador.centro_custo)
+
+    filtros = aplicar_filtros(
+        despesas, periodo, tabela_do_lote, politica.nota_fiscal_obrigatoria_acima_de
+    )
+    finais = aplicar_limites(despesas, filtros.resultados, tabela_do_lote)
+    resultados = dict(zip([despesa.id for despesa in despesas], finais, strict=True))
+
+    # e-004 e a unica alimentacao de 2026-07-18: se ela tivesse consumido limite,
+    # a justificativa seria a de limite atingido, e nao a do cambio.
+    assert resultados["e-004"].valor_reembolsavel == Decimal("0.00")
+    assert "taxa de câmbio" in resultados["e-004"].justificativa
+
+
+def test_calcular_preserva_colaborador_periodo_e_ordem_da_entrada(
+    politica: Politica, cambio: TabelaCambio
+):
+    colaborador, periodo, despesas = carregar_despesas(CAMINHO_EXEMPLO, cambio)
+
+    resultado_final = calcular(
+        colaborador,
+        periodo,
+        despesas,
+        politica.tabela_para(colaborador.centro_custo),
+        politica.nota_fiscal_obrigatoria_acima_de,
+    )
+
+    assert resultado_final.colaborador == colaborador
+    assert resultado_final.periodo == periodo
+    assert [despesa.id for despesa, _ in resultado_final.detalhamento] == [
+        despesa.id for despesa in despesas
+    ]

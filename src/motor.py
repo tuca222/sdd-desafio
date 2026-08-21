@@ -90,11 +90,16 @@ def calcular(
     filtros = aplicar_filtros(despesas, periodo, tabela, teto_nota_fiscal)
     resultados = aplicar_limites(despesas, filtros.resultados, tabela)
 
+    # `valor_total_despesas` é um total em BRL: fica de fora o estorno (RN-009), a
+    # duplicata (RN-007) e a despesa sem taxa de câmbio, que não tem valor em BRL
+    # para somar (RN-016). Somar o número lançado seria somar euros a reais.
     valor_total_despesas = sum(
         (
-            despesa.valor
+            despesa.valor_brl
             for despesa in despesas
-            if despesa.valor >= 0 and despesa.id not in filtros.ids_duplicatas
+            if despesa.valor_brl is not None
+            and despesa.valor >= 0
+            and despesa.id not in filtros.ids_duplicatas
         ),
         Decimal("0.00"),
     )
