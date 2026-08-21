@@ -375,7 +375,7 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
     esperado calculado à mão e escrito por extenso no próprio teste
   - **Commit:** `9e5e02d`
 
-- [ ] **T-047** — `parser.py`: `despesas[].valor` lançado como inteiro do JSON
+- [x] **T-047** — `parser.py`: `despesas[].valor` lançado como inteiro do JSON
   (`100`, sem casas decimais) deixa de abortar o motor
   - **Atende:** spec.md §4 ("Entrada e saída") — o campo é tipado como "número",
     e a spec não exige casas decimais em nenhum ponto
@@ -390,8 +390,20 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
     remover o `xfail` de `tests/test_dados_sinteticos.py::test_valor_inteiro_no_json_e_aceito`.
     Verificado antes de abrir a task: com essa única mudança o teste passa e os
     outros 119 continuam passando.
+  - **Achado durante a execução:** o escopo acima cobre a borda que **quebra**, e
+    não a classe do defeito. São três os carregadores que leem número do JSON —
+    `parser.py`, `politica.py` e `cambio.py` — e os três perdiam o tipo do mesmo
+    jeito. Só o `parser.py` estourava, porque só ele chama `.quantize` no valor
+    cru; os outros dois seguiam adiante entregando `int` onde
+    `LimiteCategoria.limite` e `TabelaCambio.taxa` prometem `Decimal`, e o erro
+    ficava latente (`f"{60:.2f}"` funciona, `Decimal * int` funciona). Corrigir
+    apenas um dos três deixaria o mesmo bug de pé em dois lugares esperando a
+    primeira operação que não tolerasse `int`, então o `parse_int=Decimal` entrou
+    nos três. Cobertura em
+    `tests/test_dados_sinteticos.py::test_politica_e_cambio_com_numeros_inteiros`.
   - **Aceite:** `tests/test_dados_sinteticos.py::test_valor_inteiro_no_json_e_aceito`
-    passa sem `xfail`, sobre `tests/dados/despesas-07-valor-inteiro.json`
+    passa sem `xfail`, sobre `tests/dados/despesas-07-valor-inteiro.json`, e
+    `::test_politica_e_cambio_com_numeros_inteiros` cobre as outras duas bordas
   - **Commit:** `<hash preenchido depois>`
 
 - [x] **T-048** — `regras.py`: a identidade de duplicata compara o `valor_original`,

@@ -15,8 +15,6 @@ da saída do motor, e nenhuma conta é refeita dentro do teste — plan.md §6
 import json
 from pathlib import Path
 
-import pytest
-
 from src.cli import main
 
 DADOS = Path(__file__).parent / "dados"
@@ -43,6 +41,7 @@ def rodar(
     politica: str = POLITICA,
     cambio: str = CAMBIO,
 ) -> dict:
+    tmp_path.mkdir(parents=True, exist_ok=True)
     destino = tmp_path / "resultado.json"
     codigo = main(
         [
@@ -418,20 +417,14 @@ def test_rn017_politica_mais_antiga_continua_valendo(tmp_path: Path):
     assert resultado["valor_total_reembolsavel"] == 45.00
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Defeito conhecido, ainda sem task: `parse_float=Decimal` não cobre inteiros "
-        'do JSON, então `"valor": 100` chega como `int` e `_truncar_valor` estoura '
-        "com AttributeError. Ver a revisão de 21/08/2026."
-    ),
-)
 def test_valor_inteiro_no_json_e_aceito(tmp_path: Path):
     """`"valor": 100` é um número JSON válido, e a spec.md §4 ("Entrada e saída")
     tipa o campo como "número" — sem exigir casas decimais.
 
-    Sob CC-MARKETING (padrão: alimentação R$50, transporte R$70), s7-001 deveria
-    virar parcial de R$50,00 e s7-002 total de R$40,00.
+    Sob CC-MARKETING (padrão: alimentação R$50, transporte R$70), s7-001 vira
+    parcial de R$50,00 e s7-002 total de R$40,00. Regressão da [[T-047]]: até ela,
+    `parse_float=Decimal` não era consultado para inteiros do JSON e o motor
+    abortava com `AttributeError` ao truncar um `int`.
     """
     resultado = rodar(VALOR_INTEIRO, tmp_path)
 
@@ -481,3 +474,56 @@ def test_duplicata_compara_o_valor_lancado(tmp_path: Path):
     assert resultado["valor_total_despesas"] == 86.66
     # 33,33 + 16,67 + 20,00 — os dois primeiros somam exatamente o limite do dia.
     assert resultado["valor_total_reembolsavel"] == 70.00
+
+
+def test_politica_e_cambio_com_numeros_inteiros(tmp_path: Path):
+    """Os três arquivos de entrada podem trazer números sem casas decimais.
+
+    A política e o câmbio não estouravam como o lote de despesas — nenhum dos dois
+    é truncado na leitura —, mas produziam `int` onde `LimiteCategoria.limite` e
+    `TabelaCambio.taxa` prometem `Decimal`. A [[T-047]] fechou as três bordas de
+    leitura pelo mesmo motivo, e não só a que quebrava.
+
+    O lote é o de `despesas-01`, com os limites de `CC-VENDAS-LATAM` reescritos
+    sem centavos: alimentação `120` em vez de `120.00`, e o teto de nota fiscal
+    `150` em vez de `150.00`. O resultado tem de ser idêntico.
+    """
+    politica = json.loads(Path(POLITICA).read_text(encoding="utf-8"))
+    politica["centros_custo"]["CC-VENDAS-LATAM"]["alimentacao"]["limite"] = 120
+    politica["centros_custo"]["CC-VENDAS-LATAM"]["transporte_urbano"]["limite"] = 90
+    politica["nota_fiscal_obrigatoria_acima_de"] = 150
+    caminho_politica = tmp_path / "politica-inteiros.json"
+    caminho_politica.write_text(json.dumps(politica), encoding="utf-8")
+
+    cambio = json.loads(Path(CAMBIO).read_text(encoding="utf-8"))
+    cambio["taxas"]["2026-09-14"]["EUR"] = 6
+    caminho_cambio = tmp_path / "cambio-inteiros.json"
+    caminho_cambio.write_text(json.dumps(cambio), encoding="utf-8")
+
+    com_inteiros = rodar(
+        LIMITES_POR_CENTRO_DE_CUSTO,
+        tmp_path / "inteiros",
+        politica=str(caminho_politica),
+        cambio=str(caminho_cambio),
+    )
+
+    assert com_inteiros["valor_total_despesas"] == 1290.00
+    assert com_inteiros["valor_total_reembolsavel"] == 940.00
+
+    despesas = por_id(com_inteiros)
+
+    # O limite continua sendo formatado como dinheiro na justificativa.
+    assert "R$120,00 no dia" in despesas["s1-001"]["motor_reembolso_output"]["justificativa"]
+    assert "R$150,00 necessitam" in despesas["s1-006"]["motor_reembolso_output"]["justificativa"]
+
+    # E a taxa lida como inteiro converte igual: EUR 20,00 x 6 = R$120,00.
+    convertido = rodar(
+        CAMBIO_MULTIPLOS_DESFECHOS,
+        tmp_path / "convertido",
+        politica=str(caminho_politica),
+        cambio=str(caminho_cambio),
+    )
+    s3_001 = por_id(convertido)["s3-001"]["motor_reembolso_output"]
+
+    assert s3_001["taxa_cambio"] == 6
+    assert s3_001["valor_convertido_brl"] == 120.00

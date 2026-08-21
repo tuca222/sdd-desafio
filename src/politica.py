@@ -60,7 +60,7 @@ def _tabela(bruto: dict[str, Any]) -> dict[str, LimiteCategoria]:
 
 def carregar_politica(caminho: str) -> Politica:
     with open(caminho, encoding="utf-8") as arquivo:
-        dados = json.load(arquivo, parse_float=Decimal)
+        dados = json.load(arquivo, parse_float=Decimal, parse_int=Decimal)
 
     return Politica(
         vigencia=date.fromisoformat(dados["vigencia"]),

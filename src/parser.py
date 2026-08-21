@@ -59,7 +59,7 @@ def carregar_despesas(
     caminho: str, cambio: TabelaCambio
 ) -> tuple[Colaborador, Periodo, list[Despesa]]:
     with open(caminho, encoding="utf-8") as arquivo:
-        dados = json.load(arquivo, parse_float=Decimal)
+        dados = json.load(arquivo, parse_float=Decimal, parse_int=Decimal)
 
     colaborador = Colaborador(
         id=dados["colaborador"]["id"],

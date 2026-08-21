@@ -19,7 +19,7 @@ class TabelaCambio:
 
 def carregar_cambio(caminho: str) -> TabelaCambio:
     with open(caminho, encoding="utf-8") as arquivo:
-        dados = json.load(arquivo, parse_float=Decimal)
+        dados = json.load(arquivo, parse_float=Decimal, parse_int=Decimal)
 
     return TabelaCambio(
         taxas={date.fromisoformat(dia): dict(cotacoes) for dia, cotacoes in dados["taxas"].items()}
