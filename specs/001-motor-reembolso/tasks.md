@@ -285,7 +285,7 @@ RN-008 estejam quebrados.
 - [x] **T-032** — `cli.py`: flags opcionais `--politica` e `--cambio`, com default; carrega os dois arquivos e os passa adiante. A invocação fixa do `DESAFIO.md` continua funcionando sem elas
   - **Atende:** spec.md §4 ("Entrada e saída"), interface fixa do desafio (`DESAFIO.md`), plan.md DT-006
   - **Aceite:** `tests/test_cli.py::test_cli_calcular_gera_arquivo_de_saida`, `::test_cli_aceita_politica_e_cambio_alternativos`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `90d428b`
 
 - [ ] **T-033** — `cli.py`: quando `vigencia_cobre` reprova, imprime em `stderr` o motivo citando as duas competências, **não escreve arquivo de saída** e encerra com código diferente de zero
   - **Atende:** RN-017, plan.md DT-008
