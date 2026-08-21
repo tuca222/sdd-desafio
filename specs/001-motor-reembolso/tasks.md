@@ -394,6 +394,28 @@ nenhuma regra de negócio nova entra aqui. A numeração continua de T-045.
     passa sem `xfail`, sobre `tests/dados/despesas-07-valor-inteiro.json`
   - **Commit:** `<hash preenchido depois>`
 
+- [ ] **T-048** — `regras.py`: a identidade de duplicata compara o `valor_original`,
+  não o valor já truncado
+  - **Atende:** RN-007, AMB-019, RN-010
+  - **Por que existe:** detectado na revisão de `21/08/2026`. `_identidade_duplicata`
+    compara `despesa.valor`, que já passou pelo truncamento de RN-010 na borda de
+    entrada — então duas despesas lançadas com valores **diferentes**, `33.333` e
+    `33.334`, viram o mesmo centavo e são tratadas como o mesmo lançamento, e a
+    segunda é negada citando a primeira. A spec já dizia o contrário em dois pontos:
+    a spec.md §5 (RN-007) lista `valor` entre os campos da entrada que precisam ser
+    idênticos, e a spec.md §6 (AMB-019) diz que a comparação é "sobre o valor
+    **lançado**". A spec.md §5 (RN-010) também não inclui a duplicata na lista do que
+    o truncamento antecede ("antes de qualquer verificação de limite ou nota fiscal").
+    Nenhuma mudança de spec: o código é o bug.
+  - **Escopo:** `_identidade_duplicata` passa a ler `despesa.valor_original`. Entra um
+    lote novo em `tests/dados/`, porque nenhum arquivo de `exemplos/` tem duas
+    despesas que difiram só a partir da terceira casa decimal. Nenhum resultado
+    existente muda: em todas as duplicatas dos exemplos e da massa sintética o valor
+    lançado já era idêntico.
+  - **Aceite:** `tests/test_regras.py::test_rn007_valores_que_truncam_no_mesmo_centavo_nao_sao_duplicatas`
+    e `tests/test_dados_sinteticos.py::test_duplicata_compara_o_valor_lancado`
+  - **Commit:** `<hash preenchido depois>`
+
 ---
 
 ## Cobertura
