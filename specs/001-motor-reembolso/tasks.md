@@ -315,7 +315,7 @@ RN-008 estejam quebrados.
 - [x] **T-038** — `regras.py`: `filtro_nota_fiscal` compara o valor em BRL contra o teto vindo da política, não a constante nem o valor lançado
   - **Atende:** RN-005, AMB-017, AMB-003
   - **Aceite:** `tests/test_regras.py::test_amb017_teto_de_nota_fiscal_compara_valor_convertido`, `::test_rn005_valor_exatamente_no_teto_nao_exige`
-  - **Commit:** `<hash preenchido depois>`
+  - **Commit:** `608b8a6`
 
 - [ ] **T-039** — `regras.py`/`motor.py`: o limite diário vem da `TabelaLimites` do centro de custo e agrega o valor em BRL; a justificativa passa a citar o centro de custo
   - **Atende:** RN-001, RN-002, RN-003, RN-004, RN-014, RN-015
