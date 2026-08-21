@@ -1,6 +1,6 @@
 # Plano Técnico — Motor de Cálculo de Reembolso
 
-**Versão:** 1.13 · **Baseado na spec:** 2.2
+**Versão:** 1.14 · **Baseado na spec:** 2.3 — revisado contra a spec 2.3 na implementação da Fase 5 de `tasks.md`; a mudança da spec 2.2 para a 2.3 é de status (critérios de aceite remarcados), e nenhuma decisão técnica deste plano mudou por causa dela. Ver `DECISIONS.md` [[D-014]]
 
 ---
 
