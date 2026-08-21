@@ -332,7 +332,7 @@ RN-008 estejam quebrados.
   - **Aceite:** `tests/test_motor.py::test_rn016_despesa_sem_cambio_fora_do_total_bruto`, `::test_calcula_totais_do_periodo`
   - **Commit:** `a812cad`
 
-- [ ] **T-042** — `saida.py`: `motor_reembolso_output` ganha `taxa_cambio` e `valor_convertido_brl`; o dict de saída ecoa `moeda` só quando ela veio na entrada
+- [x] **T-042** — `saida.py`: `motor_reembolso_output` ganha `taxa_cambio` e `valor_convertido_brl`; o dict de saída ecoa `moeda` só quando ela veio na entrada
   - **Atende:** spec.md §4 ("Entrada e saída"), RN-015
   - **Aceite:** `tests/test_saida.py::test_saida_publica_taxa_e_valor_convertido`, `::test_saida_omite_moeda_quando_a_entrada_nao_trouxe`
   - **Commit:** `<hash preenchido depois>`
